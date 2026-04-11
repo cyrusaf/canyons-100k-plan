@@ -3,6 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
+const { pathToFileURL } = require("url");
 
 let chromium;
 try {
@@ -16,6 +17,17 @@ const ROOT = path.resolve(__dirname, "..");
 const GUIDE_OUTPUT = path.join(ROOT, "docs", "canyons-100k-crew-guide.html");
 const TRACKER_OUTPUT = path.join(ROOT, "docs", "canyons-100k-route-tracker.html");
 const SCREENSHOT_DIR = path.join(ROOT, ".artifacts", "screenshots");
+const MAPTILER_API_KEY = process.env.MAPTILER_API_KEY || "";
+
+function fileUrl(filePath) {
+  return pathToFileURL(filePath).href;
+}
+
+function trackerUrl() {
+  const url = pathToFileURL(TRACKER_OUTPUT);
+  if (MAPTILER_API_KEY) url.searchParams.set("maptiler_key", MAPTILER_API_KEY);
+  return url.href;
+}
 
 execFileSync(process.execPath, [path.join(ROOT, "scripts", "generate.js")], {
   cwd: ROOT,
@@ -32,7 +44,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     isMobile: true
   });
 
-  await page.goto(`file://${GUIDE_OUTPUT}`, { waitUntil: "networkidle" });
+  await page.goto(fileUrl(GUIDE_OUTPUT), { waitUntil: "networkidle" });
   await page.screenshot({ path: path.join(SCREENSHOT_DIR, "iphone-overview.png"), fullPage: false });
 
   for (const id of ["plan", "crew", "maps"]) {
@@ -56,7 +68,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 
   const guideMetrics = await page.evaluate(() => {
     const overflow = [...document.querySelectorAll("body *")]
-      .filter((el) => !el.closest(".leaflet-pane"))
+      .filter((el) => !el.closest(".maplibregl-canvas-container"))
       .filter((el) => el.getBoundingClientRect().width > 0)
       .map((el) => ({
         tag: el.tagName,
@@ -68,7 +80,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       .filter((item) => item.right > window.innerWidth + 1);
 
     const tapTargets = [...document.querySelectorAll("a, button")]
-      .filter((el) => !el.closest(".leaflet-control-attribution"))
+      .filter((el) => !el.closest(".maplibregl-ctrl-attrib"))
       .map((el) => {
         const rect = el.getBoundingClientRect();
         return {
@@ -97,7 +109,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
   });
 
   const desktop = await browser.newPage({ viewport: { width: 1024, height: 768 }, deviceScaleFactor: 1 });
-  await desktop.goto(`file://${GUIDE_OUTPUT}`, { waitUntil: "networkidle" });
+  await desktop.goto(fileUrl(GUIDE_OUTPUT), { waitUntil: "networkidle" });
   await desktop.screenshot({ path: path.join(SCREENSHOT_DIR, "desktop-overview.png"), fullPage: false });
 
   const trackerMobile = await browser.newPage({
@@ -105,7 +117,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     deviceScaleFactor: 2,
     isMobile: true
   });
-  await trackerMobile.goto(`file://${TRACKER_OUTPUT}`, { waitUntil: "domcontentloaded" });
+  await trackerMobile.goto(trackerUrl(), { waitUntil: "domcontentloaded" });
   await trackerMobile.waitForFunction(() => window.routeTrackerReady === true, null, { timeout: 10000 });
   await trackerMobile.waitForTimeout(500);
   await trackerMobile.screenshot({ path: path.join(SCREENSHOT_DIR, "iphone-tracker-start.png"), fullPage: false });
@@ -114,8 +126,20 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     const resupply = document.getElementById("station-resupply");
     const station = stationEl.getBoundingClientRect();
     const box = resupply.getBoundingClientRect();
+    const metricContentFits = [...document.querySelectorAll(".station-metric")]
+      .every((el) => {
+        const label = el.querySelector("span").getBoundingClientRect();
+        const value = el.querySelector("strong").getBoundingClientRect();
+        const card = el.closest(".station-grid").getBoundingClientRect();
+        return (
+          label.height >= 10 &&
+          value.height >= 12 &&
+          label.top >= card.top - 1 &&
+          value.bottom <= card.bottom + 1
+        );
+      });
     const overflow = [...document.querySelectorAll("body *")]
-      .filter((el) => !el.closest(".leaflet-pane") && !el.closest(".leaflet-control-attribution"))
+      .filter((el) => !el.closest(".maplibregl-canvas-container") && !el.closest(".maplibregl-ctrl-attrib"))
       .filter((el) => el.getBoundingClientRect().width > 0)
       .map((el) => el.getBoundingClientRect())
       .filter((rect) => rect.right > window.innerWidth + 1 || rect.bottom > window.innerHeight + 1);
@@ -126,6 +150,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       stationText: stationEl.textContent.trim().replace(/\s+/g, " "),
       height: Math.round(box.height),
       stationHeight: Math.round(station.height),
+      metricContentFits,
       overflowCount: overflow.length
     };
   });
@@ -164,9 +189,9 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
   await trackerMobile.keyboard.press("End");
   await trackerMobile.waitForTimeout(650);
 
-  const trackerMetrics = await trackerMobile.evaluate((profileDragLabel) => {
+  const trackerMetrics = await trackerMobile.evaluate(({ profileDragLabel, hasMapTilerKey }) => {
     const overflow = [...document.querySelectorAll("body *")]
-      .filter((el) => !el.closest(".leaflet-pane"))
+      .filter((el) => !el.closest(".maplibregl-canvas-container"))
       .filter((el) => el.getBoundingClientRect().width > 0)
       .map((el) => ({
         tag: el.tagName,
@@ -179,7 +204,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       .filter((item) => item.right > window.innerWidth + 1 || item.bottom > window.innerHeight + 1);
 
     const tapTargets = [...document.querySelectorAll("a, button")]
-      .filter((el) => !el.closest(".leaflet-control-attribution"))
+      .filter((el) => !el.closest(".maplibregl-ctrl-attrib"))
       .map((el) => {
         const rect = el.getBoundingClientRect();
         return {
@@ -198,7 +223,38 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       }))
       .filter((item) => item.text && item.size < 10);
 
-    const cursor = document.querySelector(".leaflet-progress-dot").getBoundingClientRect();
+    const map = window.routeTrackerMap || null;
+    const mapReady = Boolean(map && typeof map.getZoom === "function");
+    const mapLoaded = Boolean(map && map.loaded && map.loaded());
+    const mapSetupText = (
+      document.querySelector(".map-setup-message")?.textContent ||
+      document.getElementById("route-map").textContent ||
+      ""
+    ).trim().replace(/\s+/g, " ");
+    const layerIds = window.routeTrackerMapLayerIds || {};
+    const sourceIds = window.routeTrackerMapSourceIds || {};
+    const mapLayerIds = [layerIds.fullRoute, layerIds.progressRoute, layerIds.stops, layerIds.progressDot].filter(Boolean);
+    const mapSourceIds = [sourceIds.fullRoute, sourceIds.progressRoute, sourceIds.stops, sourceIds.progressPoint].filter(Boolean);
+    const mapLayerCount = mapReady && typeof map.getLayer === "function"
+      ? mapLayerIds.filter((id) => map.getLayer(id)).length
+      : 0;
+    const mapSourceCount = mapReady && typeof map.getSource === "function"
+      ? mapSourceIds.filter((id) => map.getSource(id)).length
+      : 0;
+    const mapStopsAvailable = mapReady && typeof map.getSource === "function" && sourceIds.stops
+      ? Boolean(map.getSource(sourceIds.stops))
+      : false;
+    const mapStopTypes = mapLoaded && layerIds.stops
+      ? map.queryRenderedFeatures({ layers: [layerIds.stops] })
+        .map((feature) => "stop-" + feature.properties.type)
+        .filter(Boolean)
+      : [];
+    const progressFeatureCount = mapLoaded && layerIds.progressDot
+      ? map.queryRenderedFeatures({ layers: [layerIds.progressDot] }).length
+      : 0;
+    const projectedPoint = map && window.routeTrackerCurrentPoint
+      ? map.project(window.routeTrackerCurrentPoint)
+      : null;
     const profileCursor = document.getElementById("profile-cursor").getBoundingClientRect();
     const profilePopup = document.getElementById("profile-marker-popup");
     const doc = document.documentElement;
@@ -209,9 +265,6 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       .map((el) => [...el.classList].find((cls) => cls.startsWith("stop-")))
       .filter(Boolean);
     const currentLeg = document.getElementById("profile-current-leg").getBoundingClientRect();
-    const mapStopTypes = [...document.querySelectorAll(".leaflet-overlay-pane .map-stop")]
-      .map((el) => [...el.classList].find((cls) => cls.startsWith("stop-")))
-      .filter(Boolean);
 
     return {
       scrollWidth: doc.scrollWidth,
@@ -230,13 +283,21 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       profilePopupHiddenAtRest: profilePopup.hidden && getComputedStyle(profilePopup).display === "none",
       resupplyGuideCount: document.querySelectorAll("#profile-stop-guides .resupply-guide").length,
       mapStopTypeCount: new Set(mapStopTypes).size,
-      loadedTiles: document.querySelectorAll(".leaflet-tile-loaded").length,
-      routePaths: document.querySelectorAll(".leaflet-interactive").length,
+      mapKeyPresent: hasMapTilerKey,
+      mapReady,
+      mapLoaded,
+      mapSetupText,
+      mapLayerCount,
+      mapSourceCount,
+      mapStopsAvailable,
+      mapTilesReady: mapLoaded && map.areTilesLoaded ? map.areTilesLoaded() : false,
+      mapProgressFeatureCount: progressFeatureCount,
       cursorVisible:
-        cursor.left >= 0 &&
-        cursor.right <= window.innerWidth &&
-        cursor.top >= 0 &&
-        cursor.bottom <= window.innerHeight,
+        Boolean(projectedPoint) &&
+        projectedPoint.x >= 0 &&
+        projectedPoint.x <= window.innerWidth &&
+        projectedPoint.y >= 0 &&
+        projectedPoint.y <= window.innerHeight,
       profileCursorVisible:
         profileCursor.left >= 0 &&
         profileCursor.right <= window.innerWidth &&
@@ -246,11 +307,11 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       tapTargets,
       tinyText
     };
-  }, profileDragLabel);
+  }, { profileDragLabel, hasMapTilerKey: Boolean(MAPTILER_API_KEY) });
   trackerMetrics.profilePopupDuringDrag = profilePopupDuringDrag;
 
   const trackerDesktop = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
-  await trackerDesktop.goto(`file://${TRACKER_OUTPUT}`, { waitUntil: "domcontentloaded" });
+  await trackerDesktop.goto(trackerUrl(), { waitUntil: "domcontentloaded" });
   await trackerDesktop.waitForFunction(() => window.routeTrackerReady === true, null, { timeout: 10000 });
   await trackerDesktop.waitForTimeout(500);
   const desktopProfileBoxBeforeWheel = await trackerDesktop.locator("#profile-svg").boundingBox();
@@ -268,16 +329,31 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
   await trackerDesktop.mouse.up();
   await trackerDesktop.waitForTimeout(200);
   await trackerDesktop.screenshot({ path: path.join(SCREENSHOT_DIR, "desktop-tracker-mid.png"), fullPage: false });
-  const mapZoomBefore = await trackerDesktop.evaluate(() => window.routeTrackerMap.getZoom());
-  await trackerDesktop.locator(".leaflet-control-zoom-in").click();
-  await trackerDesktop.waitForTimeout(250);
-  const mapZoomAfter = await trackerDesktop.evaluate(() => window.routeTrackerMap.getZoom());
+  const desktopMapState = await trackerDesktop.evaluate(() => {
+    const map = window.routeTrackerMap || null;
+    return {
+      ready: Boolean(map && typeof map.getZoom === "function"),
+      setupText: (
+        document.querySelector(".map-setup-message")?.textContent ||
+        document.getElementById("route-map").textContent ||
+        ""
+      ).trim().replace(/\s+/g, " ")
+    };
+  });
+  let mapZoomBefore = null;
+  let mapZoomAfter = null;
+  if (desktopMapState.ready) {
+    mapZoomBefore = await trackerDesktop.evaluate(() => window.routeTrackerMap.getZoom());
+    await trackerDesktop.locator(".maplibregl-ctrl-zoom-in").first().click();
+    await trackerDesktop.waitForTimeout(250);
+    mapZoomAfter = await trackerDesktop.evaluate(() => window.routeTrackerMap.getZoom());
+  }
   const trackerDesktopMetrics = await trackerDesktop.evaluate((desktopProfileTargetX) => {
     const stage = document.querySelector(".route-stage").getBoundingClientRect();
     const map = document.querySelector(".map-viz").getBoundingClientRect();
     const details = document.querySelector(".route-details").getBoundingClientRect();
     const profileLine = document.getElementById("profile-cursor-line").getBoundingClientRect();
-    const zoomButton = document.querySelector(".leaflet-control-zoom-in").getBoundingClientRect();
+    const zoomButton = document.querySelector(".maplibregl-ctrl-zoom-in")?.getBoundingClientRect();
     const cursorCenter = profileLine.left + profileLine.width / 2;
 
     return {
@@ -289,10 +365,12 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       profileDragDeltaPx: Math.abs(cursorCenter - desktopProfileTargetX),
       profilePathWidth: Math.round(document.getElementById("profile-line").getBoundingClientRect().width),
       profileSvgWidth: Math.round(document.getElementById("profile-svg").getBoundingClientRect().width),
-      zoomButtonWidth: Math.round(zoomButton.width),
-      zoomButtonHeight: Math.round(zoomButton.height)
+      zoomButtonWidth: zoomButton ? Math.round(zoomButton.width) : 0,
+      zoomButtonHeight: zoomButton ? Math.round(zoomButton.height) : 0
     };
   }, desktopProfileTargetX);
+  trackerDesktopMetrics.mapReady = desktopMapState.ready;
+  trackerDesktopMetrics.mapSetupText = desktopMapState.setupText;
   trackerDesktopMetrics.mapZoomBefore = mapZoomBefore;
   trackerDesktopMetrics.mapZoomAfter = mapZoomAfter;
 
@@ -301,7 +379,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     deviceScaleFactor: 2,
     isMobile: true
   });
-  await trackerShortMobile.goto(`file://${TRACKER_OUTPUT}`, { waitUntil: "domcontentloaded" });
+  await trackerShortMobile.goto(trackerUrl(), { waitUntil: "domcontentloaded" });
   await trackerShortMobile.waitForFunction(() => window.routeTrackerReady === true, null, { timeout: 10000 });
   await trackerShortMobile.waitForTimeout(500);
   await trackerShortMobile.screenshot({ path: path.join(SCREENSHOT_DIR, "iphone-tracker-short.png"), fullPage: false });
@@ -311,6 +389,18 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     const svg = document.getElementById("profile-svg").getBoundingClientRect();
     const profilePath = document.getElementById("profile-line").getBoundingClientRect();
     const profileArea = document.getElementById("profile-area").getBoundingClientRect();
+    const metricContentFits = [...document.querySelectorAll(".station-metric")]
+      .every((el) => {
+        const label = el.querySelector("span").getBoundingClientRect();
+        const value = el.querySelector("strong").getBoundingClientRect();
+        const card = el.closest(".station-grid").getBoundingClientRect();
+        return (
+          label.height >= 10 &&
+          value.height >= 12 &&
+          label.top >= card.top - 1 &&
+          value.bottom <= card.bottom + 1
+        );
+      });
 
     return {
       profileHeight: Math.round(profile.height),
@@ -319,7 +409,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       stationAboveProfile: station.bottom <= profile.top + 1,
       profileBottomGap: Math.round(svg.bottom - profileArea.bottom),
       profilePathWidth: Math.round(profilePath.width),
-      profileSvgWidth: Math.round(svg.width)
+      profileSvgWidth: Math.round(svg.width),
+      metricContentFits
     };
   });
 
@@ -327,7 +418,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     viewport: { width: 1024, height: 300 },
     deviceScaleFactor: 2
   });
-  await trackerShortLandscape.goto(`file://${TRACKER_OUTPUT}`, { waitUntil: "domcontentloaded" });
+  await trackerShortLandscape.goto(trackerUrl(), { waitUntil: "domcontentloaded" });
   await trackerShortLandscape.waitForFunction(() => window.routeTrackerReady === true, null, { timeout: 10000 });
   await trackerShortLandscape.waitForTimeout(500);
   await trackerShortLandscape.screenshot({ path: path.join(SCREENSHOT_DIR, "desktop-tracker-short.png"), fullPage: false });
@@ -363,6 +454,26 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerShortLandscape: trackerShortLandscapeMetrics
   };
   console.log(JSON.stringify(metrics, null, 2));
+  const mapKeyPresent = Boolean(MAPTILER_API_KEY);
+  const trackerMapUnavailableByConfig =
+    !mapKeyPresent && !trackerMetrics.mapReady && trackerMetrics.mapSetupText.includes("Map key needed");
+  const trackerMapFailed = mapKeyPresent
+    ? !trackerMetrics.mapReady ||
+      !trackerMetrics.mapLoaded ||
+      trackerMetrics.mapLayerCount < 4 ||
+      trackerMetrics.mapSourceCount < 4 ||
+      !trackerMetrics.mapStopsAvailable ||
+      trackerMetrics.mapProgressFeatureCount < 1 ||
+      !trackerMetrics.cursorVisible
+    : !trackerMapUnavailableByConfig;
+  const trackerDesktopMapUnavailableByConfig =
+    !mapKeyPresent && !trackerDesktopMetrics.mapReady && trackerDesktopMetrics.mapSetupText.includes("Map key needed");
+  const trackerDesktopMapFailed = mapKeyPresent
+    ? !trackerDesktopMetrics.mapReady ||
+      trackerDesktopMetrics.zoomButtonWidth < 40 ||
+      trackerDesktopMetrics.zoomButtonHeight < 44 ||
+      trackerDesktopMetrics.mapZoomAfter <= trackerDesktopMetrics.mapZoomBefore
+    : !trackerDesktopMapUnavailableByConfig;
   if (
     guideMetrics.overflow.length ||
     guideMetrics.tapTargets.length ||
@@ -386,18 +497,13 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerMetrics.profileCurrentLegHeight < 80 ||
     !trackerMetrics.profilePopupHiddenAtRest ||
     trackerMetrics.resupplyGuideCount < 3 ||
-    trackerMetrics.mapStopTypeCount < 6 ||
-    trackerMetrics.loadedTiles < 1 ||
-    trackerMetrics.routePaths < 3 ||
-    !trackerMetrics.cursorVisible ||
+    trackerMapFailed ||
     !trackerMetrics.profileCursorVisible ||
     !trackerDesktopMetrics.mapFitsStage ||
     !trackerDesktopMetrics.detailsBelowMap ||
     trackerDesktopMetrics.profileDragDeltaPx > 5 ||
     trackerDesktopMetrics.profilePathWidth < trackerDesktopMetrics.profileSvgWidth * 0.95 ||
-    trackerDesktopMetrics.zoomButtonWidth < 40 ||
-    trackerDesktopMetrics.zoomButtonHeight < 44 ||
-    trackerDesktopMetrics.mapZoomAfter <= trackerDesktopMetrics.mapZoomBefore ||
+    trackerDesktopMapFailed ||
     !trackerStartResupplyMetrics.visible ||
     !trackerStartResupplyMetrics.text.includes("Resupply to Michigan Bluff") ||
     !trackerStartResupplyMetrics.text.includes("590 g") ||
@@ -407,9 +513,11 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     !trackerStartResupplyMetrics.stationText.includes("1,200-1,800 mg") ||
     !trackerStartResupplyMetrics.stationText.includes("1.2-1.8 L") ||
     !trackerStartResupplyMetrics.stationText.includes("Arrive 7:25 AM") ||
+    !trackerStartResupplyMetrics.metricContentFits ||
     trackerStartResupplyMetrics.overflowCount ||
     trackerStartResupplyMetrics.height > trackerStartResupplyMetrics.stationHeight ||
     !trackerShortMobileMetrics.stationAboveProfile ||
+    !trackerShortMobileMetrics.metricContentFits ||
     trackerShortMobileMetrics.profileHeight < 180 ||
     trackerShortMobileMetrics.svgHeight < 140 ||
     trackerShortMobileMetrics.profileBottomGap < 44 ||

@@ -576,7 +576,7 @@ function renderRouteTrackerHtml() {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Canyons 100K Route Tracker</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://cdn.maptiler.com/maptiler-sdk-js/v3.0.1/maptiler-sdk.css">
   <style>
 ${styles}
   </style>
@@ -597,7 +597,7 @@ ${styles}
 
       <article class="route-viz map-viz real-map-viz" aria-labelledby="map-title">
         <h2 id="map-title" class="sr-only">Course map and progress dot</h2>
-        <div id="route-map" class="leaflet-route-map" aria-label="Interactive course map with GPX track and progress dot"></div>
+        <div id="route-map" class="maplibre-route-map" aria-label="Interactive course map with GPX track and progress dot"></div>
       </article>
     </section>
 
@@ -691,7 +691,8 @@ ${styles}
     </section>
   </main>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="./route-map-config.js"></script>
+  <script src="https://cdn.maptiler.com/maptiler-sdk-js/v3.0.1/maptiler-sdk.umd.min.js"></script>
   <script>
     const routeData = ${routeJson};
 
@@ -701,9 +702,6 @@ ${styles}
       touchY: null,
       raf: null,
       map: null,
-      progressLine: null,
-      progressDot: null,
-      progressHalo: null,
       profileDragging: false
     };
 
@@ -769,6 +767,24 @@ ${styles}
       aid: "Aid"
     };
     let profile = null;
+    const mapLayerIds = {
+      fullRouteCasing: "course-route-casing",
+      fullRoute: "course-route",
+      progressRouteCasing: "course-progress-casing",
+      progressRoute: "course-progress",
+      stops: "course-stops",
+      progressHalo: "course-progress-halo",
+      progressDot: "course-progress-dot"
+    };
+    const mapSourceIds = {
+      fullRoute: "course-route-source",
+      progressRoute: "course-progress-source",
+      stops: "course-stops-source",
+      progressPoint: "course-progress-point-source"
+    };
+    window.routeTrackerReady = false;
+    window.routeTrackerMapLayerIds = mapLayerIds;
+    window.routeTrackerMapSourceIds = mapSourceIds;
 
     function clamp(value, min, max) {
       return Math.max(min, Math.min(max, value));
@@ -950,6 +966,39 @@ ${styles}
       return latLngs;
     }
 
+    function coordinatesFromLatLngs(latLngs) {
+      return latLngs.map((point) => [point[1], point[0]]);
+    }
+
+    function lineFeatureFromLatLngs(latLngs) {
+      const coordinates = coordinatesFromLatLngs(latLngs);
+      const firstCoordinate = coordinates[0] || [coursePoints[0].lon, coursePoints[0].lat];
+      const safeCoordinates = coordinates.length > 1 ? coordinates : [firstCoordinate, firstCoordinate];
+      return {
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "LineString",
+          coordinates: safeCoordinates
+        }
+      };
+    }
+
+    function pointFeature(point, properties) {
+      return {
+        type: "Feature",
+        properties: properties || {},
+        geometry: {
+          type: "Point",
+          coordinates: [point.lon, point.lat]
+        }
+      };
+    }
+
+    function featureCollection(features) {
+      return { type: "FeatureCollection", features };
+    }
+
     function previousStop(mile) {
       let index = 0;
       routeData.stops.forEach((stop, stopIndex) => {
@@ -1045,88 +1094,202 @@ ${styles}
       elements.profileCurrentLeg.setAttribute("height", Math.max(0, profile.bottom - profile.top).toFixed(2));
     }
 
+    function mapTilerKey() {
+      const query = new URLSearchParams(window.location.search);
+      const queryKey = query.get("maptiler_key");
+      if (queryKey) {
+        try {
+          localStorage.setItem("canyonsMaptilerKey", queryKey);
+        } catch (error) {
+          // Storage can be unavailable in private browsing.
+        }
+        return queryKey;
+      }
+
+      try {
+        const storedKey = localStorage.getItem("canyonsMaptilerKey");
+        if (storedKey) return storedKey;
+      } catch (error) {
+        // Ignore storage errors and try the local config file.
+      }
+
+      return window.CANYONS_MAPTILER_API_KEY || "";
+    }
+
+    function addRouteMapLayers() {
+      const routeLatLngs = coursePoints.map((point) => [point.lat, point.lon]);
+      const stopFeatures = routeData.stops.map((stop) =>
+        pointFeature(stop, {
+          name: stop.name,
+          mile: stop.mile,
+          type: stop.type || "aid",
+          label: stopTypeLabel(stop)
+        })
+      );
+
+      state.map.addSource(mapSourceIds.fullRoute, {
+        type: "geojson",
+        data: lineFeatureFromLatLngs(routeLatLngs)
+      });
+      state.map.addSource(mapSourceIds.progressRoute, {
+        type: "geojson",
+        data: lineFeatureFromLatLngs([[coursePoints[0].lat, coursePoints[0].lon]])
+      });
+      state.map.addSource(mapSourceIds.stops, {
+        type: "geojson",
+        data: featureCollection(stopFeatures)
+      });
+      state.map.addSource(mapSourceIds.progressPoint, {
+        type: "geojson",
+        data: pointFeature(coursePoints[0], {})
+      });
+
+      state.map.addLayer({
+        id: mapLayerIds.fullRouteCasing,
+        type: "line",
+        source: mapSourceIds.fullRoute,
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: { "line-color": "#ffffff", "line-opacity": 0.86, "line-width": 9 }
+      });
+      state.map.addLayer({
+        id: mapLayerIds.fullRoute,
+        type: "line",
+        source: mapSourceIds.fullRoute,
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: { "line-color": "#287c74", "line-opacity": 0.74, "line-width": 5 }
+      });
+      state.map.addLayer({
+        id: mapLayerIds.progressRouteCasing,
+        type: "line",
+        source: mapSourceIds.progressRoute,
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: { "line-color": "#ffffff", "line-opacity": 0.94, "line-width": 10 }
+      });
+      state.map.addLayer({
+        id: mapLayerIds.progressRoute,
+        type: "line",
+        source: mapSourceIds.progressRoute,
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: { "line-color": "#fc4c02", "line-opacity": 0.98, "line-width": 6 }
+      });
+      state.map.addLayer({
+        id: mapLayerIds.stops,
+        type: "circle",
+        source: mapSourceIds.stops,
+        paint: {
+          "circle-radius": [
+            "match",
+            ["get", "type"],
+            "crew",
+            6,
+            "finish",
+            7,
+            "start",
+            5,
+            4
+          ],
+          "circle-color": [
+            "match",
+            ["get", "type"],
+            "finish",
+            "#fc4c02",
+            "crew",
+            "#fff7f3",
+            "start",
+            "#ececff",
+            "#ffffff"
+          ],
+          "circle-stroke-color": [
+            "match",
+            ["get", "type"],
+            "crew",
+            "#fc4c02",
+            "finish",
+            "#ffffff",
+            "start",
+            "#6366a8",
+            "#0f766e"
+          ],
+          "circle-stroke-width": ["match", ["get", "type"], "finish", 3, "crew", 2.5, 2],
+          "circle-opacity": 1,
+          "circle-stroke-opacity": 1
+        }
+      });
+      state.map.addLayer({
+        id: mapLayerIds.progressHalo,
+        type: "circle",
+        source: mapSourceIds.progressPoint,
+        paint: {
+          "circle-radius": 19,
+          "circle-color": "#fc4c02",
+          "circle-opacity": 0.16,
+          "circle-stroke-color": "#fc4c02",
+          "circle-stroke-width": 2,
+          "circle-stroke-opacity": 0.24
+        }
+      });
+      state.map.addLayer({
+        id: mapLayerIds.progressDot,
+        type: "circle",
+        source: mapSourceIds.progressPoint,
+        paint: {
+          "circle-radius": 8,
+          "circle-color": "#fc4c02",
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-width": 3
+        }
+      });
+    }
+
     function initMap() {
-      if (!window.L) {
-        document.getElementById("route-map").textContent = "Map library could not load.";
+      const mapElement = document.getElementById("route-map");
+      if (!window.maptilersdk) {
+        mapElement.textContent = "Map library could not load.";
+        window.routeTrackerReady = true;
         return;
       }
 
-      const routeLatLngs = coursePoints.map((point) => [point.lat, point.lon]);
-      state.map = L.map("route-map", {
-        zoomControl: false,
-        scrollWheelZoom: true,
-        doubleClickZoom: true,
-        touchZoom: true,
-        dragging: true,
-        boxZoom: true,
-        keyboard: true
+      const apiKey = mapTilerKey();
+      if (!apiKey) {
+        mapElement.innerHTML = '<div class="map-setup-message"><strong>Map key needed</strong><span>Add docs/route-map-config.js with window.CANYONS_MAPTILER_API_KEY or open with ?maptiler_key=...</span></div>';
+        window.routeTrackerReady = true;
+        return;
+      }
+
+      maptilersdk.config.apiKey = apiKey;
+      state.map = new maptilersdk.Map({
+        container: "route-map",
+        style: maptilersdk.MapStyle.OUTDOOR,
+        attributionControl: true,
+        dragRotate: false,
+        pitchWithRotate: false,
+        touchPitch: false
       });
 
-      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {
-        maxZoom: 18,
-        attribution: "Basemap: Esri World Topographic"
-      }).addTo(state.map);
-
-      L.control.zoom({ position: "bottomright" }).addTo(state.map);
-
-      const fullRoute = L.polyline(routeLatLngs, {
-        color: "#0f766e",
-        opacity: 0.6,
-        weight: 5,
-        lineCap: "round",
-        lineJoin: "round"
-      }).addTo(state.map);
-
-      state.progressLine = L.polyline([[coursePoints[0].lat, coursePoints[0].lon]], {
-        color: "#c72f59",
-        opacity: 0.95,
-        weight: 6,
-        lineCap: "round",
-        lineJoin: "round"
-      }).addTo(state.map);
-
-      state.progressHalo = L.circleMarker([coursePoints[0].lat, coursePoints[0].lon], {
-        radius: 16,
-        color: "#c72f59",
-        fillColor: "#c72f59",
-        fillOpacity: 0.18,
-        opacity: 0.28,
-        weight: 2,
-        interactive: false
-      }).addTo(state.map);
-
-      state.progressDot = L.circleMarker([coursePoints[0].lat, coursePoints[0].lon], {
-        radius: 8,
-        color: "#ffffff",
-        fillColor: "#c72f59",
-        fillOpacity: 1,
-        opacity: 1,
-        weight: 3,
-        className: "leaflet-progress-dot",
-        interactive: false
-      }).addTo(state.map);
-
-      routeData.stops.forEach((stop) => {
-        const colors = stopColors[stop.type] || stopColors.aid;
-        L.circleMarker([stop.lat, stop.lon], {
-          radius: colors.mapRadius,
-          color: colors.stroke,
-          fillColor: colors.fill,
-          fillOpacity: 0.95,
-          opacity: 1,
-          weight: 2,
-          className: "map-stop stop-" + (stop.type || "aid")
-        })
-          .bindTooltip(stopTypeLabel(stop) + ": " + stop.name + " | Mile " + formatMiles(stop.mile), {
-            direction: "top",
-            sticky: true
-          })
-          .addTo(state.map);
+      state.map.addControl(new maptilersdk.NavigationControl({ showCompass: false }), "bottom-right");
+      state.map.on("load", () => {
+        addRouteMapLayers();
+        const isMobile = window.matchMedia("(max-width: 719px)").matches;
+        state.map.fitBounds(
+          [
+            [routeData.course.bounds.west, routeData.course.bounds.south],
+            [routeData.course.bounds.east, routeData.course.bounds.north]
+          ],
+          {
+            duration: 0,
+            padding: isMobile
+              ? { top: 150, right: 76, bottom: 76, left: 20 }
+              : { top: 84, right: 96, bottom: 56, left: 24 }
+          }
+        );
+        window.routeTrackerMap = state.map;
+        update(state.currentMile);
+        window.routeTrackerReady = true;
       });
-
-      state.map.fitBounds(fullRoute.getBounds(), { padding: [4, 4] });
-      window.routeTrackerMap = state.map;
-      setTimeout(() => state.map.invalidateSize(), 80);
+      state.map.on("error", (error) => {
+        window.routeTrackerMapError = String(error?.error?.message || error?.message || "Map error");
+        window.routeTrackerReady = true;
+      });
     }
 
     function setTargetMile(mile) {
@@ -1222,7 +1385,6 @@ ${styles}
       const context = legContext(stop, index);
       const leg = context.leg;
       const fuel = leg ? nutritionForMinutes(leg.plannedMinutes) : null;
-      const latLng = [currentCourse.lat, currentCourse.lon];
 
       elements.distanceLabel.textContent = formatMiles(mile) + " / " + formatMiles(totalMiles) + " mi";
       elements.elevationLabel.textContent = formatNumber(Math.round(currentCourse.eleFt)) + " ft";
@@ -1233,11 +1395,11 @@ ${styles}
       elements.profileProgress.setAttribute("d", partialProfilePath(mile));
       updateCurrentLegHighlight(index);
       updateProfilePopup(mile, currentCourse, currentProfile, context);
+      window.routeTrackerCurrentPoint = [currentCourse.lon, currentCourse.lat];
 
-      if (state.progressLine && state.progressDot && state.progressHalo) {
-        state.progressLine.setLatLngs(partialLatLngs(mile));
-        state.progressDot.setLatLng(latLng);
-        state.progressHalo.setLatLng(latLng);
+      if (state.map && state.map.loaded() && state.map.getSource(mapSourceIds.progressRoute) && state.map.getSource(mapSourceIds.progressPoint)) {
+        state.map.getSource(mapSourceIds.progressRoute).setData(lineFeatureFromLatLngs(partialLatLngs(mile)));
+        state.map.getSource(mapSourceIds.progressPoint).setData(pointFeature(currentCourse, {}));
       }
 
       elements.stationOverline.textContent = context.complete ? "Last leg complete" : "Current leg";
@@ -1277,7 +1439,7 @@ ${styles}
     }
 
     function isMapEvent(event) {
-      return event.target.closest && event.target.closest(".leaflet-route-map");
+      return event.target.closest && event.target.closest(".maplibre-route-map");
     }
 
     function isPageScrollable() {
@@ -1354,11 +1516,10 @@ ${styles}
       const observer = new ResizeObserver(() => {
         initProfile();
         update(state.currentMile);
-        if (state.map) state.map.invalidateSize();
+        if (state.map) state.map.resize();
       });
       observer.observe(elements.profileSvg);
     }
-    window.routeTrackerReady = true;
   </script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 node_modules/
 .artifacts/
 dist/
+docs/route-map-config.js
 .DS_Store
 .env
 .env.*
