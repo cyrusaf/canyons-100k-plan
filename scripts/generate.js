@@ -5,8 +5,14 @@ const path = require("path");
 
 const ROOT = path.resolve(__dirname, "..");
 const DATA_PATH = path.join(ROOT, "data", "race-plan.json");
+const GPX_PATH = path.join(ROOT, "data", "canyons-100k-course.gpx");
 const STYLE_PATH = path.join(ROOT, "src", "styles.css");
-const OUTPUT_PATH = path.join(ROOT, "dist", "canyons-100k-crew-guide.html");
+const INDEX_OUTPUT_PATH = path.join(ROOT, "docs", "index.html");
+const GUIDE_OUTPUT_PATH = path.join(ROOT, "docs", "canyons-100k-crew-guide.html");
+const TRACKER_OUTPUT_PATH = path.join(ROOT, "docs", "canyons-100k-route-tracker.html");
+const NOJEKYLL_OUTPUT_PATH = path.join(ROOT, "docs", ".nojekyll");
+const FEET_PER_METER = 3.28084;
+const EARTH_RADIUS_MI = 3958.7613;
 
 const plan = JSON.parse(fs.readFileSync(DATA_PATH, "utf8"));
 const styles = fs.readFileSync(STYLE_PATH, "utf8");
@@ -23,6 +29,24 @@ function escapeHtml(value) {
 
 function escapeAttr(value) {
   return escapeHtml(value).replaceAll("'", "&#39;");
+}
+
+function decodeXml(value) {
+  return String(value ?? "")
+    .replaceAll("&amp;", "&")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&apos;", "'");
+}
+
+function jsonForScript(value) {
+  return JSON.stringify(value)
+    .replaceAll("<", "\\u003c")
+    .replaceAll(">", "\\u003e")
+    .replaceAll("&", "\\u0026")
+    .replaceAll("\u2028", "\\u2028")
+    .replaceAll("\u2029", "\\u2029");
 }
 
 function formatNumber(value) {
@@ -43,6 +67,31 @@ function formatDuration(minutes) {
 function roundTo(value, increment) {
   // Round halves down so 0.25 L becomes 0.2 L instead of 0.3 L.
   return Math.floor(value / increment + 0.5 - Number.EPSILON) * increment;
+}
+
+function roundCoordinate(value) {
+  return Number(value.toFixed(6));
+}
+
+function roundMile(value) {
+  return Number(value.toFixed(3));
+}
+
+function roundElevation(value) {
+  return Math.round(value);
+}
+
+function distanceMi(a, b) {
+  const toRad = (degrees) => (degrees * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLon = toRad(b.lon - a.lon);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const haversine =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+
+  return 2 * EARTH_RADIUS_MI * Math.asin(Math.sqrt(haversine));
 }
 
 function nutritionForMinutes(minutes) {
@@ -258,7 +307,185 @@ function renderSources() {
     .join("\n");
 }
 
-function renderHtml() {
+function stopForName(name) {
+  return plan.stops.find((stop) => stop.name === name);
+}
+
+function stopTypeFor(stop) {
+  const labels = (stop.tags || []).map((tag) => tag.label.toLowerCase());
+  const hasLabel = (needle) => labels.some((label) => label.includes(needle));
+  const name = stop.name.toLowerCase();
+
+  if (stop.kind === "finish" || name.includes("finish")) return "finish";
+  if (hasLabel("start") || name.includes("start")) return "start";
+  if (stop.kind === "crew" || hasLabel("crew stop")) return "crew";
+  if (hasLabel("hydration")) return "hydration";
+  if (hasLabel("no aid") || hasLabel("turnaround")) return "no-aid";
+  if (hasLabel("full aid") || hasLabel("aid")) return "full-aid";
+  return stop.kind || "aid";
+}
+
+function routeStopForClient(stop, index) {
+  const resupply = resupplyFor(stop, index);
+
+  return {
+    name: stop.name,
+    mile: stop.mile,
+    eta: stop.eta,
+    kind: stop.kind || "aid",
+    type: stopTypeFor(stop),
+    tags: stop.tags,
+    note: stop.crewCallout || stop.note || "",
+    resupply: resupply
+      ? {
+          label: resupply.label,
+          miles: resupply.miles,
+          minutes: resupply.minutes,
+          nutrition: resupply.nutrition,
+          note: resupply.note
+        }
+      : null,
+    nextLeg: stop.nextLeg || null
+  };
+}
+
+function parseAttrs(value) {
+  const attrs = {};
+  for (const match of value.matchAll(/([A-Za-z_:][\w:.-]*)="([^"]*)"/g)) {
+    attrs[match[1]] = match[2];
+  }
+  return attrs;
+}
+
+function parseGpxCourse() {
+  const gpx = fs.readFileSync(GPX_PATH, "utf8");
+  const rawPoints = [];
+  const waypoints = [];
+
+  for (const match of gpx.matchAll(/<wpt\s+([^>]+)>([\s\S]*?)<\/wpt>/g)) {
+    const attrs = parseAttrs(match[1]);
+    const nameMatch = match[2].match(/<name>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/name>/);
+
+    waypoints.push({
+      name: decodeXml(nameMatch ? nameMatch[1].trim() : ""),
+      lat: Number(attrs.lat),
+      lon: Number(attrs.lon)
+    });
+  }
+
+  for (const match of gpx.matchAll(/<trkpt\s+([^>]+)>([\s\S]*?)<\/trkpt>/g)) {
+    const attrs = parseAttrs(match[1]);
+    const eleMatch = match[2].match(/<ele>([^<]+)<\/ele>/);
+    const point = {
+      lat: Number(attrs.lat),
+      lon: Number(attrs.lon),
+      eleFt: eleMatch ? Number(eleMatch[1]) * FEET_PER_METER : 0,
+      rawMile: 0
+    };
+
+    if (!Number.isFinite(point.lat) || !Number.isFinite(point.lon)) continue;
+    if (rawPoints.length) {
+      point.rawMile = rawPoints[rawPoints.length - 1].rawMile + distanceMi(rawPoints[rawPoints.length - 1], point);
+    }
+    rawPoints.push(point);
+  }
+
+  if (rawPoints.length < 2) {
+    throw new Error(`No usable track points found in ${path.relative(ROOT, GPX_PATH)}`);
+  }
+
+  const rawTotalMiles = rawPoints[rawPoints.length - 1].rawMile;
+  const officialTotalMiles = plan.race.courseDistanceMi;
+  const points = rawPoints.map((point) => ({
+    lat: roundCoordinate(point.lat),
+    lon: roundCoordinate(point.lon),
+    mile: roundMile((point.rawMile / rawTotalMiles) * officialTotalMiles),
+    eleFt: roundElevation(point.eleFt)
+  }));
+  const bounds = points.reduce(
+    (acc, point) => ({
+      south: Math.min(acc.south, point.lat),
+      west: Math.min(acc.west, point.lon),
+      north: Math.max(acc.north, point.lat),
+      east: Math.max(acc.east, point.lon)
+    }),
+    { south: Infinity, west: Infinity, north: -Infinity, east: -Infinity }
+  );
+
+  return {
+    points,
+    waypoints,
+    rawTotalMiles: roundMile(rawTotalMiles),
+    officialTotalMiles,
+    bounds
+  };
+}
+
+function interpolateCoursePoint(points, mile) {
+  if (mile <= points[0].mile) return points[0];
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const from = points[index];
+    const to = points[index + 1];
+    if (mile <= to.mile) {
+      const t = (mile - from.mile) / Math.max(0.001, to.mile - from.mile);
+      return {
+        lat: roundCoordinate(from.lat + (to.lat - from.lat) * t),
+        lon: roundCoordinate(from.lon + (to.lon - from.lon) * t),
+        mile: roundMile(mile),
+        eleFt: roundElevation(from.eleFt + (to.eleFt - from.eleFt) * t)
+      };
+    }
+  }
+  return points[points.length - 1];
+}
+
+function waypointForStop(stop, waypoints) {
+  const name = stop.name.toLowerCase();
+  const includes = (needle) => waypoints.find((waypoint) => waypoint.name.toLowerCase().includes(needle));
+
+  if (name.includes("china wall")) return includes("china wall") || includes("start");
+  if (name.includes("deadwood")) return includes("deadwood");
+  if (name.includes("devils thumb")) return includes("devils thumb");
+  if (name.includes("swinging bridge")) return includes("swinging bridge");
+  if (name.includes("michigan bluff")) return includes("michigan bluff");
+  if (name.includes("foresthill")) return includes("foresthill");
+  if (name.includes("cal 2")) return includes("cal 2");
+  if (name.includes("drivers flat")) return includes("drivers flat");
+  if (name.includes("mammoth bar")) return includes("mammoth bar");
+  if (name.includes("confluence")) return includes("confluence");
+  if (name.includes("finish")) return includes("finish");
+  return null;
+}
+
+function buildRouteData() {
+  const course = parseGpxCourse();
+
+  return {
+    title: plan.title,
+    eyebrow: plan.eyebrow,
+    subtitle: plan.subtitle,
+    race: plan.race,
+    nutrition: plan.nutrition,
+    course: {
+      points: course.points,
+      bounds: course.bounds,
+      rawTotalMiles: course.rawTotalMiles,
+      totalMiles: course.officialTotalMiles
+    },
+    stops: plan.stops.map((stop, index) => {
+      const waypoint = waypointForStop(stop, course.waypoints);
+      const coordinate = waypoint || interpolateCoursePoint(course.points, stop.mile);
+
+      return {
+        ...routeStopForClient(stop, index),
+        lat: roundCoordinate(coordinate.lat),
+        lon: roundCoordinate(coordinate.lon)
+      };
+    })
+  };
+}
+
+function renderGuideHtml() {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -276,6 +503,7 @@ ${styles}
       <a href="#plan">Plan</a>
       <a href="#crew">Crew</a>
       <a href="#maps">Maps</a>
+      <a href="./canyons-100k-route-tracker.html">Tracker</a>
     </nav>
   </div>
 
@@ -338,6 +566,804 @@ ${renderSources()}
 `;
 }
 
+function renderRouteTrackerHtml() {
+  const routeData = buildRouteData();
+  const routeJson = jsonForScript(routeData);
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Canyons 100K Route Tracker</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+${styles}
+  </style>
+</head>
+<body class="route-body">
+  <main class="route-app" data-route-app>
+    <section class="route-stage" aria-label="Course visualizations">
+      <div class="route-head">
+        <div>
+          <p class="eyebrow">Canyons 100K by UTMB</p>
+          <h1>Route Tracker</h1>
+        </div>
+        <div class="route-head-meta">
+          <span id="route-distance-label">0.0 / ${formatMiles(plan.race.courseDistanceMi)} mi</span>
+          <a href="./canyons-100k-crew-guide.html">Crew Guide</a>
+        </div>
+      </div>
+
+      <article class="route-viz map-viz real-map-viz" aria-labelledby="map-title">
+        <h2 id="map-title" class="sr-only">Course map and progress dot</h2>
+        <div id="route-map" class="leaflet-route-map" aria-label="Interactive course map with GPX track and progress dot"></div>
+      </article>
+    </section>
+
+    <section class="route-details real-route-details" aria-label="Current route details">
+      <article class="station-panel" id="station-panel">
+        <div class="station-route-summary">
+          <div class="station-overline" id="station-overline">Current leg</div>
+          <div class="station-route-line">
+            <div class="station-route-stop">
+              <span id="station-meta">Depart 5:00 AM</span>
+              <h2 id="station-name">China Wall Start</h2>
+            </div>
+            <span class="station-route-arrow">to</span>
+            <div class="station-route-stop">
+              <span id="arrival-meta">Arrive 7:25 AM</span>
+              <strong id="next-stop">Deadwood 1</strong>
+            </div>
+          </div>
+          <div class="station-tags" id="station-tags"></div>
+          <p class="station-note" id="station-note"></p>
+        </div>
+
+        <div class="station-grid station-leg-metrics" id="station-grid" aria-label="Current leg distance and elevation">
+          <div class="station-section-title">Leg effort</div>
+          <div class="station-metric primary">
+            <span>Distance</span>
+            <strong id="next-leg">10.1 mi</strong>
+          </div>
+          <div class="station-metric">
+            <span>Elevation</span>
+            <strong id="leg-elevation">+1,787 / -2,870 ft</strong>
+          </div>
+        </div>
+
+        <div class="station-grid station-nutrition-metrics" id="station-nutrition" aria-label="Nutrition needed for this leg">
+          <div class="station-section-title">Fuel for this leg</div>
+          <div class="station-metric">
+            <span>Carbs</span>
+            <strong id="next-fuel">220 g</strong>
+          </div>
+          <div class="station-metric">
+            <span>Salt</span>
+            <strong id="leg-sodium">1,200-1,800 mg</strong>
+          </div>
+          <div class="station-metric">
+            <span>Fluid</span>
+            <strong id="leg-fluid">1.2-1.8 L</strong>
+          </div>
+        </div>
+
+        <div class="station-resupply" id="station-resupply" hidden>
+          <span id="resupply-label">Resupply to Michigan Bluff</span>
+          <strong id="resupply-block">24.0 mi | 6h40</strong>
+          <em id="resupply-nutrition">590 g carbs | 3,250-4,900 mg Na | 3.3-4.9 L</em>
+          <p id="resupply-note"></p>
+        </div>
+      </article>
+
+      <article class="route-viz profile-viz bottom-profile-viz" aria-labelledby="profile-title">
+        <div class="viz-title">
+          <div>
+            <span>Full GPX Elevation Profile</span>
+            <strong id="profile-title">Tap or drag to move the marker</strong>
+          </div>
+          <em id="route-elevation-label">0 ft</em>
+        </div>
+        <svg id="profile-svg" class="route-svg" preserveAspectRatio="none" role="img" aria-label="Full course elevation profile with current position line">
+          <g class="profile-grid" id="profile-grid"></g>
+          <path class="profile-area" id="profile-area"></path>
+          <rect class="profile-current-leg" id="profile-current-leg" x="0" y="0" width="0" height="0"></rect>
+          <g class="profile-stop-guides" id="profile-stop-guides"></g>
+          <path class="profile-line-shadow" id="profile-line-shadow"></path>
+          <path class="profile-line" id="profile-line"></path>
+          <path class="profile-progress" id="profile-progress"></path>
+          <g id="profile-stops"></g>
+          <line class="profile-cursor-line" id="profile-cursor-line"></line>
+          <circle class="profile-cursor" id="profile-cursor" r="5.5"></circle>
+        </svg>
+        <div class="profile-marker-popup" id="profile-marker-popup" hidden aria-hidden="true">
+          <div class="profile-popup-row profile-popup-current">
+            <span id="profile-popup-mile">0.0 mi</span>
+            <span id="profile-popup-elevation">0 ft</span>
+            <span id="profile-popup-grade">0%</span>
+          </div>
+          <div class="profile-popup-leg">
+            <span id="profile-popup-leg-route">China Wall Start -> Deadwood 1</span>
+            <span id="profile-popup-leg-stats">10.1 mi / +1,787 / -2,870 ft</span>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const routeData = ${routeJson};
+
+    const state = {
+      currentMile: 0,
+      targetMile: 0,
+      touchY: null,
+      raf: null,
+      map: null,
+      progressLine: null,
+      progressDot: null,
+      progressHalo: null,
+      profileDragging: false
+    };
+
+    const elements = {
+      distanceLabel: document.getElementById("route-distance-label"),
+      elevationLabel: document.getElementById("route-elevation-label"),
+      stationPanel: document.getElementById("station-panel"),
+      stationOverline: document.getElementById("station-overline"),
+      stationName: document.getElementById("station-name"),
+      stationMeta: document.getElementById("station-meta"),
+      arrivalMeta: document.getElementById("arrival-meta"),
+      stationTags: document.getElementById("station-tags"),
+      stationNote: document.getElementById("station-note"),
+      stationGrid: document.getElementById("station-grid"),
+      stationResupply: document.getElementById("station-resupply"),
+      nextStop: document.getElementById("next-stop"),
+      nextLeg: document.getElementById("next-leg"),
+      legElevation: document.getElementById("leg-elevation"),
+      nextFuel: document.getElementById("next-fuel"),
+      legSodium: document.getElementById("leg-sodium"),
+      legFluid: document.getElementById("leg-fluid"),
+      resupplyLabel: document.getElementById("resupply-label"),
+      resupplyBlock: document.getElementById("resupply-block"),
+      resupplyNutrition: document.getElementById("resupply-nutrition"),
+      resupplyNote: document.getElementById("resupply-note"),
+      profileSvg: document.getElementById("profile-svg"),
+      profileGrid: document.getElementById("profile-grid"),
+      profileStopGuides: document.getElementById("profile-stop-guides"),
+      profileCurrentLeg: document.getElementById("profile-current-leg"),
+      profileArea: document.getElementById("profile-area"),
+      profileLine: document.getElementById("profile-line"),
+      profileLineShadow: document.getElementById("profile-line-shadow"),
+      profileProgress: document.getElementById("profile-progress"),
+      profileStops: document.getElementById("profile-stops"),
+      profileCursor: document.getElementById("profile-cursor"),
+      profileCursorLine: document.getElementById("profile-cursor-line"),
+      profilePopup: document.getElementById("profile-marker-popup"),
+      profilePopupMile: document.getElementById("profile-popup-mile"),
+      profilePopupElevation: document.getElementById("profile-popup-elevation"),
+      profilePopupGrade: document.getElementById("profile-popup-grade"),
+      profilePopupLegRoute: document.getElementById("profile-popup-leg-route"),
+      profilePopupLegStats: document.getElementById("profile-popup-leg-stats")
+    };
+
+    const totalMiles = routeData.course.totalMiles;
+    const coursePoints = routeData.course.points;
+    const stopColors = {
+      "full-aid": { stroke: "#527a2f", fill: "#edf6e6", mapRadius: 4, profileRadius: 4.2 },
+      hydration: { stroke: "#1d6fb8", fill: "#e7f2ff", mapRadius: 4, profileRadius: 4.2 },
+      "no-aid": { stroke: "#b84a18", fill: "#fff0e7", mapRadius: 4, profileRadius: 4.2 },
+      crew: { stroke: "#c72f59", fill: "#fde7ee", mapRadius: 6, profileRadius: 5 },
+      start: { stroke: "#6366a8", fill: "#ececff", mapRadius: 5, profileRadius: 4.6 },
+      finish: { stroke: "#0f766e", fill: "#dff7f2", mapRadius: 6, profileRadius: 5 },
+      aid: { stroke: "#0f766e", fill: "#ffffff", mapRadius: 4, profileRadius: 4.2 }
+    };
+    const stopTypeLabels = {
+      "full-aid": "Full aid",
+      hydration: "Hydration",
+      "no-aid": "No aid",
+      crew: "Crew",
+      start: "Start",
+      finish: "Finish",
+      aid: "Aid"
+    };
+    let profile = null;
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function formatMiles(value) {
+      return Number(value).toFixed(1);
+    }
+
+    function formatNumber(value) {
+      return Number(value).toLocaleString("en-US");
+    }
+
+    function formatFluid(value) {
+      return Number(value).toFixed(1);
+    }
+
+    function stopTypeLabel(stop) {
+      return stopTypeLabels[stop.type] || "Aid";
+    }
+
+    function formatDuration(minutes) {
+      if (!minutes) return "";
+      if (minutes < 60) return minutes + "m";
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return mins ? hours + "h" + String(mins).padStart(2, "0") : hours + "h00";
+    }
+
+    function nutritionForMinutes(minutes) {
+      const hours = minutes / 60;
+      const roundTo = (value, increment) => Math.floor(value / increment + 0.5 - Number.EPSILON) * increment;
+      return {
+        carbs: roundTo(hours * routeData.nutrition.carbsPerHour, routeData.nutrition.carbRoundToGrams),
+        sodiumLow: roundTo(hours * routeData.nutrition.sodiumMgPerHour.low, routeData.nutrition.sodiumRoundToMg),
+        sodiumHigh: roundTo(hours * routeData.nutrition.sodiumMgPerHour.high, routeData.nutrition.sodiumRoundToMg),
+        fluidLow: roundTo(hours * routeData.nutrition.fluidLitersPerHour.low, routeData.nutrition.fluidRoundToLiters),
+        fluidHigh: roundTo(hours * routeData.nutrition.fluidLitersPerHour.high, routeData.nutrition.fluidRoundToLiters)
+      };
+    }
+
+    function formatElevationLine(leg) {
+      return "+" + formatNumber(leg.gainFt) + " / -" + formatNumber(leg.lossFt) + " ft";
+    }
+
+    function formatNutritionLine(nutrition) {
+      return formatNumber(nutrition.carbs) + " g carbs | " +
+        formatNumber(nutrition.sodiumLow) + "-" + formatNumber(nutrition.sodiumHigh) + " mg Na | " +
+        formatFluid(nutrition.fluidLow) + "-" + formatFluid(nutrition.fluidHigh) + " L";
+    }
+
+    function legContext(stop, index) {
+      if (stop.nextLeg) {
+        return {
+          depart: stop,
+          arrive: routeData.stops[index + 1] || null,
+          leg: stop.nextLeg,
+          complete: false
+        };
+      }
+      if (index > 0) {
+        const depart = routeData.stops[index - 1];
+        return {
+          depart,
+          arrive: stop,
+          leg: depart.nextLeg || null,
+          complete: true
+        };
+      }
+      return {
+        depart: stop,
+        arrive: null,
+        leg: null,
+        complete: true
+      };
+    }
+
+    function buildProfileGeometry() {
+      const rect = elements.profileSvg.getBoundingClientRect();
+      const width = rect.width > 0 ? Math.round(rect.width) : 1000;
+      const measuredHeight = rect.height > 0 ? Math.round(rect.height) : 220;
+      const minElevation = Math.min(...coursePoints.map((point) => point.eleFt)) - 120;
+      const maxElevation = Math.max(...coursePoints.map((point) => point.eleFt)) + 120;
+      const left = 8;
+      const right = width - 8;
+      const top = 18;
+      const minBottomPadding = 48;
+      const minPlotHeight = 48;
+      const height = Math.max(measuredHeight, top + minBottomPadding + minPlotHeight);
+      const bottom = height - Math.max(minBottomPadding, Math.round(height * 0.16));
+      const points = coursePoints.map((point) => {
+        const x = left + (point.mile / totalMiles) * (right - left);
+        const y = bottom - ((point.eleFt - minElevation) / (maxElevation - minElevation)) * (bottom - top);
+        return { ...point, x, y };
+      });
+
+      return { points, left, right, top, bottom, width, height, minElevation, maxElevation };
+    }
+
+    function pointPath(points) {
+      return points.map((point, index) => (index ? "L" : "M") + point.x.toFixed(2) + " " + point.y.toFixed(2)).join(" ");
+    }
+
+    function interpolate(points, mile) {
+      if (mile <= points[0].mile) return points[0];
+      for (let index = 0; index < points.length - 1; index += 1) {
+        const from = points[index];
+        const to = points[index + 1];
+        if (mile <= to.mile) {
+          const t = (mile - from.mile) / Math.max(0.001, to.mile - from.mile);
+          return {
+            mile,
+            lat: from.lat + (to.lat - from.lat) * t,
+            lon: from.lon + (to.lon - from.lon) * t,
+            eleFt: from.eleFt + (to.eleFt - from.eleFt) * t,
+            x: from.x + (to.x - from.x) * t,
+            y: from.y + (to.y - from.y) * t
+          };
+        }
+      }
+      return points[points.length - 1];
+    }
+
+    function profilePoint(mile) {
+      return interpolate(profile.points, mile);
+    }
+
+    function coursePoint(mile) {
+      return interpolate(coursePoints, mile);
+    }
+
+    function gradeForMile(mile) {
+      const windowMiles = 0.12;
+      const fromMile = clamp(mile - windowMiles, 0, totalMiles);
+      const toMile = clamp(mile + windowMiles, 0, totalMiles);
+      const distanceFt = (toMile - fromMile) * 5280;
+      if (distanceFt < 120) return null;
+      const from = coursePoint(fromMile);
+      const to = coursePoint(toMile);
+      return ((to.eleFt - from.eleFt) / distanceFt) * 100;
+    }
+
+    function partialProfilePath(mile) {
+      const drawn = [];
+      for (let index = 0; index < profile.points.length; index += 1) {
+        const point = profile.points[index];
+        if (point.mile < mile) {
+          drawn.push(point);
+          continue;
+        }
+        if (point.mile === mile || index === 0) drawn.push(point);
+        else drawn.push(profilePoint(mile));
+        break;
+      }
+      return pointPath(drawn);
+    }
+
+    function partialLatLngs(mile) {
+      const latLngs = [];
+      for (let index = 0; index < coursePoints.length; index += 1) {
+        const point = coursePoints[index];
+        if (point.mile < mile) {
+          latLngs.push([point.lat, point.lon]);
+          continue;
+        }
+        const current = point.mile === mile || index === 0 ? point : coursePoint(mile);
+        latLngs.push([current.lat, current.lon]);
+        break;
+      }
+      return latLngs;
+    }
+
+    function previousStop(mile) {
+      let index = 0;
+      routeData.stops.forEach((stop, stopIndex) => {
+        if (stop.mile <= mile + 0.05) index = stopIndex;
+      });
+      return { stop: routeData.stops[index], index };
+    }
+
+    function initProfile() {
+      profile = buildProfileGeometry();
+      elements.profileSvg.setAttribute("viewBox", "0 0 " + profile.width + " " + profile.height);
+
+      const gridFragment = document.createDocumentFragment();
+      for (let index = 0; index < 4; index += 1) {
+        const y = profile.top + ((profile.bottom - profile.top) * index) / 3;
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("class", "profile-grid-line");
+        line.setAttribute("x1", profile.left);
+        line.setAttribute("x2", profile.right);
+        line.setAttribute("y1", y);
+        line.setAttribute("y2", y);
+        gridFragment.appendChild(line);
+      }
+      elements.profileGrid.replaceChildren(gridFragment);
+
+      const profileD = pointPath(profile.points);
+      const areaD = profileD + " L " + profile.points[profile.points.length - 1].x.toFixed(2) + " " + profile.bottom + " L " + profile.points[0].x.toFixed(2) + " " + profile.bottom + " Z";
+      elements.profileArea.setAttribute("d", areaD);
+      elements.profileLine.setAttribute("d", profileD);
+      elements.profileLineShadow.setAttribute("d", profileD);
+      elements.profileCursorLine.setAttribute("y1", profile.top);
+      elements.profileCursorLine.setAttribute("y2", profile.bottom);
+
+      const guideFragment = document.createDocumentFragment();
+      routeData.stops.forEach((stop) => {
+        const point = profilePoint(stop.mile);
+        const guide = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        guide.setAttribute("class", "profile-stop-guide stop-" + (stop.type || "aid") + (stop.resupply ? " resupply-guide" : ""));
+        guide.setAttribute("x1", point.x);
+        guide.setAttribute("x2", point.x);
+        guide.setAttribute("y1", profile.top);
+        guide.setAttribute("y2", profile.bottom);
+        const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+        title.textContent = stopTypeLabel(stop) + ": " + stop.name + " | Mile " + formatMiles(stop.mile);
+        guide.appendChild(title);
+        guideFragment.appendChild(guide);
+      });
+      elements.profileStopGuides.replaceChildren(guideFragment);
+
+      const fragment = document.createDocumentFragment();
+      routeData.stops.forEach((stop) => {
+        const point = profilePoint(stop.mile);
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("class", "svg-stop stop-" + (stop.type || "aid"));
+        circle.setAttribute("cx", point.x);
+        circle.setAttribute("cy", point.y);
+        circle.setAttribute("r", stopColors[stop.type]?.profileRadius || stopColors.aid.profileRadius);
+        const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+        title.textContent = stopTypeLabel(stop) + ": " + stop.name + " | Mile " + formatMiles(stop.mile);
+        circle.appendChild(title);
+        fragment.appendChild(circle);
+      });
+      elements.profileStops.replaceChildren(fragment);
+    }
+
+    function currentLegStops(stopIndex) {
+      if (routeData.stops.length < 2) return null;
+      if (stopIndex >= routeData.stops.length - 1) {
+        return {
+          from: routeData.stops[routeData.stops.length - 2],
+          to: routeData.stops[routeData.stops.length - 1]
+        };
+      }
+      return {
+        from: routeData.stops[stopIndex],
+        to: routeData.stops[stopIndex + 1]
+      };
+    }
+
+    function updateCurrentLegHighlight(stopIndex) {
+      const leg = currentLegStops(stopIndex);
+      if (!leg) {
+        elements.profileCurrentLeg.setAttribute("width", 0);
+        elements.profileCurrentLeg.setAttribute("height", 0);
+        return;
+      }
+
+      const from = profilePoint(leg.from.mile);
+      const to = profilePoint(leg.to.mile);
+      elements.profileCurrentLeg.setAttribute("x", Math.min(from.x, to.x).toFixed(2));
+      elements.profileCurrentLeg.setAttribute("y", profile.top);
+      elements.profileCurrentLeg.setAttribute("width", Math.abs(to.x - from.x).toFixed(2));
+      elements.profileCurrentLeg.setAttribute("height", Math.max(0, profile.bottom - profile.top).toFixed(2));
+    }
+
+    function initMap() {
+      if (!window.L) {
+        document.getElementById("route-map").textContent = "Map library could not load.";
+        return;
+      }
+
+      const routeLatLngs = coursePoints.map((point) => [point.lat, point.lon]);
+      state.map = L.map("route-map", {
+        zoomControl: false,
+        scrollWheelZoom: true,
+        doubleClickZoom: true,
+        touchZoom: true,
+        dragging: true,
+        boxZoom: true,
+        keyboard: true
+      });
+
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", {
+        maxZoom: 18,
+        attribution: "Basemap: Esri World Topographic"
+      }).addTo(state.map);
+
+      L.control.zoom({ position: "bottomright" }).addTo(state.map);
+
+      const fullRoute = L.polyline(routeLatLngs, {
+        color: "#0f766e",
+        opacity: 0.6,
+        weight: 5,
+        lineCap: "round",
+        lineJoin: "round"
+      }).addTo(state.map);
+
+      state.progressLine = L.polyline([[coursePoints[0].lat, coursePoints[0].lon]], {
+        color: "#c72f59",
+        opacity: 0.95,
+        weight: 6,
+        lineCap: "round",
+        lineJoin: "round"
+      }).addTo(state.map);
+
+      state.progressHalo = L.circleMarker([coursePoints[0].lat, coursePoints[0].lon], {
+        radius: 16,
+        color: "#c72f59",
+        fillColor: "#c72f59",
+        fillOpacity: 0.18,
+        opacity: 0.28,
+        weight: 2,
+        interactive: false
+      }).addTo(state.map);
+
+      state.progressDot = L.circleMarker([coursePoints[0].lat, coursePoints[0].lon], {
+        radius: 8,
+        color: "#ffffff",
+        fillColor: "#c72f59",
+        fillOpacity: 1,
+        opacity: 1,
+        weight: 3,
+        className: "leaflet-progress-dot",
+        interactive: false
+      }).addTo(state.map);
+
+      routeData.stops.forEach((stop) => {
+        const colors = stopColors[stop.type] || stopColors.aid;
+        L.circleMarker([stop.lat, stop.lon], {
+          radius: colors.mapRadius,
+          color: colors.stroke,
+          fillColor: colors.fill,
+          fillOpacity: 0.95,
+          opacity: 1,
+          weight: 2,
+          className: "map-stop stop-" + (stop.type || "aid")
+        })
+          .bindTooltip(stopTypeLabel(stop) + ": " + stop.name + " | Mile " + formatMiles(stop.mile), {
+            direction: "top",
+            sticky: true
+          })
+          .addTo(state.map);
+      });
+
+      state.map.fitBounds(fullRoute.getBounds(), { padding: [4, 4] });
+      window.routeTrackerMap = state.map;
+      setTimeout(() => state.map.invalidateSize(), 80);
+    }
+
+    function setTargetMile(mile) {
+      state.targetMile = clamp(mile, 0, totalMiles);
+      if (!state.raf) state.raf = requestAnimationFrame(animate);
+    }
+
+    function mileFromProfileEvent(event) {
+      const transform = elements.profileSvg.getScreenCTM();
+      let svgX;
+      if (transform) {
+        const point = elements.profileSvg.createSVGPoint();
+        point.x = event.clientX;
+        point.y = event.clientY;
+        svgX = point.matrixTransform(transform.inverse()).x;
+      } else {
+        const rect = elements.profileSvg.getBoundingClientRect();
+        svgX = ((event.clientX - rect.left) / Math.max(1, rect.width)) * profile.width;
+      }
+      const progress = (clamp(svgX, profile.left, profile.right) - profile.left) / (profile.right - profile.left);
+      return progress * totalMiles;
+    }
+
+    function jumpToMile(mile) {
+      state.targetMile = clamp(mile, 0, totalMiles);
+      state.currentMile = state.targetMile;
+      if (state.raf) {
+        cancelAnimationFrame(state.raf);
+        state.raf = null;
+      }
+      update(state.currentMile);
+    }
+
+    function hideProfilePopup() {
+      elements.profilePopup.hidden = true;
+      elements.profilePopup.setAttribute("aria-hidden", "true");
+    }
+
+    function scrubProfile(event) {
+      event.preventDefault();
+      jumpToMile(mileFromProfileEvent(event));
+    }
+
+    function updateProfilePopup(mile, currentCourse, currentProfile, context) {
+      if (!state.profileDragging) return;
+
+      const grade = gradeForMile(mile);
+      elements.profilePopupMile.textContent = formatMiles(mile) + " mi";
+      elements.profilePopupElevation.textContent = formatNumber(Math.round(currentCourse.eleFt)) + " ft";
+      elements.profilePopupGrade.textContent = grade === null ? "--%" : (grade > 0 ? "+" : "") + Math.round(grade) + "%";
+      elements.profilePopupLegRoute.textContent = context.arrive
+        ? context.depart.name + " -> " + context.arrive.name
+        : context.depart.name;
+      elements.profilePopupLegStats.textContent = context.leg
+        ? formatMiles(context.leg.distanceMi) + " mi / " + formatElevationLine(context.leg)
+        : "Finish";
+      elements.profilePopup.hidden = false;
+      elements.profilePopup.setAttribute("aria-hidden", "false");
+
+      const containerRect = elements.profilePopup.parentElement.getBoundingClientRect();
+      const svgRect = elements.profileSvg.getBoundingClientRect();
+      const popupWidth = elements.profilePopup.offsetWidth;
+      const popupHeight = elements.profilePopup.offsetHeight;
+      const localX = svgRect.left - containerRect.left + (currentProfile.x / Math.max(1, profile.width)) * svgRect.width;
+      const localY = svgRect.top - containerRect.top + (currentProfile.y / Math.max(1, profile.height)) * svgRect.height;
+      let x = localX + 12;
+      let y = localY - popupHeight - 12;
+
+      if (y < 6) y = localY + 12;
+      x = clamp(x, 6, Math.max(6, containerRect.width - popupWidth - 6));
+      y = clamp(y, 6, Math.max(6, containerRect.height - popupHeight - 6));
+      elements.profilePopup.style.left = x.toFixed(1) + "px";
+      elements.profilePopup.style.top = y.toFixed(1) + "px";
+    }
+
+    function animate() {
+      const delta = state.targetMile - state.currentMile;
+      if (Math.abs(delta) < 0.02) {
+        state.currentMile = state.targetMile;
+        state.raf = null;
+        update(state.currentMile);
+        return;
+      }
+      state.currentMile += delta * 0.22;
+      update(state.currentMile);
+      state.raf = requestAnimationFrame(animate);
+    }
+
+    function update(mile) {
+      const currentCourse = coursePoint(mile);
+      const currentProfile = profilePoint(mile);
+      const { stop, index } = previousStop(mile);
+      const context = legContext(stop, index);
+      const leg = context.leg;
+      const fuel = leg ? nutritionForMinutes(leg.plannedMinutes) : null;
+      const latLng = [currentCourse.lat, currentCourse.lon];
+
+      elements.distanceLabel.textContent = formatMiles(mile) + " / " + formatMiles(totalMiles) + " mi";
+      elements.elevationLabel.textContent = formatNumber(Math.round(currentCourse.eleFt)) + " ft";
+      elements.profileCursor.setAttribute("cx", currentProfile.x);
+      elements.profileCursor.setAttribute("cy", currentProfile.y);
+      elements.profileCursorLine.setAttribute("x1", currentProfile.x);
+      elements.profileCursorLine.setAttribute("x2", currentProfile.x);
+      elements.profileProgress.setAttribute("d", partialProfilePath(mile));
+      updateCurrentLegHighlight(index);
+      updateProfilePopup(mile, currentCourse, currentProfile, context);
+
+      if (state.progressLine && state.progressDot && state.progressHalo) {
+        state.progressLine.setLatLngs(partialLatLngs(mile));
+        state.progressDot.setLatLng(latLng);
+        state.progressHalo.setLatLng(latLng);
+      }
+
+      elements.stationOverline.textContent = context.complete ? "Last leg complete" : "Current leg";
+      elements.stationName.textContent = context.depart.name;
+      elements.stationMeta.textContent = "Depart " + context.depart.eta;
+      elements.nextStop.textContent = context.arrive ? context.arrive.name : "Done";
+      elements.arrivalMeta.textContent = context.arrive ? "Arrive " + context.arrive.eta : "";
+      elements.stationTags.innerHTML = context.depart.tags.map((tag) => '<span class="badge ' + escapeHtml(tag.type || "default") + '">' + escapeHtml(tag.label) + "</span>").join("");
+      elements.stationNote.textContent = context.complete && context.arrive ? context.arrive.note : context.depart.note;
+
+      if (stop.resupply) {
+        const resupply = stop.resupply;
+        elements.stationPanel.classList.add("has-resupply");
+        elements.stationResupply.hidden = false;
+        elements.resupplyLabel.textContent = "Resupply to " + resupply.label;
+        elements.resupplyBlock.textContent = formatMiles(resupply.miles) + " mi | " + formatDuration(resupply.minutes);
+        elements.resupplyNutrition.textContent = formatNutritionLine(resupply.nutrition);
+        elements.resupplyNote.textContent = resupply.note;
+      } else {
+        elements.stationPanel.classList.remove("has-resupply");
+        elements.stationResupply.hidden = true;
+      }
+
+      if (leg) {
+        elements.nextLeg.textContent = formatMiles(leg.distanceMi) + " mi";
+        elements.legElevation.textContent = formatElevationLine(leg);
+        elements.nextFuel.textContent = formatNumber(fuel.carbs) + " g";
+        elements.legSodium.textContent = formatNumber(fuel.sodiumLow) + "-" + formatNumber(fuel.sodiumHigh) + " mg";
+        elements.legFluid.textContent = formatFluid(fuel.fluidLow) + "-" + formatFluid(fuel.fluidHigh) + " L";
+      } else {
+        elements.nextLeg.textContent = "Finish";
+        elements.legElevation.textContent = "Done";
+        elements.nextFuel.textContent = "Recover";
+        elements.legSodium.textContent = "--";
+        elements.legFluid.textContent = "--";
+      }
+    }
+
+    function isMapEvent(event) {
+      return event.target.closest && event.target.closest(".leaflet-route-map");
+    }
+
+    function isPageScrollable() {
+      return document.documentElement.scrollHeight > window.innerHeight + 1;
+    }
+
+    window.addEventListener("wheel", (event) => {
+      if (isMapEvent(event)) return;
+      if (isPageScrollable()) return;
+      event.preventDefault();
+      setTargetMile(state.targetMile + event.deltaY * 0.025);
+    }, { passive: false });
+
+    window.addEventListener("touchstart", (event) => {
+      if (isMapEvent(event)) {
+        state.touchY = null;
+        return;
+      }
+      state.touchY = event.touches[0].clientY;
+    }, { passive: true });
+
+    window.addEventListener("touchmove", (event) => {
+      if (isMapEvent(event)) return;
+      if (isPageScrollable()) return;
+      if (state.touchY === null) return;
+      event.preventDefault();
+      const nextY = event.touches[0].clientY;
+      setTargetMile(state.targetMile + (state.touchY - nextY) * 0.035);
+      state.touchY = nextY;
+    }, { passive: false });
+
+    window.addEventListener("keydown", (event) => {
+      const keys = {
+        ArrowDown: 0.5,
+        ArrowRight: 0.5,
+        PageDown: 3,
+        ArrowUp: -0.5,
+        ArrowLeft: -0.5,
+        PageUp: -3,
+        Home: -totalMiles,
+        End: totalMiles
+      };
+      if (!(event.key in keys)) return;
+      event.preventDefault();
+      setTargetMile(event.key === "Home" ? 0 : event.key === "End" ? totalMiles : state.targetMile + keys[event.key]);
+    });
+
+    elements.profileSvg.addEventListener("pointerdown", (event) => {
+      state.profileDragging = true;
+      elements.profileSvg.setPointerCapture(event.pointerId);
+      scrubProfile(event);
+    });
+
+    elements.profileSvg.addEventListener("pointermove", (event) => {
+      if (!state.profileDragging) return;
+      scrubProfile(event);
+    });
+
+    elements.profileSvg.addEventListener("pointerup", (event) => {
+      state.profileDragging = false;
+      elements.profileSvg.releasePointerCapture(event.pointerId);
+      hideProfilePopup();
+    });
+
+    elements.profileSvg.addEventListener("pointercancel", () => {
+      state.profileDragging = false;
+      hideProfilePopup();
+    });
+
+    initProfile();
+    initMap();
+    update(0);
+    if ("ResizeObserver" in window) {
+      const observer = new ResizeObserver(() => {
+        initProfile();
+        update(state.currentMile);
+        if (state.map) state.map.invalidateSize();
+      });
+      observer.observe(elements.profileSvg);
+    }
+    window.routeTrackerReady = true;
+  </script>
+</body>
+</html>
+`;
+}
 function validatePlan(data) {
   const names = new Set(data.stops.map((stop) => stop.name));
   for (const stop of data.stops) {
@@ -350,6 +1376,13 @@ function validatePlan(data) {
   }
 }
 
-fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true });
-fs.writeFileSync(OUTPUT_PATH, renderHtml());
-console.log(`Generated ${path.relative(ROOT, OUTPUT_PATH)}`);
+fs.mkdirSync(path.dirname(GUIDE_OUTPUT_PATH), { recursive: true });
+const guideHtml = renderGuideHtml();
+fs.writeFileSync(INDEX_OUTPUT_PATH, guideHtml);
+fs.writeFileSync(GUIDE_OUTPUT_PATH, guideHtml);
+fs.writeFileSync(TRACKER_OUTPUT_PATH, renderRouteTrackerHtml());
+fs.writeFileSync(NOJEKYLL_OUTPUT_PATH, "");
+console.log(`Generated ${path.relative(ROOT, INDEX_OUTPUT_PATH)}`);
+console.log(`Generated ${path.relative(ROOT, GUIDE_OUTPUT_PATH)}`);
+console.log(`Generated ${path.relative(ROOT, TRACKER_OUTPUT_PATH)}`);
+console.log(`Generated ${path.relative(ROOT, NOJEKYLL_OUTPUT_PATH)}`);

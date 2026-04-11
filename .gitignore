@@ -1,3 +1,14 @@
 node_modules/
 .artifacts/
+dist/
 .DS_Store
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.crt
+.npmrc
+.netrc
+.local
+*.local

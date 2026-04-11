@@ -5,10 +5,13 @@ Generated race-day crew guide for the Canyons 100K.
 ## Files
 
 - `data/race-plan.json` is the editable race plan: stops, ETAs, leg splits, elevation, crew notes, fuel targets, map notes, and source links.
+- `data/canyons-100k-course.gpx` is the official 2026 100K GPX used for the route tracker map and elevation profile.
 - `src/styles.css` is the report styling.
-- `scripts/generate.js` builds the HTML report.
-- `scripts/review.js` builds the report, captures Playwright screenshots, and checks mobile overflow, tap targets, and tiny text.
-- `dist/canyons-100k-crew-guide.html` is the generated guide.
+- `scripts/generate.js` builds the HTML report and route tracker.
+- `scripts/review.js` builds the pages, captures Playwright screenshots, and checks mobile overflow, tap targets, tiny text, and route-tracker cursor movement.
+- `docs/index.html` is the GitHub Pages entrypoint.
+- `docs/canyons-100k-crew-guide.html` is the generated guide.
+- `docs/canyons-100k-route-tracker.html` is the generated full-screen route tracker.
 
 ## Common Changes
 
@@ -41,8 +44,19 @@ npm run build
 Open:
 
 ```sh
-open dist/canyons-100k-crew-guide.html
+open docs/index.html
+open docs/canyons-100k-crew-guide.html
+open docs/canyons-100k-route-tracker.html
 ```
+
+## GitHub Pages
+
+This repo is set up for local builds and branch-based GitHub Pages publishing.
+
+1. Run `npm run build`.
+2. Commit the generated `docs/` files.
+3. In GitHub, set **Settings -> Pages -> Build and deployment -> Source** to **Deploy from a branch**.
+4. Select branch `main` and folder `/docs`.
 
 ## Visual Review
 
