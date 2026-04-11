@@ -1,0 +1,1006 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Canyons 100K Crew Guide</title>
+  <style>
+:root {
+  color-scheme: light;
+  --paper: #f4f7f5;
+  --surface: #ffffff;
+  --ink: #18201d;
+  --muted: #5b6761;
+  --line: #d6ded8;
+  --trail: #0f766e;
+  --trail-soft: #e1f4f0;
+  --crew: #c72f59;
+  --crew-soft: #fde7ee;
+  --aid: #527a2f;
+  --aid-soft: #edf6e6;
+  --warn: #b84a18;
+  --warn-soft: #fff0e7;
+  --night: #242a27;
+  --shadow: 0 6px 16px rgba(24, 32, 29, 0.07);
+  --radius: 8px;
+  --jump-offset: 76px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.35;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: var(--trail);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(244, 247, 245, 0.96);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+}
+
+.nav {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 8px 12px;
+}
+
+.nav a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.wrap {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 12px 12px 56px;
+}
+
+header,
+section {
+  scroll-margin-top: var(--jump-offset);
+}
+
+header {
+  display: grid;
+  gap: 10px;
+  padding: 8px 0 4px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--crew);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: 34px;
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stat,
+.crew-pill,
+.stop {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.stat {
+  min-height: 66px;
+  padding: 9px 10px;
+}
+
+.label,
+.row-label,
+.stat span,
+.crew-pill span {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.stat strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 17px;
+  line-height: 1.12;
+}
+
+.stat em {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.crew-strip {
+  display: grid;
+  gap: 8px;
+}
+
+.crew-pill {
+  padding: 10px;
+  border-color: rgba(199, 47, 89, 0.35);
+  background: linear-gradient(90deg, var(--crew-soft), #ffffff);
+}
+
+.crew-pill strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 18px;
+  line-height: 1.08;
+}
+
+.crew-pill em {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+  font-style: normal;
+}
+
+section {
+  margin-top: 20px;
+}
+
+.section-head {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+h2 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.section-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.course-list {
+  display: grid;
+  gap: 8px;
+}
+
+.stop {
+  overflow: hidden;
+}
+
+.stop.crew {
+  border: 2px solid var(--crew);
+  background: #fffafe;
+}
+
+.stop.finish {
+  border-color: rgba(15, 118, 110, 0.5);
+  background: #fbfffe;
+}
+
+.stop-top {
+  display: grid;
+  grid-template-columns: 54px 1fr auto;
+  gap: 8px;
+  align-items: stretch;
+  padding: 10px;
+}
+
+.milebox {
+  display: grid;
+  place-items: center;
+  min-height: 54px;
+  border-radius: var(--radius);
+  background: var(--night);
+  color: #ffffff;
+  text-align: center;
+}
+
+.milebox strong {
+  display: block;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.milebox span {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.stop-main {
+  min-width: 0;
+}
+
+.stop-main h3 {
+  margin: 0 0 5px;
+  font-size: 20px;
+  line-height: 1.05;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 7px;
+  border-radius: var(--radius);
+  background: var(--trail-soft);
+  color: #0b554f;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.badge.aid {
+  background: var(--aid-soft);
+  color: #365d18;
+}
+
+.badge.crew {
+  background: var(--crew);
+  color: #ffffff;
+}
+
+.badge.warn {
+  background: var(--warn-soft);
+  color: #8f330b;
+}
+
+.eta {
+  min-width: 76px;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  background: var(--trail-soft);
+  color: #0b554f;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.eta span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.crew .eta {
+  background: var(--crew-soft);
+  color: #8f1638;
+}
+
+.crew-callout {
+  margin: 0 10px 8px;
+  padding: 8px 9px;
+  border-radius: var(--radius);
+  background: var(--crew-soft);
+  color: #6e0f2c;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.resupply {
+  padding: 8px 10px;
+  border-top: 1px solid rgba(199, 47, 89, 0.22);
+  background: #fff7fa;
+}
+
+.stop:not(.crew) .resupply {
+  border-top-color: rgba(15, 118, 110, 0.18);
+  background: #f7fbfa;
+}
+
+.resupply-head {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.resupply-head span {
+  color: var(--crew);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.resupply-head strong {
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.18;
+  text-align: right;
+}
+
+.resupply-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid rgba(214, 222, 216, 0.85);
+  border-left: 1px solid rgba(214, 222, 216, 0.85);
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.resupply-metric {
+  min-width: 0;
+  padding: 6px 7px;
+  border-right: 1px solid rgba(214, 222, 216, 0.85);
+  border-bottom: 1px solid rgba(214, 222, 216, 0.85);
+}
+
+.resupply-metric span {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.resupply-metric strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 1.18;
+}
+
+.resupply p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.note {
+  margin: 0 10px 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.leg {
+  border-top: 1px solid var(--line);
+  background: #fbfdfc;
+}
+
+.leg-row {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 8px;
+  padding: 7px 10px;
+  border-top: 1px solid rgba(214, 222, 216, 0.72);
+  align-items: baseline;
+}
+
+.leg-row:first-child {
+  border-top: 0;
+}
+
+.leg-row strong {
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.row-label {
+  font-size: 10px;
+}
+
+.crew-quick,
+.map-grid,
+.source-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.crew-card,
+.map-card,
+.source-card {
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.crew-card {
+  border-left: 5px solid var(--crew);
+}
+
+.crew-card h3,
+.map-card h3,
+.source-card h3 {
+  margin: 0 0 5px;
+  font-size: 17px;
+  line-height: 1.1;
+}
+
+.crew-card p,
+.map-card p,
+.source-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.source-card a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.map-card.crew {
+  border-left: 5px solid var(--crew);
+}
+
+.map-card {
+  border-left: 5px solid var(--trail);
+}
+
+.small-note {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@media (min-width: 720px) {
+  :root {
+    --jump-offset: 72px;
+  }
+
+  .wrap {
+    padding: 18px 20px 72px;
+  }
+
+  h1 {
+    font-size: 54px;
+  }
+
+  .stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .crew-strip,
+  .crew-quick,
+  .map-grid,
+  .source-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .source-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stop-top {
+    grid-template-columns: 64px 1fr 92px;
+  }
+
+  .milebox {
+    min-height: 62px;
+  }
+
+  .leg-row {
+    grid-template-columns: 92px 1fr;
+  }
+
+  .resupply-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media print {
+  body {
+    background: #ffffff;
+  }
+
+  .topbar {
+    display: none;
+  }
+
+  .wrap {
+    max-width: none;
+    padding: 0;
+  }
+
+  .stop,
+  .stat,
+  .crew-pill,
+  .crew-card,
+  .map-card,
+  .source-card {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <nav class="nav" aria-label="Guide sections">
+      <a href="#overview">Overview</a>
+      <a href="#plan">Plan</a>
+      <a href="#crew">Crew</a>
+      <a href="#maps">Maps</a>
+    </nav>
+  </div>
+
+  <main class="wrap">
+    <header id="overview">
+      <p class="eyebrow">Canyons 100K by UTMB</p>
+      <h1>Race Day Crew Guide</h1>
+      <p class="subtitle">Compact 17-hour working plan. All ETAs and leg paces are planning estimates; official course markings and race-week updates win.</p>
+
+      <div class="stats" aria-label="Race facts">
+        <div class="stat">
+          <span>Start</span>
+          <strong>5:00 AM</strong>
+        </div>
+        <div class="stat">
+          <span>Finish Goal</span>
+          <strong>10:00 PM</strong>
+        </div>
+        <div class="stat">
+          <span>Course</span>
+          <strong>63.1 mi</strong>
+        </div>
+        <div class="stat">
+          <span>Fuel / Electrolytes</span>
+          <strong>90 g/hr carbs</strong>
+          <em>500-750 mg Na/hr</em>
+        </div>
+      </div>
+
+      <div class="crew-strip" aria-label="Crew stops">
+        <div class="crew-pill">
+          <span>Crew Stop 1</span>
+          <strong>Michigan Bluff - 11:40 AM</strong>
+          <em>Arrive by 10:40 AM. Quick refill and cooling.</em>
+        </div>
+        <div class="crew-pill">
+          <span>Crew Stop 2</span>
+          <strong>Foresthill - 1:15 PM</strong>
+          <em>Arrive by 12:15 PM. Drop bag and main reset.</em>
+        </div>
+        <div class="crew-pill">
+          <span>Crew Stop 3</span>
+          <strong>Drivers Flat - 5:45 PM</strong>
+          <em>Arrive by 4:45 PM. Last handoff to finish.</em>
+        </div>
+      </div>
+    </header>
+
+    <section id="plan" aria-labelledby="plan-title">
+      <div class="section-head">
+        <h2 id="plan-title">Course Plan</h2>
+        <p>Each card shows the current stop, ETA, crew status, and the next-leg distance, climb/descent, planned split, pace, and fuel to consume before the next stop. Resupply bands sum the leg-fuel targets to the next crew stop or finish; add buffer for extra stop time, delays, and heat.</p>
+      </div>
+
+      <div class="course-list">
+        <article class="stop">
+          <div class="stop-top">
+            <div class="milebox"><div><strong>0.0</strong><span>mi</span></div></div>
+            <div class="stop-main">
+              <h3>China Wall Start</h3>
+              <div class="badges"><span class="badge warn">No crew</span><span class="badge">Start</span></div>
+            </div>
+            <div class="eta"><span>ETA</span>5:00 AM</div>
+          </div>
+          <p class="note">Runner-only shuttle. Leave with the first long-leg fuel loaded.</p>
+
+          <div class="resupply" aria-label="Resupply target from China Wall Start to Michigan Bluff">
+            <div class="resupply-head"><span>Resupply to Michigan Bluff</span><strong>24.0 mi | 6h32</strong></div>
+            <div class="resupply-grid">
+              <div class="resupply-metric"><span>Carbs</span><strong>590 g</strong></div>
+              <div class="resupply-metric"><span>Sodium</span><strong>3,250-4,900 mg</strong></div>
+              <div class="resupply-metric"><span>Fluid</span><strong>3.3-4.9 L</strong></div>
+            </div>
+            <p>Use Deadwood full aid. Carry enough preferred fuel for the no-food Devils Thumb loop.</p>
+          </div>
+
+          <div class="leg">
+            <div class="leg-row"><span class="row-label">Next</span><strong>Deadwood 1</strong></div>
+            <div class="leg-row"><span class="row-label">Leg</span><strong>10.1 mi | +1,787 / -2,870 ft</strong></div>
+            <div class="leg-row"><span class="row-label">Time/Pace</span><strong>2h25 | 14:22/mi</strong></div>
+            <div class="leg-row"><span class="row-label">Leg Fuel</span><strong>220 g carbs | 1,200-1,800 mg Na | 1.2-1.8 L</strong></div>
+          </div>
+        </article>
+
+        <article class="stop">
+          <div class="stop-top">
+            <div class="milebox"><div><strong>10.1</strong><span>mi</span></div></div>
+            <div class="stop-main">
+              <h3>Deadwood 1</h3>
+              <div class="badges"><span class="badge aid">Full aid</span><span class="badge warn">No crew</span></div>
+            </div>
+            <div class="eta"><span>ETA</span>7:25 AM</div>
+          </div>
+          <p class="note">Refill and keep enough food for the Devils Thumb loop through Deadwood 2.</p>
+
+
+          <div class="leg">
+            <div class="leg-row"><span class="row-label">Next</span><strong>Devils Thumb 1</strong></div>
+            <div class="leg-row"><span class="row-label">Leg</span><strong>1.8 mi | +565 / -124 ft</strong></div>
+            <div class="leg-row"><span class="row-label">Time/Pace</span><strong>30m | 16:37/mi</strong></div>
+            <div class="leg-row"><span class="row-label">Leg Fuel</span><strong>45 g carbs | 250-400 mg Na | 0.3-0.4 L</strong></div>
+          </div>
+        </article>
+
+        <article class="stop">
+          <div class="stop-top">
+            <div class="milebox"><div><strong>12.0</strong><span>mi</span></div></div>
+            <div class="stop-main">
+              <h3>Devils Thumb 1</h3>
+              <div class="badges"><span class="badge">Hydration</span><span class="badge warn">No crew</span></div>
+            </div>
+            <div class="eta"><span>ETA</span>7:55 AM</div>
+          </div>
+          <p class="note">Water/electrolyte only. No food. Keep moving unless bottles are low.</p>
+
+
+          <div class="leg">
+            <div class="leg-row"><span class="row-label">Next</span><strong>Swinging Bridge</strong></div>
+            <div class="leg-row"><span class="row-label">Leg</span><strong>1.6 mi | +0 / -1,642 ft</strong></div>
+            <div class="leg-row"><span class="row-label">Time/Pace</span><strong>23m | 14:15/mi</strong></div>
+            <div class="leg-row"><span class="row-label">Leg Fuel</span><strong>35 g carbs | 200-300 mg Na | 0.2-0.3 L</strong></div>
+          </div>
+        </article>
+
+        <article class="stop">
+          <div class="stop-top">
+            <div class="milebox"><div><strong>13.5</strong><span>mi</span></div></div>
+            <div class="stop-main">
+              <h3>Swinging Bridge</h3>
+              <div class="badges"><span class="badge warn">Turnaround</span><span class="badge warn">No aid</span></div>
+            </div>
+            <div class="eta"><span>ETA</span>8:20 AM</div>
+          </div>
+          <p class="note">Reset for the steep climb back to Devils Thumb.</p>
+
+
+          <div class="leg">
+            <div class="leg-row"><span class="row-label">Next</span><strong>Devils Thumb 2</strong></div>
+            <div class="leg-row"><span class="row-label">Leg</span><strong>1.6 mi | +1,642 / -0 ft</strong></div>
+            <div class="leg-row"><span class="row-label">Time/Pace</span><strong>49m | 30:52/mi</strong></div>
+            <div class="leg-row"><span class="row-label">Leg Fuel</span><strong>75 g carbs | 400-600 mg Na | 0.4-0.6 L</strong></div>
+          </div>
+        </article>
+
+        <article class="stop">
+          <div class="stop-top">
+            <div class="milebox"><div><strong>15.1</strong><span>mi</span></div></div>
+            <div class="stop-main">
+              <h3>Devils Thumb 2</h3>
+              <div class="badges"><span class="badge">Hydration</span><span class="badge warn">No crew</span></div>
+            </div>
+            <div class="eta"><span>ETA</span>9:10 AM</div>
+          </div>
+          <p class="note">Top off if needed. Food still comes from what you carried out of Deadwood 1.</p>
+
+
+          <div class="leg">
+            <div class="leg-row"><span class="row-label">Next</span><strong>Deadwood 2</strong></div>
+            <div class="leg-row"><span class="row-label">Leg</span><strong>3.2 mi | +283 / -724 ft</strong></div>
+            <div class="leg-row"><span class="row-label">Time/Pace</span><strong>41m | 12:52/mi</strong></div>
+            <div class="leg-row"><span class="row-label">Leg Fuel</span><strong>60 g carbs | 350-500 mg Na | 0.3-0.5 L</strong></div>
+          </div>
+        </article>
+
+        <article class="stop">
+          <div class="stop-top">
+            <div class="milebox"><div><strong>18.3</strong><span>mi</span></div></div>
+            <div class="stop-main">
+              <h3>Deadwood 2</h3>
+              <div class="badges"><span class="badge aid">Full aid</span><span class="badge warn">No crew</span><span class="badge warn">Cut 11:30 AM</span></div>
+            </div>
+            <div class="eta"><span>ETA</span>9:55 AM</div>
+          </div>
+          <p class="note">Refill for the push to first crew. Start heat management early.</p>
+
+
+          <div class="leg">
+            <div class="leg-row"><span class="row-label">Next</span><strong>Michigan Bluff</strong></div>
+            <div class="leg-row"><span class="row-label">Leg</span><strong>5.7 mi | +1,774 / -2,229 ft</strong></div>
+            <div class="leg-row"><span class="row-label">Time/Pace</span><strong>1h44 | 18:14/mi</strong></div>
+            <div class="leg-row"><span class="row-label">Leg Fuel</span><strong>155 g carbs | 850-1,300 mg Na | 0.9-1.3 L</strong></div>
+          </div>
+        </article>
+
+        <article class="stop crew">
+          <div class="stop-top">
+            <div class="milebox"><div><strong>24.0</strong><span>mi</span></div></div>
+            <div class="stop-main">
+              <h3>Michigan Bluff</h3>
+              <div class="badges"><span class="badge crew">Crew stop</span><span class="badge aid">Aid</span><span class="badge warn">Cut 12:45 PM</span></div>
+            </div>
+            <div class="eta"><span>ETA</span>11:40 AM</div>
+          </div>
+          <div class="crew-callout">CREW HERE: arrive by 10:40 AM. Fast bottle swap, cooling, sunscreen, quick stomach/feet check.</div>
+
+          <div class="resupply" aria-label="Resupply target from Michigan Bluff to Foresthill">
+            <div class="resupply-head"><span>Resupply to Foresthill</span><strong>5.9 mi | 1h31</strong></div>
+            <div class="resupply-grid">
+              <div class="resupply-metric"><span>Carbs</span><strong>135 g</strong></div>
+              <div class="resupply-metric"><span>Sodium</span><strong>750-1,150 mg</strong></div>
+              <div class="resupply-metric"><span>Fluid</span><strong>0.8-1.1 L</strong></div>
+            </div>
+            <p>Short crew-to-crew block. Keep the handoff fast and leave with simple calories.</p>
+          </div>
+
+          <div class="leg">
+            <div class="leg-row"><span class="row-label">Next</span><strong>Foresthill</strong></div>
+            <div class="leg-row"><span class="row-label">Leg</span><strong>5.9 mi | +1,173 / -1,367 ft</strong></div>
+            <div class="leg-row"><span class="row-label">Time/Pace</span><strong>1h31 | 15:28/mi</strong></div>
+            <div class="leg-row"><span class="row-label">Leg Fuel</span><strong>135 g carbs | 750-1,150 mg Na | 0.8-1.1 L</strong></div>
+          </div>
+        </article>
+
+        <article class="stop crew">
+          <div class="stop-top">
+            <div class="milebox"><div><strong>30.0</strong><span>mi</span></div></div>
+            <div class="stop-main">
+              <h3>Foresthill</h3>
+              <div class="badges"><span class="badge crew">Crew stop</span><span class="badge crew">Drop bag</span><span class="badge warn">Cut 2:30 PM</span></div>
+            </div>
+            <div class="eta"><span>ETA</span>1:15 PM</div>
+          </div>
+          <div class="crew-callout">CREW HERE: arrive by 12:15 PM. Main reset: bottles, drop bag, socks/lube if needed, preferred fuel for Cal Street.</div>
+
+          <div class="resupply" aria-label="Resupply target from Foresthill to Drivers Flat">
+            <div class="resupply-head"><span>Resupply to Drivers Flat</span><strong>17.6 mi | 4h16</strong></div>
+            <div class="resupply-grid">
+              <div class="resupply-metric"><span>Carbs</span><strong>385 g</strong></div>
+              <div class="resupply-metric"><span>Sodium</span><strong>2,150-3,200 mg</strong></div>
+              <div class="resupply-metric"><span>Fluid</span><strong>2.1-3.2 L</strong></div>
+            </div>
+            <p>Longest crew-to-crew block. Use Cal 2 full aid, but leave Foresthill with the block covered.</p>
+          </div>
+
+          <div class="leg">
+            <div class="leg-row"><span class="row-label">Next</span><strong>Cal 2</strong></div>
+            <div class="leg-row"><span class="row-label">Leg</span><strong>8.3 mi | +725 / -2,311 ft</strong></div>
+            <div class="leg-row"><span class="row-label">Time/Pace</span><strong>1h52 | 13:33/mi</strong></div>
+            <div class="leg-row"><span class="row-label">Leg Fuel</span><strong>170 g carbs | 950-1,400 mg Na | 0.9-1.4 L</strong></div>
+          </div>
+        </article>
+
+        <article class="stop">
+          <div class="stop-top">
+            <div class="milebox"><div><strong>38.2</strong><span>mi</span></div></div>
+            <div class="stop-main">
+              <h3>Cal 2</h3>
+              <div class="badges"><span class="badge aid">Full aid</span><span class="badge warn">No crew</span></div>
+            </div>
+            <div class="eta"><span>ETA</span>3:15 PM</div>
+          </div>
+          <p class="note">Long no-crew leg follows. Refill hard here.</p>
+
+
+          <div class="leg">
+            <div class="leg-row"><span class="row-label">Next</span><strong>Drivers Flat</strong></div>
+            <div class="leg-row"><span class="row-label">Leg</span><strong>9.3 mi | +1,725 / -1,727 ft</strong></div>
+            <div class="leg-row"><span class="row-label">Time/Pace</span><strong>2h24 | 15:31/mi</strong></div>
+            <div class="leg-row"><span class="row-label">Leg Fuel</span><strong>215 g carbs | 1,200-1,800 mg Na | 1.2-1.8 L</strong></div>
+          </div>
+        </article>
+
+        <article class="stop crew">
+          <div class="stop-top">
+            <div class="milebox"><div><strong>47.5</strong><span>mi</span></div></div>
+            <div class="stop-main">
+              <h3>Drivers Flat</h3>
+              <div class="badges"><span class="badge crew">Crew stop</span><span class="badge aid">Aid</span><span class="badge warn">Cut 7:45 PM</span></div>
+            </div>
+            <div class="eta"><span>ETA</span>5:45 PM</div>
+          </div>
+          <div class="crew-callout">CREW HERE: arrive by 4:45 PM. Last handoff: lights, warmth, calories through the finish, decisive exit.</div>
+
+          <div class="resupply" aria-label="Resupply target from Drivers Flat to Finish">
+            <div class="resupply-head"><span>Resupply to Finish</span><strong>15.6 mi | 4h05</strong></div>
+            <div class="resupply-grid">
+              <div class="resupply-metric"><span>Carbs</span><strong>365 g</strong></div>
+              <div class="resupply-metric"><span>Sodium</span><strong>2,050-3,050 mg</strong></div>
+              <div class="resupply-metric"><span>Fluid</span><strong>2.1-3.2 L</strong></div>
+            </div>
+            <p>Final personal-fuel load. Add light, warm layer, and enough finish fuel to avoid bargaining.</p>
+          </div>
+
+          <div class="leg">
+            <div class="leg-row"><span class="row-label">Next</span><strong>Mammoth Bar</strong></div>
+            <div class="leg-row"><span class="row-label">Leg</span><strong>7.9 mi | +984 / -2,050 ft</strong></div>
+            <div class="leg-row"><span class="row-label">Time/Pace</span><strong>1h57 | 14:50/mi</strong></div>
+            <div class="leg-row"><span class="row-label">Leg Fuel</span><strong>175 g carbs | 1,000-1,450 mg Na | 1.0-1.5 L</strong></div>
+          </div>
+        </article>
+
+        <article class="stop">
+          <div class="stop-top">
+            <div class="milebox"><div><strong>55.5</strong><span>mi</span></div></div>
+            <div class="stop-main">
+              <h3>Mammoth Bar</h3>
+              <div class="badges"><span class="badge aid">Full aid</span><span class="badge warn">No crew</span><span class="badge warn">Cut 10:15 PM</span></div>
+            </div>
+            <div class="eta"><span>ETA</span>7:50 PM</div>
+          </div>
+          <p class="note">Eat if possible. The finish is close enough to simplify, not close enough to stop fueling.</p>
+
+
+          <div class="leg">
+            <div class="leg-row"><span class="row-label">Next</span><strong>Confluence</strong></div>
+            <div class="leg-row"><span class="row-label">Leg</span><strong>3.7 mi | +679 / -718 ft</strong></div>
+            <div class="leg-row"><span class="row-label">Time/Pace</span><strong>1h00 | 16:08/mi</strong></div>
+            <div class="leg-row"><span class="row-label">Leg Fuel</span><strong>90 g carbs | 500-750 mg Na | 0.5-0.8 L</strong></div>
+          </div>
+        </article>
+
+        <article class="stop">
+          <div class="stop-top">
+            <div class="milebox"><div><strong>59.1</strong><span>mi</span></div></div>
+            <div class="stop-main">
+              <h3>Confluence</h3>
+              <div class="badges"><span class="badge aid">Full aid</span><span class="badge warn">No crew</span></div>
+            </div>
+            <div class="eta"><span>ETA</span>8:50 PM</div>
+          </div>
+          <p class="note">Final aid. Calories, fluid, then climb to Auburn.</p>
+
+
+          <div class="leg">
+            <div class="leg-row"><span class="row-label">Next</span><strong>Downtown Auburn Finish</strong></div>
+            <div class="leg-row"><span class="row-label">Leg</span><strong>4.0 mi | +958 / -275 ft</strong></div>
+            <div class="leg-row"><span class="row-label">Time/Pace</span><strong>1h08 | 16:57/mi</strong></div>
+            <div class="leg-row"><span class="row-label">Leg Fuel</span><strong>100 g carbs | 550-850 mg Na | 0.6-0.9 L</strong></div>
+          </div>
+        </article>
+
+        <article class="stop finish">
+          <div class="stop-top">
+            <div class="milebox"><div><strong>63.1</strong><span>mi</span></div></div>
+            <div class="stop-main">
+              <h3>Downtown Auburn Finish</h3>
+              <div class="badges"><span class="badge crew">Crew</span><span class="badge">Goal finish</span><span class="badge warn">Cut 1:00 AM</span></div>
+            </div>
+            <div class="eta"><span>ETA</span>10:00 PM</div>
+          </div>
+          <p class="note">Warm layer, dry shoes, simple food, and no complicated decisions.</p>
+
+
+        </article>
+      </div>
+    </section>
+
+    <section id="crew" aria-labelledby="crew-title">
+      <div class="section-head">
+        <h2 id="crew-title">Crew Cheat Sheet</h2>
+        <p>The detailed handoffs are highlighted in the course plan. This is just the fast memory jog.</p>
+      </div>
+
+      <div class="crew-quick">
+        <article class="crew-card">
+          <h3>Michigan Bluff</h3>
+          <p>Fast stop. Bottles, cooling, sunscreen, trash, quick stomach/feet check.</p>
+        </article>
+        <article class="crew-card">
+          <h3>Foresthill</h3>
+          <p>Main reset. Drop bag, socks/lube if needed, preferred fuel, weather choice.</p>
+        </article>
+        <article class="crew-card">
+          <h3>Drivers Flat</h3>
+          <p>Final handoff. Light, warmth, finish fuel, confidence, and send.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="maps" aria-labelledby="maps-title">
+      <div class="section-head">
+        <h2 id="maps-title">Maps & Parking</h2>
+        <p>Confirm parking against the race-week guide, then add exact pins and screenshots here.</p>
+      </div>
+
+      <div class="map-grid">
+        <article class="map-card crew">
+          <h3>Michigan Bluff</h3>
+          <p>Crew allowed. Plan for up to a 1.5 mile walk-in from designated parking.</p>
+        </article>
+        <article class="map-card crew">
+          <h3>Foresthill</h3>
+          <p>Crew and drop bag. Plan for up to a 1 mile walk-in from designated parking.</p>
+        </article>
+        <article class="map-card crew">
+          <h3>Drivers Flat</h3>
+          <p>Last crew stop. Plan for up to a 1 mile walk-in from designated parking.</p>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="sources-title">
+      <div class="section-head">
+        <h2 id="sources-title">Source Notes</h2>
+        <p>Update after packet pickup and runner briefing.</p>
+      </div>
+
+      <div class="source-grid">
+        <article class="source-card">
+          <h3>Official 100K Page</h3>
+          <p><a href="https://canyons.utmb.world/races/100k">Course description, date, start time, distance, and GPX link</a></p>
+        </article>
+        <article class="source-card">
+          <h3>Official Aid Chart</h3>
+          <p><a href="https://res.cloudinary.com/utmb-world/image/upload/v1775774030/canyons/2026/Aid%20Station%20Charts/2026_The_Canyons_Endurance_Runs_by_UTMB_100k_Aid_Station_Chart_Imperial_e64146a241.pdf.pdf">Miles, elevation, cutoffs, crew, and drop-bag locations</a></p>
+        </article>
+      </div>
+      <p class="small-note">Version: generated compact draft, 17-hour schedule. Next pass: exact target time, maps, parking screenshots, and product-specific fuel math.</p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,344 @@
+{
+  "title": "Canyons 100K Crew Guide",
+  "eyebrow": "Canyons 100K by UTMB",
+  "subtitle": "Compact 17-hour working plan. All ETAs and leg paces are planning estimates; official course markings and race-week updates win.",
+  "versionNote": "Version: generated compact draft, 17-hour schedule. Next pass: exact target time, maps, parking screenshots, and product-specific fuel math.",
+  "race": {
+    "start": "5:00 AM",
+    "finishGoal": "10:00 PM",
+    "courseDistanceMi": 63.1
+  },
+  "nutrition": {
+    "carbsPerHour": 90,
+    "sodiumMgPerHour": {
+      "low": 500,
+      "high": 750
+    },
+    "fluidLitersPerHour": {
+      "low": 0.5,
+      "high": 0.75
+    },
+    "carbRoundToGrams": 5,
+    "sodiumRoundToMg": 50,
+    "fluidRoundToLiters": 0.1
+  },
+  "crewStops": [
+    {
+      "name": "Michigan Bluff",
+      "eta": "11:40 AM",
+      "arriveBy": "10:40 AM",
+      "summary": "Quick refill and cooling."
+    },
+    {
+      "name": "Foresthill",
+      "eta": "1:15 PM",
+      "arriveBy": "12:15 PM",
+      "summary": "Drop bag and main reset."
+    },
+    {
+      "name": "Drivers Flat",
+      "eta": "5:45 PM",
+      "arriveBy": "4:45 PM",
+      "summary": "Last handoff to finish."
+    }
+  ],
+  "stops": [
+    {
+      "name": "China Wall Start",
+      "mile": 0.0,
+      "eta": "5:00 AM",
+      "tags": [
+        { "label": "No crew", "type": "warn" },
+        { "label": "Start", "type": "default" }
+      ],
+      "note": "Runner-only shuttle. Leave with the first long-leg fuel loaded.",
+      "resupplyTo": "Michigan Bluff",
+      "resupplyNote": "Use Deadwood full aid. Carry enough preferred fuel for the no-food Devils Thumb loop.",
+      "nextLeg": {
+        "to": "Deadwood 1",
+        "distanceMi": 10.1,
+        "gainFt": 1787,
+        "lossFt": 2870,
+        "plannedTime": "2h25",
+        "plannedMinutes": 145,
+        "pace": "14:22/mi"
+      }
+    },
+    {
+      "name": "Deadwood 1",
+      "mile": 10.1,
+      "eta": "7:25 AM",
+      "tags": [
+        { "label": "Full aid", "type": "aid" },
+        { "label": "No crew", "type": "warn" }
+      ],
+      "note": "Refill and keep enough food for the Devils Thumb loop through Deadwood 2.",
+      "nextLeg": {
+        "to": "Devils Thumb 1",
+        "distanceMi": 1.8,
+        "gainFt": 565,
+        "lossFt": 124,
+        "plannedTime": "30m",
+        "plannedMinutes": 30,
+        "pace": "16:37/mi"
+      }
+    },
+    {
+      "name": "Devils Thumb 1",
+      "mile": 12.0,
+      "eta": "7:55 AM",
+      "tags": [
+        { "label": "Hydration", "type": "default" },
+        { "label": "No crew", "type": "warn" }
+      ],
+      "note": "Water/electrolyte only. No food. Keep moving unless bottles are low.",
+      "nextLeg": {
+        "to": "Swinging Bridge",
+        "distanceMi": 1.6,
+        "gainFt": 0,
+        "lossFt": 1642,
+        "plannedTime": "23m",
+        "plannedMinutes": 23,
+        "pace": "14:15/mi"
+      }
+    },
+    {
+      "name": "Swinging Bridge",
+      "mile": 13.5,
+      "eta": "8:20 AM",
+      "tags": [
+        { "label": "Turnaround", "type": "warn" },
+        { "label": "No aid", "type": "warn" }
+      ],
+      "note": "Reset for the steep climb back to Devils Thumb.",
+      "nextLeg": {
+        "to": "Devils Thumb 2",
+        "distanceMi": 1.6,
+        "gainFt": 1642,
+        "lossFt": 0,
+        "plannedTime": "49m",
+        "plannedMinutes": 49,
+        "pace": "30:52/mi"
+      }
+    },
+    {
+      "name": "Devils Thumb 2",
+      "mile": 15.1,
+      "eta": "9:10 AM",
+      "tags": [
+        { "label": "Hydration", "type": "default" },
+        { "label": "No crew", "type": "warn" }
+      ],
+      "note": "Top off if needed. Food still comes from what you carried out of Deadwood 1.",
+      "nextLeg": {
+        "to": "Deadwood 2",
+        "distanceMi": 3.2,
+        "gainFt": 283,
+        "lossFt": 724,
+        "plannedTime": "41m",
+        "plannedMinutes": 41,
+        "pace": "12:52/mi"
+      }
+    },
+    {
+      "name": "Deadwood 2",
+      "mile": 18.3,
+      "eta": "9:55 AM",
+      "tags": [
+        { "label": "Full aid", "type": "aid" },
+        { "label": "No crew", "type": "warn" },
+        { "label": "Cut 11:30 AM", "type": "warn" }
+      ],
+      "note": "Refill for the push to first crew. Start heat management early.",
+      "nextLeg": {
+        "to": "Michigan Bluff",
+        "distanceMi": 5.7,
+        "gainFt": 1774,
+        "lossFt": 2229,
+        "plannedTime": "1h44",
+        "plannedMinutes": 104,
+        "pace": "18:14/mi"
+      }
+    },
+    {
+      "name": "Michigan Bluff",
+      "mile": 24.0,
+      "eta": "11:40 AM",
+      "kind": "crew",
+      "tags": [
+        { "label": "Crew stop", "type": "crew" },
+        { "label": "Aid", "type": "aid" },
+        { "label": "Cut 12:45 PM", "type": "warn" }
+      ],
+      "crewCallout": "CREW HERE: arrive by 10:40 AM. Fast bottle swap, cooling, sunscreen, quick stomach/feet check.",
+      "resupplyTo": "Foresthill",
+      "resupplyNote": "Short crew-to-crew block. Keep the handoff fast and leave with simple calories.",
+      "nextLeg": {
+        "to": "Foresthill",
+        "distanceMi": 5.9,
+        "gainFt": 1173,
+        "lossFt": 1367,
+        "plannedTime": "1h31",
+        "plannedMinutes": 91,
+        "pace": "15:28/mi"
+      }
+    },
+    {
+      "name": "Foresthill",
+      "mile": 30.0,
+      "eta": "1:15 PM",
+      "kind": "crew",
+      "tags": [
+        { "label": "Crew stop", "type": "crew" },
+        { "label": "Drop bag", "type": "crew" },
+        { "label": "Cut 2:30 PM", "type": "warn" }
+      ],
+      "crewCallout": "CREW HERE: arrive by 12:15 PM. Main reset: bottles, drop bag, socks/lube if needed, preferred fuel for Cal Street.",
+      "resupplyTo": "Drivers Flat",
+      "resupplyNote": "Longest crew-to-crew block. Use Cal 2 full aid, but leave Foresthill with the block covered.",
+      "nextLeg": {
+        "to": "Cal 2",
+        "distanceMi": 8.3,
+        "gainFt": 725,
+        "lossFt": 2311,
+        "plannedTime": "1h52",
+        "plannedMinutes": 112,
+        "pace": "13:33/mi"
+      }
+    },
+    {
+      "name": "Cal 2",
+      "mile": 38.2,
+      "eta": "3:15 PM",
+      "tags": [
+        { "label": "Full aid", "type": "aid" },
+        { "label": "No crew", "type": "warn" }
+      ],
+      "note": "Long no-crew leg follows. Refill hard here.",
+      "nextLeg": {
+        "to": "Drivers Flat",
+        "distanceMi": 9.3,
+        "gainFt": 1725,
+        "lossFt": 1727,
+        "plannedTime": "2h24",
+        "plannedMinutes": 144,
+        "pace": "15:31/mi"
+      }
+    },
+    {
+      "name": "Drivers Flat",
+      "mile": 47.5,
+      "eta": "5:45 PM",
+      "kind": "crew",
+      "tags": [
+        { "label": "Crew stop", "type": "crew" },
+        { "label": "Aid", "type": "aid" },
+        { "label": "Cut 7:45 PM", "type": "warn" }
+      ],
+      "crewCallout": "CREW HERE: arrive by 4:45 PM. Last handoff: lights, warmth, calories through the finish, decisive exit.",
+      "resupplyTo": "Downtown Auburn Finish",
+      "resupplyLabel": "Finish",
+      "resupplyNote": "Final personal-fuel load. Add light, warm layer, and enough finish fuel to avoid bargaining.",
+      "nextLeg": {
+        "to": "Mammoth Bar",
+        "distanceMi": 7.9,
+        "gainFt": 984,
+        "lossFt": 2050,
+        "plannedTime": "1h57",
+        "plannedMinutes": 117,
+        "pace": "14:50/mi"
+      }
+    },
+    {
+      "name": "Mammoth Bar",
+      "mile": 55.5,
+      "eta": "7:50 PM",
+      "tags": [
+        { "label": "Full aid", "type": "aid" },
+        { "label": "No crew", "type": "warn" },
+        { "label": "Cut 10:15 PM", "type": "warn" }
+      ],
+      "note": "Eat if possible. The finish is close enough to simplify, not close enough to stop fueling.",
+      "nextLeg": {
+        "to": "Confluence",
+        "distanceMi": 3.7,
+        "gainFt": 679,
+        "lossFt": 718,
+        "plannedTime": "1h00",
+        "plannedMinutes": 60,
+        "pace": "16:08/mi"
+      }
+    },
+    {
+      "name": "Confluence",
+      "mile": 59.1,
+      "eta": "8:50 PM",
+      "tags": [
+        { "label": "Full aid", "type": "aid" },
+        { "label": "No crew", "type": "warn" }
+      ],
+      "note": "Final aid. Calories, fluid, then climb to Auburn.",
+      "nextLeg": {
+        "to": "Downtown Auburn Finish",
+        "distanceMi": 4.0,
+        "gainFt": 958,
+        "lossFt": 275,
+        "plannedTime": "1h08",
+        "plannedMinutes": 68,
+        "pace": "16:57/mi"
+      }
+    },
+    {
+      "name": "Downtown Auburn Finish",
+      "mile": 63.1,
+      "eta": "10:00 PM",
+      "kind": "finish",
+      "tags": [
+        { "label": "Crew", "type": "crew" },
+        { "label": "Goal finish", "type": "default" },
+        { "label": "Cut 1:00 AM", "type": "warn" }
+      ],
+      "note": "Warm layer, dry shoes, simple food, and no complicated decisions."
+    }
+  ],
+  "crewCheatSheet": [
+    {
+      "name": "Michigan Bluff",
+      "detail": "Fast stop. Bottles, cooling, sunscreen, trash, quick stomach/feet check."
+    },
+    {
+      "name": "Foresthill",
+      "detail": "Main reset. Drop bag, socks/lube if needed, preferred fuel, weather choice."
+    },
+    {
+      "name": "Drivers Flat",
+      "detail": "Final handoff. Light, warmth, finish fuel, confidence, and send."
+    }
+  ],
+  "maps": [
+    {
+      "name": "Michigan Bluff",
+      "detail": "Crew allowed. Plan for up to a 1.5 mile walk-in from designated parking."
+    },
+    {
+      "name": "Foresthill",
+      "detail": "Crew and drop bag. Plan for up to a 1 mile walk-in from designated parking."
+    },
+    {
+      "name": "Drivers Flat",
+      "detail": "Last crew stop. Plan for up to a 1 mile walk-in from designated parking."
+    }
+  ],
+  "sources": [
+    {
+      "title": "Official 100K Page",
+      "url": "https://canyons.utmb.world/races/100k",
+      "label": "Course description, date, start time, distance, and GPX link"
+    },
+    {
+      "title": "Official Aid Chart",
+      "url": "https://res.cloudinary.com/utmb-world/image/upload/v1775774030/canyons/2026/Aid%20Station%20Charts/2026_The_Canyons_Endurance_Runs_by_UTMB_100k_Aid_Station_Chart_Imperial_e64146a241.pdf.pdf",
+      "label": "Miles, elevation, cutoffs, crew, and drop-bag locations"
+    }
+  ]
+}

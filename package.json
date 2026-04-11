@@ -1,0 +1,13 @@
+{
+  "name": "canyons-100k-plan",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generated Canyons 100K race-day crew guide.",
+  "scripts": {
+    "build": "node scripts/generate.js",
+    "review": "node scripts/review.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.52.0"
+  }
+}
