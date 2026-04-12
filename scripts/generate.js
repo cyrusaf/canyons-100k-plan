@@ -748,6 +748,8 @@ ${styles}
 
     const totalMiles = routeData.course.totalMiles;
     const coursePoints = routeData.course.points;
+    const mapHighlightColor = "#d6336c";
+    const mapHighlightSoft = "#fff1f5";
     const stopColors = {
       "full-aid": { stroke: "#527a2f", fill: "#edf6e6", mapRadius: 4, profileRadius: 4.2 },
       hydration: { stroke: "#1d6fb8", fill: "#e7f2ff", mapRadius: 4, profileRadius: 4.2 },
@@ -1277,7 +1279,7 @@ ${styles}
         type: "line",
         source: mapSourceIds.progressRoute,
         layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": "#fc4c02", "line-opacity": 1, "line-width": 6.6 }
+        paint: { "line-color": mapHighlightColor, "line-opacity": 1, "line-width": 6.6 }
       });
       state.map.addLayer({
         id: mapLayerIds.stops,
@@ -1299,9 +1301,9 @@ ${styles}
             "match",
             ["get", "type"],
             "finish",
-            "#fc4c02",
+            mapHighlightColor,
             "crew",
-            "#fff7f3",
+            mapHighlightSoft,
             "start",
             "#ececff",
             "#ffffff"
@@ -1310,7 +1312,7 @@ ${styles}
             "match",
             ["get", "type"],
             "crew",
-            "#fc4c02",
+            mapHighlightColor,
             "finish",
             "#ffffff",
             "start",
@@ -1328,9 +1330,9 @@ ${styles}
         source: mapSourceIds.progressPoint,
         paint: {
           "circle-radius": 19,
-          "circle-color": "#fc4c02",
+          "circle-color": mapHighlightColor,
           "circle-opacity": 0.16,
-          "circle-stroke-color": "#fc4c02",
+          "circle-stroke-color": mapHighlightColor,
           "circle-stroke-width": 2,
           "circle-stroke-opacity": 0.24
         }
@@ -1341,7 +1343,7 @@ ${styles}
         source: mapSourceIds.progressPoint,
         paint: {
           "circle-radius": 8,
-          "circle-color": "#fc4c02",
+          "circle-color": mapHighlightColor,
           "circle-stroke-color": "#ffffff",
           "circle-stroke-width": 3
         }
