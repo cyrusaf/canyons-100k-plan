@@ -64,6 +64,14 @@ function formatDuration(minutes) {
   return mins ? `${hours}h${String(mins).padStart(2, "0")}` : `${hours}h00`;
 }
 
+function formatPace(minutes, miles) {
+  if (!miles) return "";
+  const totalSeconds = Math.round((minutes * 60) / miles);
+  const paceMinutes = Math.floor(totalSeconds / 60);
+  const paceSeconds = totalSeconds % 60;
+  return `${paceMinutes}:${String(paceSeconds).padStart(2, "0")}/mi`;
+}
+
 function roundTo(value, increment) {
   // Round halves down so 0.25 L becomes 0.2 L instead of 0.3 L.
   return Math.floor(value / increment + 0.5 - Number.EPSILON) * increment;
@@ -325,6 +333,45 @@ function stopTypeFor(stop) {
   return stop.kind || "aid";
 }
 
+function countsAsSegmentBoundary(stop) {
+  if (stop.segmentBoundary === false) return false;
+  return stopTypeFor(stop) !== "no-aid";
+}
+
+function mergedNextLeg(fromIndex, toIndex) {
+  if (toIndex <= fromIndex) return null;
+  if (toIndex === fromIndex + 1) {
+    return { ...plan.stops[fromIndex].nextLeg };
+  }
+
+  let distanceMi = 0;
+  let gainFt = 0;
+  let lossFt = 0;
+  let plannedMinutes = 0;
+
+  for (let index = fromIndex; index < toIndex; index += 1) {
+    const leg = plan.stops[index].nextLeg;
+    if (!leg) {
+      throw new Error(`Missing leg while merging segment from '${plan.stops[fromIndex].name}'`);
+    }
+    distanceMi += leg.distanceMi;
+    gainFt += leg.gainFt;
+    lossFt += leg.lossFt;
+    plannedMinutes += leg.plannedMinutes;
+  }
+
+  const roundedDistance = Number(distanceMi.toFixed(1));
+  return {
+    to: plan.stops[toIndex].name,
+    distanceMi: roundedDistance,
+    gainFt: Math.round(gainFt),
+    lossFt: Math.round(lossFt),
+    plannedTime: formatDuration(plannedMinutes),
+    plannedMinutes,
+    pace: formatPace(plannedMinutes, roundedDistance)
+  };
+}
+
 function routeStopForClient(stop, index) {
   const resupply = resupplyFor(stop, index);
 
@@ -334,6 +381,7 @@ function routeStopForClient(stop, index) {
     eta: stop.eta,
     kind: stop.kind || "aid",
     type: stopTypeFor(stop),
+    segmentBoundary: countsAsSegmentBoundary(stop),
     tags: stop.tags,
     note: stop.crewCallout || stop.note || "",
     resupply: resupply
@@ -459,6 +507,19 @@ function waypointForStop(stop, waypoints) {
 
 function buildRouteData() {
   const course = parseGpxCourse();
+  const stops = plan.stops.map((stop, index) => {
+    const waypoint = waypointForStop(stop, course.waypoints);
+    const coordinate = waypoint || interpolateCoursePoint(course.points, stop.mile);
+
+    return {
+      ...routeStopForClient(stop, index),
+      lat: roundCoordinate(coordinate.lat),
+      lon: roundCoordinate(coordinate.lon)
+    };
+  });
+  const segmentStopIndexes = plan.stops
+    .map((stop, index) => (countsAsSegmentBoundary(stop) ? index : null))
+    .filter((index) => index !== null);
 
   return {
     title: plan.title,
@@ -472,16 +533,14 @@ function buildRouteData() {
       rawTotalMiles: course.rawTotalMiles,
       totalMiles: course.officialTotalMiles
     },
-    stops: plan.stops.map((stop, index) => {
-      const waypoint = waypointForStop(stop, course.waypoints);
-      const coordinate = waypoint || interpolateCoursePoint(course.points, stop.mile);
-
-      return {
-        ...routeStopForClient(stop, index),
-        lat: roundCoordinate(coordinate.lat),
-        lon: roundCoordinate(coordinate.lon)
-      };
-    })
+    stops,
+    segmentStops: segmentStopIndexes.map((stopIndex, segmentIndex) => ({
+      ...stops[stopIndex],
+      nextLeg:
+        segmentIndex < segmentStopIndexes.length - 1
+          ? mergedNextLeg(stopIndex, segmentStopIndexes[segmentIndex + 1])
+          : null
+    }))
   };
 }
 
@@ -748,12 +807,13 @@ ${styles}
 
     const totalMiles = routeData.course.totalMiles;
     const coursePoints = routeData.course.points;
+    const segmentStops = routeData.segmentStops || routeData.stops;
     const mapHighlightColor = "#d6336c";
     const mapHighlightSoft = "#fff1f5";
     const stopColors = {
       "full-aid": { stroke: "#527a2f", fill: "#edf6e6", mapRadius: 4, profileRadius: 4.2 },
       hydration: { stroke: "#1d6fb8", fill: "#e7f2ff", mapRadius: 4, profileRadius: 4.2 },
-      "no-aid": { stroke: "#b84a18", fill: "#fff0e7", mapRadius: 4, profileRadius: 4.2 },
+      "no-aid": { stroke: "#7b847d", fill: "#f4f7f5", mapRadius: 3, profileRadius: 3.2 },
       crew: { stroke: "#c72f59", fill: "#fde7ee", mapRadius: 6, profileRadius: 5 },
       start: { stroke: "#6366a8", fill: "#ececff", mapRadius: 5, profileRadius: 4.6 },
       finish: { stroke: "#0f766e", fill: "#dff7f2", mapRadius: 6, profileRadius: 5 },
@@ -851,13 +911,13 @@ ${styles}
       if (stop.nextLeg) {
         return {
           depart: stop,
-          arrive: routeData.stops[index + 1] || null,
+          arrive: segmentStops[index + 1] || null,
           leg: stop.nextLeg,
           complete: false
         };
       }
       if (index > 0) {
-        const depart = routeData.stops[index - 1];
+        const depart = segmentStops[index - 1];
         return {
           depart,
           arrive: stop,
@@ -1003,10 +1063,10 @@ ${styles}
 
     function previousStop(mile) {
       let index = 0;
-      routeData.stops.forEach((stop, stopIndex) => {
+      segmentStops.forEach((stop, stopIndex) => {
         if (stop.mile <= mile + 0.05) index = stopIndex;
       });
-      return { stop: routeData.stops[index], index };
+      return { stop: segmentStops[index], index };
     }
 
     function initProfile() {
@@ -1067,16 +1127,16 @@ ${styles}
     }
 
     function currentLegStops(stopIndex) {
-      if (routeData.stops.length < 2) return null;
-      if (stopIndex >= routeData.stops.length - 1) {
+      if (segmentStops.length < 2) return null;
+      if (stopIndex >= segmentStops.length - 1) {
         return {
-          from: routeData.stops[routeData.stops.length - 2],
-          to: routeData.stops[routeData.stops.length - 1]
+          from: segmentStops[segmentStops.length - 2],
+          to: segmentStops[segmentStops.length - 1]
         };
       }
       return {
-        from: routeData.stops[stopIndex],
-        to: routeData.stops[stopIndex + 1]
+        from: segmentStops[stopIndex],
+        to: segmentStops[stopIndex + 1]
       };
     }
 
@@ -1295,6 +1355,8 @@ ${styles}
             7,
             "start",
             5,
+            "no-aid",
+            3,
             4
           ],
           "circle-color": [
@@ -1306,6 +1368,8 @@ ${styles}
             mapHighlightSoft,
             "start",
             "#ececff",
+            "no-aid",
+            "#f4f7f5",
             "#ffffff"
           ],
           "circle-stroke-color": [
@@ -1317,9 +1381,11 @@ ${styles}
             "#ffffff",
             "start",
             "#6366a8",
+            "no-aid",
+            "#7b847d",
             "#0f766e"
           ],
-          "circle-stroke-width": ["match", ["get", "type"], "finish", 3, "crew", 2.5, 2],
+          "circle-stroke-width": ["match", ["get", "type"], "finish", 3, "crew", 2.5, "no-aid", 1.5, 2],
           "circle-opacity": 1,
           "circle-stroke-opacity": 1
         }

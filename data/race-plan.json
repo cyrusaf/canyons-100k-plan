@@ -106,6 +106,8 @@
       "name": "Swinging Bridge",
       "mile": 13.5,
       "eta": "8:20 AM",
+      "kind": "waypoint",
+      "segmentBoundary": false,
       "tags": [
         { "label": "Turnaround", "type": "warn" },
         { "label": "No aid", "type": "warn" }
