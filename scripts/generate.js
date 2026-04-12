@@ -942,10 +942,10 @@ ${styles}
       const left = 8;
       const right = width - 8;
       const top = 18;
-      const minBottomPadding = 48;
+      const minBottomPadding = 24;
       const minPlotHeight = 48;
       const height = Math.max(measuredHeight, top + minBottomPadding + minPlotHeight);
-      const bottom = height - Math.max(minBottomPadding, Math.round(height * 0.16));
+      const bottom = height - Math.max(minBottomPadding, Math.round(height * 0.08));
       const points = coursePoints.map((point) => {
         const x = left + (point.mile / totalMiles) * (right - left);
         const y = bottom - ((point.eleFt - minElevation) / (maxElevation - minElevation)) * (bottom - top);
@@ -1087,7 +1087,7 @@ ${styles}
       elements.profileGrid.replaceChildren(gridFragment);
 
       const profileD = pointPath(profile.points);
-      const areaD = profileD + " L " + profile.points[profile.points.length - 1].x.toFixed(2) + " " + profile.bottom + " L " + profile.points[0].x.toFixed(2) + " " + profile.bottom + " Z";
+      const areaD = profileD + " L " + profile.points[profile.points.length - 1].x.toFixed(2) + " " + profile.height + " L " + profile.points[0].x.toFixed(2) + " " + profile.height + " Z";
       elements.profileArea.setAttribute("d", areaD);
       elements.profileLine.setAttribute("d", profileD);
       elements.profileLineShadow.setAttribute("d", profileD);

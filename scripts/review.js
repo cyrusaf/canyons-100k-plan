@@ -532,7 +532,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     !trackerShortMobileMetrics.metricContentFits ||
     trackerShortMobileMetrics.profileHeight < 180 ||
     trackerShortMobileMetrics.svgHeight < 140 ||
-    trackerShortMobileMetrics.profileBottomGap < 44 ||
+    trackerShortMobileMetrics.profileBottomGap > 8 ||
     trackerShortMobileMetrics.profilePathWidth < trackerShortMobileMetrics.profileSvgWidth * 0.95 ||
     trackerShortLandscapeMetrics.scrollHeight <= trackerShortLandscapeMetrics.innerHeight ||
     trackerShortLandscapeMetrics.appHeight < 720 ||
@@ -540,7 +540,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     !trackerShortLandscapeMetrics.profileWithinApp ||
     trackerShortLandscapeMetrics.profileHeight < 240 ||
     trackerShortLandscapeMetrics.svgHeight < 180 ||
-    trackerShortLandscapeMetrics.profileBottomGap < 44 ||
+    trackerShortLandscapeMetrics.profileBottomGap > 8 ||
     trackerMetrics.scrollWidth > trackerMetrics.innerWidth + 1 ||
     trackerMetrics.scrollHeight > trackerMetrics.innerHeight + 1
   ) {
