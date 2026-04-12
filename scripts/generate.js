@@ -1116,6 +1116,10 @@ ${styles}
       return window.CANYONS_MAPTILER_API_KEY || "";
     }
 
+    function redactMapError(value) {
+      return String(value || "Map error").replace(/([?&]key=)[^&\\s)]+/g, "$1redacted");
+    }
+
     function addRouteMapLayers() {
       const routeLatLngs = coursePoints.map((point) => [point.lat, point.lon]);
       const stopFeatures = routeData.stops.map((stop) =>
@@ -1287,7 +1291,7 @@ ${styles}
         window.routeTrackerReady = true;
       });
       state.map.on("error", (error) => {
-        window.routeTrackerMapError = String(error?.error?.message || error?.message || "Map error");
+        window.routeTrackerMapError = redactMapError(error?.error?.message || error?.message);
         window.routeTrackerReady = true;
       });
     }

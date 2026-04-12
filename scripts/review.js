@@ -233,6 +233,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     ).trim().replace(/\s+/g, " ");
     const layerIds = window.routeTrackerMapLayerIds || {};
     const sourceIds = window.routeTrackerMapSourceIds || {};
+    const mapConfigPresent = Boolean(window.CANYONS_MAPTILER_API_KEY);
     const mapLayerIds = [layerIds.fullRoute, layerIds.progressRoute, layerIds.stops, layerIds.progressDot].filter(Boolean);
     const mapSourceIds = [sourceIds.fullRoute, sourceIds.progressRoute, sourceIds.stops, sourceIds.progressPoint].filter(Boolean);
     const mapLayerCount = mapReady && typeof map.getLayer === "function"
@@ -283,9 +284,12 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       profilePopupHiddenAtRest: profilePopup.hidden && getComputedStyle(profilePopup).display === "none",
       resupplyGuideCount: document.querySelectorAll("#profile-stop-guides .resupply-guide").length,
       mapStopTypeCount: new Set(mapStopTypes).size,
-      mapKeyPresent: hasMapTilerKey,
+      mapKeyPresent: hasMapTilerKey || mapConfigPresent,
+      mapEnvKeyPresent: hasMapTilerKey,
+      mapConfigPresent,
       mapReady,
       mapLoaded,
+      mapError: String(window.routeTrackerMapError || "").replace(/([?&]key=)[^&\s)]+/g, "$1redacted"),
       mapSetupText,
       mapLayerCount,
       mapSourceCount,
@@ -333,6 +337,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     const map = window.routeTrackerMap || null;
     return {
       ready: Boolean(map && typeof map.getZoom === "function"),
+      configPresent: Boolean(window.CANYONS_MAPTILER_API_KEY),
+      error: String(window.routeTrackerMapError || "").replace(/([?&]key=)[^&\s)]+/g, "$1redacted"),
       setupText: (
         document.querySelector(".map-setup-message")?.textContent ||
         document.getElementById("route-map").textContent ||
@@ -370,6 +376,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     };
   }, desktopProfileTargetX);
   trackerDesktopMetrics.mapReady = desktopMapState.ready;
+  trackerDesktopMetrics.mapConfigPresent = desktopMapState.configPresent;
+  trackerDesktopMetrics.mapError = desktopMapState.error;
   trackerDesktopMetrics.mapSetupText = desktopMapState.setupText;
   trackerDesktopMetrics.mapZoomBefore = mapZoomBefore;
   trackerDesktopMetrics.mapZoomAfter = mapZoomAfter;
@@ -454,10 +462,12 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerShortLandscape: trackerShortLandscapeMetrics
   };
   console.log(JSON.stringify(metrics, null, 2));
-  const mapKeyPresent = Boolean(MAPTILER_API_KEY);
-  const trackerMapUnavailableByConfig =
-    !mapKeyPresent && !trackerMetrics.mapReady && trackerMetrics.mapSetupText.includes("Map key needed");
-  const trackerMapFailed = mapKeyPresent
+  const liveMapReview = Boolean(MAPTILER_API_KEY);
+  const trackerMapSkippedLocally =
+    !liveMapReview &&
+    !trackerMetrics.mapReady &&
+    (trackerMetrics.mapSetupText.includes("Map key needed") || trackerMetrics.mapConfigPresent);
+  const trackerMapFailed = liveMapReview
     ? !trackerMetrics.mapReady ||
       !trackerMetrics.mapLoaded ||
       trackerMetrics.mapLayerCount < 4 ||
@@ -465,15 +475,17 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       !trackerMetrics.mapStopsAvailable ||
       trackerMetrics.mapProgressFeatureCount < 1 ||
       !trackerMetrics.cursorVisible
-    : !trackerMapUnavailableByConfig;
-  const trackerDesktopMapUnavailableByConfig =
-    !mapKeyPresent && !trackerDesktopMetrics.mapReady && trackerDesktopMetrics.mapSetupText.includes("Map key needed");
-  const trackerDesktopMapFailed = mapKeyPresent
+    : !trackerMapSkippedLocally;
+  const trackerDesktopMapSkippedLocally =
+    !liveMapReview &&
+    !trackerDesktopMetrics.mapReady &&
+    (trackerDesktopMetrics.mapSetupText.includes("Map key needed") || trackerDesktopMetrics.mapConfigPresent);
+  const trackerDesktopMapFailed = liveMapReview
     ? !trackerDesktopMetrics.mapReady ||
       trackerDesktopMetrics.zoomButtonWidth < 40 ||
       trackerDesktopMetrics.zoomButtonHeight < 44 ||
       trackerDesktopMetrics.mapZoomAfter <= trackerDesktopMetrics.mapZoomBefore
-    : !trackerDesktopMapUnavailableByConfig;
+    : !trackerDesktopMapSkippedLocally;
   if (
     guideMetrics.overflow.length ||
     guideMetrics.tapTargets.length ||

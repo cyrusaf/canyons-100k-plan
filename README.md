@@ -49,21 +49,23 @@ open docs/canyons-100k-crew-guide.html
 open docs/canyons-100k-route-tracker.html
 ```
 
-## Local Map Key
+## Map Key
 
-The route tracker uses MapTiler for the interactive trail map. Do not commit a key. For local review, export `MAPTILER_API_KEY` in your shell and run:
+The route tracker uses MapTiler for the interactive trail map. `docs/route-map-config.js` contains the public browser key used by GitHub Pages; only commit a key that is restricted to the Pages origin in MapTiler.
+
+For local review with the committed Pages key, run:
+
+```sh
+npm run review
+```
+
+If MapTiler rejects the committed key from `file://`, the review still checks layout and interaction. Live map assertions run when `MAPTILER_API_KEY` is set for local review.
+
+To test a different local key without editing the committed config file, export `MAPTILER_API_KEY` in your shell and run:
 
 ```sh
 source ~/.zshrc
 npm run review
-```
-
-For opening the static tracker directly in a browser, create an ignored local config file:
-
-```sh
-cat > docs/route-map-config.js <<'JS'
-window.CANYONS_MAPTILER_API_KEY = "YOUR_LOCAL_KEY";
-JS
 ```
 
 You can also open `docs/canyons-100k-route-tracker.html?maptiler_key=YOUR_LOCAL_KEY`; the page stores that value in local browser storage for later local opens.
