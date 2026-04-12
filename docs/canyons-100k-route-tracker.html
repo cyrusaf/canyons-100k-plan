@@ -2236,34 +2236,30 @@ h2 {
     }
 
     function stylizeBaseMap() {
-      safeSetPaint("Background", "background-color", "#f2f4ee");
+      safeSetPaint("Background", "background-color", "#f7f8f5");
 
-      safeSetPaint("Forest", "fill-color", "#92cf8a");
-      safeSetPaint("Wood", "fill-color", "#82c979");
-      safeSetPaint("Wood", "fill-opacity", 0.68);
-      safeSetPaint("Grass", "fill-color", "#c6e7bd");
-      safeSetPaint("Grass", "fill-opacity", 0.7);
-      safeSetPaint("Scrub", "fill-color", "#d8e8c7");
-      safeSetPaint("Scrub", "fill-opacity", 0.58);
-      safeSetPaint("Crop", "fill-color", "#edf0d7");
-      safeSetPaint("Crop", "fill-opacity", 0.45);
-      safeSetPaint("Residential", "fill-color", "#f1f2f0");
-      safeSetPaint("Residential", "fill-opacity", 0.64);
-      safeSetPaint("Industrial", "fill-color", "#eef0ed");
-      safeSetPaint("Industrial", "fill-opacity", 0.56);
+      ["Forest", "Wood", "Grass", "Scrub", "Crop"].forEach((layerId) => {
+        safeSetPaint(layerId, "fill-color", "#d9efcf");
+        safeSetPaint(layerId, "fill-opacity", 0.28);
+      });
+      safeSetPaint("Residential", "fill-color", "#f7f7f5");
+      safeSetPaint("Residential", "fill-opacity", 0.86);
+      safeSetPaint("Industrial", "fill-color", "#f5f5f3");
+      safeSetPaint("Industrial", "fill-opacity", 0.76);
 
-      safeSetPaint("Hillshade", "hillshade-shadow-color", "#84908b");
+      safeSetPaint("Hillshade", "hillshade-exaggeration", 0.04);
+      safeSetPaint("Hillshade", "hillshade-shadow-color", "#a8afa9");
       safeSetPaint("Hillshade", "hillshade-highlight-color", "#ffffff");
-      safeSetPaint("Hillshade", "hillshade-accent-color", "#9daf9f");
+      safeSetPaint("Hillshade", "hillshade-accent-color", "#d4ddd2");
 
       safeSetPaint("Contour index", "line-color", "#ffffff");
-      safeSetPaint("Contour index", "line-opacity", 0.34);
+      safeSetPaint("Contour index", "line-opacity", 0.1);
       safeSetPaint("Contour", "line-color", "#ffffff");
-      safeSetPaint("Contour", "line-opacity", 0.2);
+      safeSetPaint("Contour", "line-opacity", 0.04);
       safeSetLayout("Contour labels", "visibility", "none");
       safeSetLayout("Glacier contour labels", "visibility", "none");
 
-      safeSetPaint("Water", "fill-color", "#a9d8ef");
+      safeSetPaint("Water", "fill-color", "#b6deee");
       safeSetPaint("River", "line-color", "#7fc1df");
       safeSetPaint("Waterway", "line-color", "#83c4df");
       safeSetPaint("River intermittent", "line-color", "#9dd4e9");
@@ -2274,19 +2270,19 @@ h2 {
         safeSetPaint(layerId, "line-opacity", 0.54);
       });
       safeSetPaint("Minor road", "line-color", "#ffffff");
-      safeSetPaint("Major road", "line-color", "#fff9df");
-      safeSetPaint("Highway", "line-color", "#f0d58e");
-      safeSetPaint("Highway", "line-opacity", 0.62);
+      safeSetPaint("Major road", "line-color", "#fff7d9");
+      safeSetPaint("Highway", "line-color", "#f2dda2");
+      safeSetPaint("Highway", "line-opacity", 0.45);
 
       ["Path minor", "Path"].forEach((layerId) => {
         safeSetLayerZoomRange(layerId, 10, 24);
         safeSetPaint(layerId, "line-color", "#ffffff");
-        safeSetPaint(layerId, "line-opacity", 0.72);
-        safeSetPaint(layerId, "line-width", ["interpolate", ["linear"], ["zoom"], 9, 0.55, 12, 1.2, 15, 2.2]);
+        safeSetPaint(layerId, "line-opacity", 0.84);
+        safeSetPaint(layerId, "line-width", ["interpolate", ["linear"], ["zoom"], 9, 0.45, 12, 1, 15, 1.8]);
       });
 
       safeSetPaint("Road labels", "text-color", "#49524c");
-      safeSetPaint("Road labels", "text-opacity", ["interpolate", ["linear"], ["zoom"], 8, 0.18, 12, 0.55]);
+      safeSetPaint("Road labels", "text-opacity", ["interpolate", ["linear"], ["zoom"], 8, 0.02, 12, 0.28]);
       safeSetPaint("Road labels", "text-halo-color", "rgba(255, 255, 255, 0.78)");
       ["Place labels", "Village labels", "Town labels", "City labels"].forEach((layerId) => {
         safeSetPaint(layerId, "text-color", "#2d3430");
@@ -2345,7 +2341,7 @@ h2 {
         type: "line",
         source: mapSourceIds.fullRoute,
         layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": "#247b72", "line-opacity": 0.74, "line-width": 4.7 }
+        paint: { "line-color": "#287e76", "line-opacity": 0.58, "line-width": 4.6 }
       });
       state.map.addLayer({
         id: mapLayerIds.progressRouteCasing,
@@ -2359,7 +2355,7 @@ h2 {
         type: "line",
         source: mapSourceIds.progressRoute,
         layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": "#fc4c02", "line-opacity": 0.99, "line-width": 6.8 }
+        paint: { "line-color": "#fc4c02", "line-opacity": 1, "line-width": 6.6 }
       });
       state.map.addLayer({
         id: mapLayerIds.stops,
