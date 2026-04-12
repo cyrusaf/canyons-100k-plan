@@ -1150,25 +1150,35 @@ ${styles}
     function stylizeBaseMap() {
       safeSetPaint("Background", "background-color", "#f7f8f5");
 
-      ["Forest", "Wood", "Grass", "Scrub", "Crop"].forEach((layerId) => {
-        safeSetPaint(layerId, "fill-color", "#d9efcf");
-        safeSetPaint(layerId, "fill-opacity", 0.28);
+      ["Forest", "Wood"].forEach((layerId) => {
+        safeSetPaint(layerId, "fill-color", "#dfead9");
+        safeSetPaint(layerId, "fill-opacity", 0.24);
+      });
+      ["Grass", "Scrub", "Crop"].forEach((layerId) => {
+        safeSetPaint(layerId, "fill-color", "#e8eee1");
+        safeSetPaint(layerId, "fill-opacity", 0.18);
       });
       safeSetPaint("Residential", "fill-color", "#f7f7f5");
       safeSetPaint("Residential", "fill-opacity", 0.86);
       safeSetPaint("Industrial", "fill-color", "#f5f5f3");
       safeSetPaint("Industrial", "fill-opacity", 0.76);
 
-      safeSetPaint("Hillshade", "hillshade-exaggeration", 0.04);
-      safeSetPaint("Hillshade", "hillshade-shadow-color", "#a8afa9");
+      safeSetPaint("Hillshade", "hillshade-exaggeration", 0.11);
+      safeSetPaint("Hillshade", "hillshade-shadow-color", "#8f9b94");
       safeSetPaint("Hillshade", "hillshade-highlight-color", "#ffffff");
-      safeSetPaint("Hillshade", "hillshade-accent-color", "#d4ddd2");
+      safeSetPaint("Hillshade", "hillshade-accent-color", "#c8d2ca");
 
-      safeSetPaint("Contour index", "line-color", "#ffffff");
-      safeSetPaint("Contour index", "line-opacity", 0.1);
-      safeSetPaint("Contour", "line-color", "#ffffff");
-      safeSetPaint("Contour", "line-opacity", 0.04);
-      safeSetLayout("Contour labels", "visibility", "none");
+      safeSetPaint("Contour index", "line-color", "#748178");
+      safeSetPaint("Contour index", "line-opacity", ["interpolate", ["linear"], ["zoom"], 8, 0.16, 11, 0.24, 14, 0.32]);
+      safeSetPaint("Contour index", "line-width", ["interpolate", ["linear"], ["zoom"], 9, 0.55, 13, 0.86, 16, 1.12]);
+      safeSetPaint("Contour", "line-color", "#95a098");
+      safeSetPaint("Contour", "line-opacity", ["interpolate", ["linear"], ["zoom"], 8, 0.06, 11, 0.12, 15, 0.18]);
+      safeSetPaint("Contour", "line-width", ["interpolate", ["linear"], ["zoom"], 9, 0.32, 13, 0.52, 16, 0.76]);
+      safeSetLayout("Contour labels", "visibility", "visible");
+      safeSetPaint("Contour labels", "text-color", "#6f7c74");
+      safeSetPaint("Contour labels", "text-opacity", ["interpolate", ["linear"], ["zoom"], 11, 0, 13, 0.16, 15, 0.28]);
+      safeSetPaint("Contour labels", "text-halo-color", "rgba(247, 248, 245, 0.78)");
+      safeSetPaint("Contour labels", "text-halo-width", 1.1);
       safeSetLayout("Glacier contour labels", "visibility", "none");
 
       safeSetPaint("Water", "fill-color", "#b6deee");
