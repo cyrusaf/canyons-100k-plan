@@ -1263,7 +1263,7 @@ ${styles}
       maptilersdk.config.apiKey = apiKey;
       state.map = new maptilersdk.Map({
         container: "route-map",
-        style: maptilersdk.MapStyle.OUTDOOR,
+        style: maptilersdk.MapStyle.TOPO,
         attributionControl: true,
         dragRotate: false,
         pitchWithRotate: false,
