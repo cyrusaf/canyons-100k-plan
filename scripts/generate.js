@@ -1120,6 +1120,103 @@ ${styles}
       return String(value || "Map error").replace(/([?&]key=)[^&\\s)]+/g, "$1redacted");
     }
 
+    function safeSetPaint(layerId, property, value) {
+      if (!state.map.getLayer(layerId)) return;
+      try {
+        state.map.setPaintProperty(layerId, property, value);
+      } catch (error) {
+        // MapTiler can revise style internals; keep the tracker resilient.
+      }
+    }
+
+    function safeSetLayout(layerId, property, value) {
+      if (!state.map.getLayer(layerId)) return;
+      try {
+        state.map.setLayoutProperty(layerId, property, value);
+      } catch (error) {
+        // Ignore optional base-map layer tweaks.
+      }
+    }
+
+    function safeSetLayerZoomRange(layerId, minzoom, maxzoom) {
+      if (!state.map.getLayer(layerId) || typeof state.map.setLayerZoomRange !== "function") return;
+      try {
+        state.map.setLayerZoomRange(layerId, minzoom, maxzoom);
+      } catch (error) {
+        // Ignore optional base-map layer tweaks.
+      }
+    }
+
+    function stylizeBaseMap() {
+      safeSetPaint("Background", "background-color", "#f2f4ee");
+
+      safeSetPaint("Forest", "fill-color", "#92cf8a");
+      safeSetPaint("Wood", "fill-color", "#82c979");
+      safeSetPaint("Wood", "fill-opacity", 0.68);
+      safeSetPaint("Grass", "fill-color", "#c6e7bd");
+      safeSetPaint("Grass", "fill-opacity", 0.7);
+      safeSetPaint("Scrub", "fill-color", "#d8e8c7");
+      safeSetPaint("Scrub", "fill-opacity", 0.58);
+      safeSetPaint("Crop", "fill-color", "#edf0d7");
+      safeSetPaint("Crop", "fill-opacity", 0.45);
+      safeSetPaint("Residential", "fill-color", "#f1f2f0");
+      safeSetPaint("Residential", "fill-opacity", 0.64);
+      safeSetPaint("Industrial", "fill-color", "#eef0ed");
+      safeSetPaint("Industrial", "fill-opacity", 0.56);
+
+      safeSetPaint("Hillshade", "hillshade-shadow-color", "#84908b");
+      safeSetPaint("Hillshade", "hillshade-highlight-color", "#ffffff");
+      safeSetPaint("Hillshade", "hillshade-accent-color", "#9daf9f");
+
+      safeSetPaint("Contour index", "line-color", "#ffffff");
+      safeSetPaint("Contour index", "line-opacity", 0.34);
+      safeSetPaint("Contour", "line-color", "#ffffff");
+      safeSetPaint("Contour", "line-opacity", 0.2);
+      safeSetLayout("Contour labels", "visibility", "none");
+      safeSetLayout("Glacier contour labels", "visibility", "none");
+
+      safeSetPaint("Water", "fill-color", "#a9d8ef");
+      safeSetPaint("River", "line-color", "#7fc1df");
+      safeSetPaint("Waterway", "line-color", "#83c4df");
+      safeSetPaint("River intermittent", "line-color", "#9dd4e9");
+      safeSetPaint("Waterway intermittent", "line-color", "#9dd4e9");
+
+      ["Minor road outline", "Major road outline", "Highway outline"].forEach((layerId) => {
+        safeSetPaint(layerId, "line-color", "#ffffff");
+        safeSetPaint(layerId, "line-opacity", 0.54);
+      });
+      safeSetPaint("Minor road", "line-color", "#ffffff");
+      safeSetPaint("Major road", "line-color", "#fff9df");
+      safeSetPaint("Highway", "line-color", "#f0d58e");
+      safeSetPaint("Highway", "line-opacity", 0.62);
+
+      ["Path minor", "Path"].forEach((layerId) => {
+        safeSetLayerZoomRange(layerId, 10, 24);
+        safeSetPaint(layerId, "line-color", "#ffffff");
+        safeSetPaint(layerId, "line-opacity", 0.72);
+        safeSetPaint(layerId, "line-width", ["interpolate", ["linear"], ["zoom"], 9, 0.55, 12, 1.2, 15, 2.2]);
+      });
+
+      safeSetPaint("Road labels", "text-color", "#49524c");
+      safeSetPaint("Road labels", "text-opacity", ["interpolate", ["linear"], ["zoom"], 8, 0.18, 12, 0.55]);
+      safeSetPaint("Road labels", "text-halo-color", "rgba(255, 255, 255, 0.78)");
+      ["Place labels", "Village labels", "Town labels", "City labels"].forEach((layerId) => {
+        safeSetPaint(layerId, "text-color", "#2d3430");
+        safeSetPaint(layerId, "text-halo-color", "rgba(255, 255, 255, 0.82)");
+        safeSetPaint(layerId, "text-halo-width", 1.4);
+      });
+      ["Protected area labels", "National park labels"].forEach((layerId) => {
+        safeSetPaint(layerId, "text-color", "#2f6b30");
+        safeSetPaint(layerId, "text-halo-color", "rgba(239, 248, 237, 0.9)");
+        safeSetPaint(layerId, "text-halo-width", 1.5);
+      });
+      ["Peak labels", "Peak labels (US)", "Volcano labels", "Volcano labels (US)"].forEach((layerId) => {
+        safeSetPaint(layerId, "text-color", "#42503e");
+        safeSetPaint(layerId, "text-halo-color", "rgba(255, 255, 255, 0.78)");
+        safeSetPaint(layerId, "icon-color", "#56624d");
+      });
+    }
+
     function addRouteMapLayers() {
       const routeLatLngs = coursePoints.map((point) => [point.lat, point.lon]);
       const stopFeatures = routeData.stops.map((stop) =>
@@ -1153,28 +1250,28 @@ ${styles}
         type: "line",
         source: mapSourceIds.fullRoute,
         layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": "#ffffff", "line-opacity": 0.86, "line-width": 9 }
+        paint: { "line-color": "#ffffff", "line-opacity": 0.92, "line-width": 9.5 }
       });
       state.map.addLayer({
         id: mapLayerIds.fullRoute,
         type: "line",
         source: mapSourceIds.fullRoute,
         layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": "#287c74", "line-opacity": 0.74, "line-width": 5 }
+        paint: { "line-color": "#247b72", "line-opacity": 0.74, "line-width": 4.7 }
       });
       state.map.addLayer({
         id: mapLayerIds.progressRouteCasing,
         type: "line",
         source: mapSourceIds.progressRoute,
         layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": "#ffffff", "line-opacity": 0.94, "line-width": 10 }
+        paint: { "line-color": "#ffffff", "line-opacity": 0.96, "line-width": 11.5 }
       });
       state.map.addLayer({
         id: mapLayerIds.progressRoute,
         type: "line",
         source: mapSourceIds.progressRoute,
         layout: { "line-cap": "round", "line-join": "round" },
-        paint: { "line-color": "#fc4c02", "line-opacity": 0.98, "line-width": 6 }
+        paint: { "line-color": "#fc4c02", "line-opacity": 0.99, "line-width": 6.8 }
       });
       state.map.addLayer({
         id: mapLayerIds.stops,
@@ -1270,8 +1367,8 @@ ${styles}
         touchPitch: false
       });
 
-      state.map.addControl(new maptilersdk.NavigationControl({ showCompass: false }), "bottom-right");
       state.map.on("load", () => {
+        stylizeBaseMap();
         addRouteMapLayers();
         const isMobile = window.matchMedia("(max-width: 719px)").matches;
         state.map.fitBounds(
