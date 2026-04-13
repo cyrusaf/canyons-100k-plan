@@ -525,6 +525,7 @@ h2 {
 
 .route-body {
   --route-bottom-safe: 0px;
+  --route-profile-bottom-safe: 0px;
   width: 100%;
   min-width: 320px;
   min-height: 100svh;
@@ -1246,6 +1247,7 @@ h2 {
   position: relative;
   display: grid;
   grid-template-rows: minmax(48px, auto) minmax(0, 1fr);
+  padding-bottom: var(--route-profile-bottom-safe);
   border: 0;
   border-bottom: 1px solid var(--line);
   background: #ffffff;
@@ -1636,6 +1638,18 @@ h2 {
 
   .station-tags {
     display: none;
+  }
+}
+
+@media (min-width: 720px) and (max-height: 900px) {
+  .route-body {
+    --route-bottom-safe: 96px;
+  }
+}
+
+@media (min-width: 720px) and (max-height: 720px) {
+  .route-body {
+    --route-profile-bottom-safe: 72px;
   }
 }
 
