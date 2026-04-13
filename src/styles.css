@@ -516,9 +516,11 @@ h2 {
 }
 
 .route-body {
+  --route-bottom-safe: 0px;
   width: 100%;
   min-width: 320px;
   min-height: 100svh;
+  padding-bottom: var(--route-bottom-safe);
   overflow-x: hidden;
   overflow-y: auto;
   background: #f4f7f5;
@@ -1577,6 +1579,10 @@ h2 {
 }
 
 @media (max-height: 720px) {
+  .route-body {
+    --route-bottom-safe: 64px;
+  }
+
   .route-app {
     --route-stage-height: 44svh;
   }
