@@ -566,8 +566,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     Math.abs(trackerDesktopMetrics.appHeight - trackerDesktopMetrics.innerHeight) > 1 ||
     Math.abs(trackerDesktopMetrics.profileBottomGap) > 1 ||
     Math.abs(trackerDesktopMetrics.profileSvgBottomGap) > 1 ||
-    trackerDesktopMetrics.profileContentBottomGap < 8 ||
-    trackerDesktopMetrics.profileContentBottomGap > 22 ||
+    trackerDesktopMetrics.profileContentBottomGap < 24 ||
+    trackerDesktopMetrics.profileContentBottomGap > 60 ||
     !trackerDesktopMetrics.mapFitsStage ||
     !trackerDesktopMetrics.detailsBelowMap ||
     trackerDesktopMetrics.profileDragDeltaPx > 5 ||
@@ -590,9 +590,9 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerShortMobileMetrics.profileHeight < 180 ||
     trackerShortMobileMetrics.svgHeight < 140 ||
     Math.abs(trackerShortMobileMetrics.profileSvgBottomGap) > 1 ||
-    trackerShortMobileMetrics.profileLineBottomGap < 12 ||
-    trackerShortMobileMetrics.profileContentBottomGap < 8 ||
-    trackerShortMobileMetrics.profileContentBottomGap > 22 ||
+    trackerShortMobileMetrics.profileLineBottomGap < 24 ||
+    trackerShortMobileMetrics.profileContentBottomGap < 20 ||
+    trackerShortMobileMetrics.profileContentBottomGap > 60 ||
     trackerShortMobileMetrics.profilePathWidth < trackerShortMobileMetrics.profileSvgWidth * 0.95 ||
     trackerShortLandscapeMetrics.scrollHeight > trackerShortLandscapeMetrics.innerHeight + 1 ||
     Math.abs(trackerShortLandscapeMetrics.appHeight - trackerShortLandscapeMetrics.innerHeight) > 1 ||
@@ -601,9 +601,9 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerShortLandscapeMetrics.profileHeight < 80 ||
     trackerShortLandscapeMetrics.svgHeight < 50 ||
     Math.abs(trackerShortLandscapeMetrics.profileSvgBottomGap) > 1 ||
-    trackerShortLandscapeMetrics.profileLineBottomGap < 8 ||
-    trackerShortLandscapeMetrics.profileContentBottomGap < 6 ||
-    trackerShortLandscapeMetrics.profileContentBottomGap > 18 ||
+    trackerShortLandscapeMetrics.profileLineBottomGap < 24 ||
+    trackerShortLandscapeMetrics.profileContentBottomGap < 20 ||
+    trackerShortLandscapeMetrics.profileContentBottomGap > 44 ||
     trackerMetrics.scrollWidth > trackerMetrics.innerWidth + 1 ||
     trackerMetrics.scrollHeight > trackerMetrics.innerHeight + 1
   ) {
