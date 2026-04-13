@@ -523,23 +523,26 @@ h2 {
 }
 
 .route-body {
-  --route-bottom-safe: 0px;
   width: 100%;
   min-width: 320px;
-  min-height: 100svh;
-  padding-bottom: var(--route-bottom-safe);
+  height: 100svh;
+  height: 100dvh;
+  min-height: 0;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
   background: #f4f7f5;
 }
 
 .route-app {
   --route-stage-height: 52svh;
-  --route-min-height: 720px;
+  --route-bottom-inset: 0px;
   display: grid;
-  grid-template-rows: var(--route-stage-height) minmax(0, 1fr);
-  height: max(100svh, var(--route-min-height));
-  min-height: var(--route-min-height);
+  grid-template-rows: minmax(0, var(--route-stage-height)) minmax(0, 1fr);
+  height: 100svh;
+  height: 100dvh;
+  min-height: 0;
+  padding-bottom: var(--route-bottom-inset);
+  background: #f4f7f5;
 }
 
 .route-stage {
@@ -1146,6 +1149,43 @@ h2 {
   }
 }
 
+@media (min-width: 720px) and (max-width: 1240px) {
+  .station-panel {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr) minmax(0, 1.05fr);
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .station-route-summary {
+    padding: 8px;
+  }
+
+  .station-route-stop h2,
+  .station-route-stop strong {
+    font-size: 18px;
+  }
+
+  .station-leg-metrics {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  }
+
+  .station-metric {
+    padding: 6px 8px 7px;
+  }
+
+  .station-metric strong {
+    font-size: 16px;
+  }
+
+  .station-metric.primary strong {
+    font-size: 22px;
+  }
+
+  .station-resupply em {
+    font-size: 12px;
+  }
+}
+
 .next-panel {
   display: grid;
   align-content: center;
@@ -1380,7 +1420,6 @@ h2 {
 @media (max-width: 719px) {
   .route-app {
     --route-stage-height: 46svh;
-    --route-min-height: 680px;
   }
 
   .route-stage {
@@ -1586,10 +1625,6 @@ h2 {
 }
 
 @media (max-height: 720px) {
-  .route-body {
-    --route-bottom-safe: 64px;
-  }
-
   .route-app {
     --route-stage-height: 44svh;
   }
@@ -1638,9 +1673,11 @@ h2 {
   }
 }
 
-@media (min-width: 720px) and (max-height: 900px) {
-  .route-body {
-    --route-bottom-safe: 96px;
+@media (min-width: 720px) and (min-height: 421px) and (max-height: 760px) {
+  .route-app {
+    --route-stage-height: 38svh;
+    --route-bottom-inset: clamp(0px, calc(760px - 100svh), 72px);
+    --route-bottom-inset: clamp(0px, calc(760px - 100dvh), 72px);
   }
 }
 
@@ -1656,6 +1693,88 @@ h2 {
   .station-leg-metrics,
   .station-nutrition-metrics {
     grid-template-rows: auto;
+  }
+}
+
+@media (max-width: 719px) and (max-height: 480px) {
+  .route-app {
+    --route-stage-height: 30svh;
+  }
+
+  .route-details {
+    grid-template-rows: 160px minmax(0, 1fr);
+  }
+
+  .station-panel {
+    gap: 4px;
+    padding: 6px 10px;
+  }
+
+  .station-metric {
+    padding: 4px 6px;
+  }
+
+  .station-resupply {
+    display: none;
+  }
+
+  .bottom-profile-viz {
+    grid-template-rows: minmax(36px, auto) minmax(0, 1fr);
+  }
+
+  .bottom-profile-viz .viz-title {
+    min-height: 36px;
+    padding: 4px 8px 2px;
+  }
+}
+
+@media (min-width: 720px) and (max-height: 420px) {
+  .route-app {
+    --route-stage-height: 28svh;
+  }
+
+  .route-details {
+    grid-template-rows: 104px minmax(0, 1fr);
+  }
+
+  .station-panel {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+}
+
+@media (min-width: 720px) and (max-height: 260px) {
+  .route-app {
+    --route-stage-height: 22svh;
+  }
+
+  .route-details {
+    grid-template-rows: 88px minmax(0, 1fr);
+  }
+
+  .station-panel {
+    gap: 4px 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
+  .bottom-profile-viz {
+    grid-template-rows: minmax(32px, auto) minmax(0, 1fr);
+  }
+
+  .bottom-profile-viz .viz-title {
+    min-height: 32px;
+    padding: 3px 8px 2px;
+  }
+
+  .bottom-profile-viz .viz-title strong {
+    font-size: 13px;
+  }
+
+  .bottom-profile-viz .viz-title em {
+    min-width: 72px;
+    padding: 4px 6px;
+    font-size: 11px;
   }
 }
 

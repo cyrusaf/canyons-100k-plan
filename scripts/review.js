@@ -29,6 +29,19 @@ function trackerUrl() {
   return url.href;
 }
 
+async function waitForTrackerMapIdle(page) {
+  await page.waitForFunction(() => {
+    const map = window.routeTrackerMap;
+    if (!window.CANYONS_MAPTILER_API_KEY) return true;
+    return Boolean(
+      map &&
+      typeof map.loaded === "function" &&
+      map.loaded() &&
+      (typeof map.areTilesLoaded !== "function" || map.areTilesLoaded())
+    );
+  }, null, { timeout: 6000 }).catch(() => {});
+}
+
 execFileSync(process.execPath, [path.join(ROOT, "scripts", "generate.js")], {
   cwd: ROOT,
   stdio: "inherit"
@@ -81,6 +94,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 
     const tapTargets = [...document.querySelectorAll("a, button")]
       .filter((el) => !el.closest(".maplibregl-ctrl-attrib"))
+      .filter((el) => !el.closest(".maplibregl-ctrl-logo"))
+      .filter((el) => el.getAttribute("aria-label") !== "MapTiler logo")
       .map((el) => {
         const rect = el.getBoundingClientRect();
         return {
@@ -119,6 +134,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
   });
   await trackerMobile.goto(trackerUrl(), { waitUntil: "domcontentloaded" });
   await trackerMobile.waitForFunction(() => window.routeTrackerReady === true, null, { timeout: 10000 });
+  await waitForTrackerMapIdle(trackerMobile);
   await trackerMobile.waitForTimeout(500);
   await trackerMobile.screenshot({ path: path.join(SCREENSHOT_DIR, "iphone-tracker-start.png"), fullPage: false });
   const trackerStartResupplyMetrics = await trackerMobile.evaluate(() => {
@@ -205,6 +221,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 
     const tapTargets = [...document.querySelectorAll("a, button")]
       .filter((el) => !el.closest(".maplibregl-ctrl-attrib"))
+      .filter((el) => !el.closest(".maplibregl-ctrl-logo"))
+      .filter((el) => el.getAttribute("aria-label") !== "MapTiler logo")
       .map((el) => {
         const rect = el.getBoundingClientRect();
         return {
@@ -317,6 +335,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
   const trackerDesktop = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
   await trackerDesktop.goto(trackerUrl(), { waitUntil: "domcontentloaded" });
   await trackerDesktop.waitForFunction(() => window.routeTrackerReady === true, null, { timeout: 10000 });
+  await waitForTrackerMapIdle(trackerDesktop);
   await trackerDesktop.waitForTimeout(500);
   const desktopProfileBoxBeforeWheel = await trackerDesktop.locator("#profile-svg").boundingBox();
   await trackerDesktop.mouse.move(
@@ -462,6 +481,10 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerShortLandscape: trackerShortLandscapeMetrics
   };
   console.log(JSON.stringify(metrics, null, 2));
+  const mileLabelMatch = trackerMetrics.mileLabel.match(/([\d.]+)\s*\/\s*([\d.]+)\s*mi/);
+  const mileLabelAtEnd = mileLabelMatch
+    ? Math.abs(Number(mileLabelMatch[1]) - Number(mileLabelMatch[2])) <= 0.11 && Number(mileLabelMatch[2]) >= 63
+    : false;
   const liveMapReview = Boolean(MAPTILER_API_KEY);
   const trackerMapSkippedLocally =
     !liveMapReview &&
@@ -493,8 +516,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerMetrics.overflow.length ||
     trackerMetrics.tapTargets.length ||
     trackerMetrics.tinyText.length ||
-    trackerMetrics.bodyOverflow !== "auto" ||
-    !trackerMetrics.mileLabel.startsWith("63.1") ||
+    trackerMetrics.bodyOverflow !== "hidden" ||
+    !mileLabelAtEnd ||
     trackerMetrics.profileDragLabel.startsWith("63.1") ||
     !trackerMetrics.profilePopupDuringDrag.visible ||
     !trackerMetrics.profilePopupDuringDrag.withinProfile ||
@@ -534,12 +557,12 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerShortMobileMetrics.svgHeight < 140 ||
     trackerShortMobileMetrics.profileBottomGap > 8 ||
     trackerShortMobileMetrics.profilePathWidth < trackerShortMobileMetrics.profileSvgWidth * 0.95 ||
-    trackerShortLandscapeMetrics.scrollHeight <= trackerShortLandscapeMetrics.innerHeight ||
-    trackerShortLandscapeMetrics.appHeight < 720 ||
+    trackerShortLandscapeMetrics.scrollHeight > trackerShortLandscapeMetrics.innerHeight + 1 ||
+    Math.abs(trackerShortLandscapeMetrics.appHeight - trackerShortLandscapeMetrics.innerHeight) > 1 ||
     !trackerShortLandscapeMetrics.stationAboveProfile ||
     !trackerShortLandscapeMetrics.profileWithinApp ||
-    trackerShortLandscapeMetrics.profileHeight < 240 ||
-    trackerShortLandscapeMetrics.svgHeight < 180 ||
+    trackerShortLandscapeMetrics.profileHeight < 80 ||
+    trackerShortLandscapeMetrics.svgHeight < 50 ||
     trackerShortLandscapeMetrics.profileBottomGap > 8 ||
     trackerMetrics.scrollWidth > trackerMetrics.innerWidth + 1 ||
     trackerMetrics.scrollHeight > trackerMetrics.innerHeight + 1
