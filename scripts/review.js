@@ -498,6 +498,68 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     };
   });
 
+  const trackerBottomSweepViewports = [
+    { width: 2048, height: 300 },
+    { width: 2048, height: 360 },
+    { width: 2048, height: 420 },
+    { width: 2048, height: 440 },
+    { width: 2048, height: 460 },
+    { width: 2048, height: 500 },
+    { width: 2048, height: 517 },
+    { width: 2048, height: 540 },
+    { width: 2048, height: 720 },
+    { width: 2048, height: 832 },
+    { width: 1280, height: 517 },
+    { width: 720, height: 517 },
+    { width: 390, height: 360 },
+    { width: 390, height: 400 },
+    { width: 390, height: 480 },
+    { width: 390, height: 500 },
+    { width: 390, height: 560 },
+    { width: 390, height: 667 },
+    { width: 390, height: 844 }
+  ];
+  const trackerBottomSweepPage = await browser.newPage({ deviceScaleFactor: 1 });
+  const trackerBottomSweep = [];
+  for (const viewport of trackerBottomSweepViewports) {
+    await trackerBottomSweepPage.setViewportSize(viewport);
+    await trackerBottomSweepPage.goto(trackerUrl(), { waitUntil: "domcontentloaded" });
+    await trackerBottomSweepPage.waitForFunction(
+      () => Boolean(
+        document.getElementById("profile-line")?.getAttribute("d") &&
+        document.querySelectorAll("#profile-stops circle").length
+      ),
+      null,
+      { timeout: 10000 }
+    );
+    await trackerBottomSweepPage.waitForTimeout(100);
+    trackerBottomSweep.push(await trackerBottomSweepPage.evaluate(() => {
+      const profile = document.querySelector(".bottom-profile-viz").getBoundingClientRect();
+      const svg = document.getElementById("profile-svg").getBoundingClientRect();
+      const area = document.getElementById("profile-area").getBoundingClientRect();
+      const contentBottom = Math.max(
+        ...[...document.querySelectorAll("#profile-line, #profile-stops circle")]
+          .map((el) => el.getBoundingClientRect().bottom)
+      );
+      const doc = document.documentElement;
+      const normalChromeBudget =
+        (window.innerWidth >= 720 && window.innerHeight >= 421) ||
+        (window.innerWidth < 720 && window.innerHeight >= 481);
+
+      return {
+        viewport: `${window.innerWidth}x${window.innerHeight}`,
+        scrollHeight: doc.scrollHeight,
+        innerHeight: window.innerHeight,
+        profileBottomGap: Math.round(window.innerHeight - profile.bottom),
+        profileSvgBottomGap: Math.round(profile.bottom - svg.bottom),
+        profileAreaBottomGap: Math.round(svg.bottom - area.bottom),
+        profileContentBottomGap: Math.round(svg.bottom - contentBottom),
+        bottomChromeBudget: normalChromeBudget ? 64 : 28
+      };
+    }));
+  }
+  await trackerBottomSweepPage.close();
+
   await browser.close();
 
   const metrics = {
@@ -506,7 +568,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerDesktop: trackerDesktopMetrics,
     trackerStartResupply: trackerStartResupplyMetrics,
     trackerShortMobile: trackerShortMobileMetrics,
-    trackerShortLandscape: trackerShortLandscapeMetrics
+    trackerShortLandscape: trackerShortLandscapeMetrics,
+    trackerBottomSweep
   };
   console.log(JSON.stringify(metrics, null, 2));
   const mileLabelMatch = trackerMetrics.mileLabel.match(/([\d.]+)\s*\/\s*([\d.]+)\s*mi/);
@@ -566,8 +629,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     Math.abs(trackerDesktopMetrics.appHeight - trackerDesktopMetrics.innerHeight) > 1 ||
     Math.abs(trackerDesktopMetrics.profileBottomGap) > 1 ||
     Math.abs(trackerDesktopMetrics.profileSvgBottomGap) > 1 ||
-    trackerDesktopMetrics.profileContentBottomGap < 24 ||
-    trackerDesktopMetrics.profileContentBottomGap > 60 ||
+    trackerDesktopMetrics.profileContentBottomGap < 56 ||
+    trackerDesktopMetrics.profileContentBottomGap > 86 ||
     !trackerDesktopMetrics.mapFitsStage ||
     !trackerDesktopMetrics.detailsBelowMap ||
     trackerDesktopMetrics.profileDragDeltaPx > 5 ||
@@ -590,9 +653,9 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerShortMobileMetrics.profileHeight < 180 ||
     trackerShortMobileMetrics.svgHeight < 140 ||
     Math.abs(trackerShortMobileMetrics.profileSvgBottomGap) > 1 ||
-    trackerShortMobileMetrics.profileLineBottomGap < 24 ||
-    trackerShortMobileMetrics.profileContentBottomGap < 20 ||
-    trackerShortMobileMetrics.profileContentBottomGap > 60 ||
+    trackerShortMobileMetrics.profileLineBottomGap < 56 ||
+    trackerShortMobileMetrics.profileContentBottomGap < 56 ||
+    trackerShortMobileMetrics.profileContentBottomGap > 86 ||
     trackerShortMobileMetrics.profilePathWidth < trackerShortMobileMetrics.profileSvgWidth * 0.95 ||
     trackerShortLandscapeMetrics.scrollHeight > trackerShortLandscapeMetrics.innerHeight + 1 ||
     Math.abs(trackerShortLandscapeMetrics.appHeight - trackerShortLandscapeMetrics.innerHeight) > 1 ||
@@ -601,9 +664,16 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerShortLandscapeMetrics.profileHeight < 80 ||
     trackerShortLandscapeMetrics.svgHeight < 50 ||
     Math.abs(trackerShortLandscapeMetrics.profileSvgBottomGap) > 1 ||
-    trackerShortLandscapeMetrics.profileLineBottomGap < 24 ||
-    trackerShortLandscapeMetrics.profileContentBottomGap < 20 ||
+    trackerShortLandscapeMetrics.profileLineBottomGap < 28 ||
+    trackerShortLandscapeMetrics.profileContentBottomGap < 28 ||
     trackerShortLandscapeMetrics.profileContentBottomGap > 44 ||
+    trackerBottomSweep.some((item) =>
+      item.scrollHeight > item.innerHeight + 1 ||
+      Math.abs(item.profileBottomGap) > 1 ||
+      Math.abs(item.profileSvgBottomGap) > 1 ||
+      Math.abs(item.profileAreaBottomGap) > 1 ||
+      item.profileContentBottomGap < item.bottomChromeBudget
+    ) ||
     trackerMetrics.scrollWidth > trackerMetrics.innerWidth + 1 ||
     trackerMetrics.scrollHeight > trackerMetrics.innerHeight + 1
   ) {
