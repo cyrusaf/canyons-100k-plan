@@ -663,19 +663,19 @@ ${styles}
     <section class="route-details real-route-details" aria-label="Current route details">
       <article class="station-panel" id="station-panel">
         <div class="station-route-summary">
-          <div class="station-overline" id="station-overline">Current leg</div>
-          <div class="station-route-line">
-            <div class="station-route-stop">
-              <span id="station-meta">Depart 5:00 AM</span>
-              <h2 id="station-name">China Wall Start</h2>
-            </div>
-            <span class="station-route-arrow">to</span>
-            <div class="station-route-stop">
-              <span id="arrival-meta">Arrive 7:25 AM</span>
-              <strong id="next-stop">Deadwood 1</strong>
-            </div>
+          <div class="station-route-kicker">
+            <div class="station-overline" id="station-overline">Current leg</div>
+            <div class="station-tags" id="station-tags"></div>
           </div>
-          <div class="station-tags" id="station-tags"></div>
+          <div class="station-route-line">
+            <h2 id="station-name">China Wall Start</h2>
+            <span class="station-route-arrow">to</span>
+            <strong id="next-stop">Deadwood 1</strong>
+          </div>
+          <div class="station-route-times" aria-label="Current leg timing">
+            <span id="station-meta">Depart 5:00 AM</span>
+            <span id="arrival-meta">Arrive 7:25 AM</span>
+          </div>
           <p class="station-note" id="station-note"></p>
         </div>
 
@@ -786,6 +786,8 @@ ${styles}
       resupplyBlock: document.getElementById("resupply-block"),
       resupplyNutrition: document.getElementById("resupply-nutrition"),
       resupplyNote: document.getElementById("resupply-note"),
+      profileViz: document.querySelector(".bottom-profile-viz"),
+      profileTitle: document.querySelector(".bottom-profile-viz .viz-title"),
       profileSvg: document.getElementById("profile-svg"),
       profileGrid: document.getElementById("profile-grid"),
       profileStopGuides: document.getElementById("profile-stop-guides"),
@@ -847,6 +849,14 @@ ${styles}
     window.routeTrackerReady = false;
     window.routeTrackerMapLayerIds = mapLayerIds;
     window.routeTrackerMapSourceIds = mapSourceIds;
+
+    function syncViewportHeight() {
+      const viewportHeight =
+        window.visualViewport && window.visualViewport.height
+          ? window.visualViewport.height
+          : window.innerHeight;
+      document.documentElement.style.setProperty("--route-vh", viewportHeight * 0.01 + "px");
+    }
 
     function clamp(value, min, max) {
       return Math.max(min, Math.min(max, value));
@@ -933,7 +943,18 @@ ${styles}
       };
     }
 
+    function fitProfileSvgToContainer() {
+      const profileRect = elements.profileViz.getBoundingClientRect();
+      const titleRect = elements.profileTitle.getBoundingClientRect();
+      const targetHeight = Math.max(1, Math.round(profileRect.height - titleRect.height));
+      const nextHeight = targetHeight + "px";
+      if (targetHeight > 1 && elements.profileSvg.style.height !== nextHeight) {
+        elements.profileSvg.style.setProperty("height", nextHeight, "important");
+      }
+    }
+
     function buildProfileGeometry() {
+      fitProfileSvgToContainer();
       const rect = elements.profileSvg.getBoundingClientRect();
       const width = rect.width > 0 ? Math.round(rect.width) : 1000;
       const measuredHeight = rect.height > 0 ? Math.round(rect.height) : 220;
@@ -942,17 +963,18 @@ ${styles}
       const left = 8;
       const right = width - 8;
       const top = 18;
-      const minBottomPadding = 70;
+      const bottomPadding = Math.max(18, Math.min(32, Math.round(measuredHeight * 0.1)));
       const minPlotHeight = 48;
-      const height = Math.max(measuredHeight, top + minBottomPadding + minPlotHeight);
-      const bottom = height - Math.max(minBottomPadding, Math.round(height * 0.18));
+      const height = Math.max(measuredHeight, top + bottomPadding + minPlotHeight);
+      const paintBottom = height;
+      const bottom = height - bottomPadding;
       const points = coursePoints.map((point) => {
         const x = left + (point.mile / totalMiles) * (right - left);
         const y = bottom - ((point.eleFt - minElevation) / (maxElevation - minElevation)) * (bottom - top);
         return { ...point, x, y };
       });
 
-      return { points, left, right, top, bottom, width, height, minElevation, maxElevation };
+      return { points, left, right, top, bottom, paintBottom, width, height, minElevation, maxElevation };
     }
 
     function pointPath(points) {
@@ -1074,8 +1096,12 @@ ${styles}
       elements.profileSvg.setAttribute("viewBox", "0 0 " + profile.width + " " + profile.height);
 
       const gridFragment = document.createDocumentFragment();
+      const gridYValues = [];
       for (let index = 0; index < 4; index += 1) {
-        const y = profile.top + ((profile.bottom - profile.top) * index) / 3;
+        gridYValues.push(profile.top + ((profile.bottom - profile.top) * index) / 3);
+      }
+      if (profile.paintBottom - profile.bottom > 1) gridYValues.push(profile.paintBottom);
+      gridYValues.forEach((y) => {
         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
         line.setAttribute("class", "profile-grid-line");
         line.setAttribute("x1", profile.left);
@@ -1083,16 +1109,16 @@ ${styles}
         line.setAttribute("y1", y);
         line.setAttribute("y2", y);
         gridFragment.appendChild(line);
-      }
+      });
       elements.profileGrid.replaceChildren(gridFragment);
 
       const profileD = pointPath(profile.points);
-      const areaD = profileD + " L " + profile.points[profile.points.length - 1].x.toFixed(2) + " " + profile.height + " L " + profile.points[0].x.toFixed(2) + " " + profile.height + " Z";
+      const areaD = profileD + " L " + profile.points[profile.points.length - 1].x.toFixed(2) + " " + profile.paintBottom + " L " + profile.points[0].x.toFixed(2) + " " + profile.paintBottom + " Z";
       elements.profileArea.setAttribute("d", areaD);
       elements.profileLine.setAttribute("d", profileD);
       elements.profileLineShadow.setAttribute("d", profileD);
       elements.profileCursorLine.setAttribute("y1", profile.top);
-      elements.profileCursorLine.setAttribute("y2", profile.bottom);
+      elements.profileCursorLine.setAttribute("y2", profile.paintBottom);
 
       const guideFragment = document.createDocumentFragment();
       routeData.stops.forEach((stop) => {
@@ -1102,7 +1128,7 @@ ${styles}
         guide.setAttribute("x1", point.x);
         guide.setAttribute("x2", point.x);
         guide.setAttribute("y1", profile.top);
-        guide.setAttribute("y2", profile.bottom);
+        guide.setAttribute("y2", profile.paintBottom);
         const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
         title.textContent = stopTypeLabel(stop) + ": " + stop.name + " | Mile " + formatMiles(stop.mile);
         guide.appendChild(title);
@@ -1153,7 +1179,7 @@ ${styles}
       elements.profileCurrentLeg.setAttribute("x", Math.min(from.x, to.x).toFixed(2));
       elements.profileCurrentLeg.setAttribute("y", profile.top);
       elements.profileCurrentLeg.setAttribute("width", Math.abs(to.x - from.x).toFixed(2));
-      elements.profileCurrentLeg.setAttribute("height", Math.max(0, profile.bottom - profile.top).toFixed(2));
+      elements.profileCurrentLeg.setAttribute("height", Math.max(0, profile.paintBottom - profile.top).toFixed(2));
     }
 
     function mapTilerKey() {
@@ -1684,15 +1710,30 @@ ${styles}
       hideProfilePopup();
     });
 
+    let layoutFrame = null;
+    function refreshLayout() {
+      layoutFrame = null;
+      syncViewportHeight();
+      initProfile();
+      update(state.currentMile);
+      if (state.map) state.map.resize();
+    }
+
+    function scheduleLayoutRefresh() {
+      if (layoutFrame !== null) return;
+      layoutFrame = window.requestAnimationFrame(refreshLayout);
+    }
+
+    syncViewportHeight();
     initProfile();
     initMap();
     update(0);
+    window.addEventListener("resize", scheduleLayoutRefresh);
+    window.addEventListener("orientationchange", scheduleLayoutRefresh);
+    if (window.visualViewport) window.visualViewport.addEventListener("resize", scheduleLayoutRefresh);
     if ("ResizeObserver" in window) {
-      const observer = new ResizeObserver(() => {
-        initProfile();
-        update(state.currentMile);
-        if (state.map) state.map.resize();
-      });
+      const observer = new ResizeObserver(scheduleLayoutRefresh);
+      observer.observe(elements.profileViz);
       observer.observe(elements.profileSvg);
     }
   </script>

@@ -6,8 +6,9 @@ const { execFileSync } = require("child_process");
 const { pathToFileURL } = require("url");
 
 let chromium;
+let webkit;
 try {
-  ({ chromium } = require("playwright"));
+  ({ chromium, webkit } = require("playwright"));
 } catch (error) {
   console.error("Playwright is not installed. Run `npm install`, then `npm run review`.");
   process.exit(1);
@@ -40,6 +41,77 @@ async function waitForTrackerMapIdle(page) {
       (typeof map.areTilesLoaded !== "function" || map.areTilesLoaded())
     );
   }, null, { timeout: 6000 }).catch(() => {});
+}
+
+async function collectTrackerBottomSweep(browser, viewports) {
+  const page = await browser.newPage({ deviceScaleFactor: 1 });
+  const sweep = [];
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+    await page.goto(trackerUrl(), { waitUntil: "domcontentloaded" });
+    await page.waitForFunction(
+      () => Boolean(
+        document.getElementById("profile-line")?.getAttribute("d") &&
+        document.querySelectorAll("#profile-stops circle").length
+      ),
+      null,
+      { timeout: 10000 }
+    );
+    await page.waitForTimeout(100);
+    sweep.push(await page.evaluate(() => {
+      const profile = document.querySelector(".bottom-profile-viz").getBoundingClientRect();
+      const title = document.querySelector(".bottom-profile-viz .viz-title").getBoundingClientRect();
+      const svg = document.getElementById("profile-svg").getBoundingClientRect();
+      const area = document.getElementById("profile-area").getBoundingClientRect();
+      const grid = document.getElementById("profile-grid").getBoundingClientRect();
+      const currentLeg = document.getElementById("profile-current-leg").getBoundingClientRect();
+      const guideBottom = Math.max(
+        ...[...document.querySelectorAll("#profile-stop-guides line")]
+          .map((el) => el.getBoundingClientRect().bottom)
+      );
+      const contentBottom = Math.max(
+        ...[...document.querySelectorAll("#profile-line, #profile-stops circle")]
+          .map((el) => el.getBoundingClientRect().bottom)
+      );
+      const doc = document.documentElement;
+      const normalChromeBudget =
+        (window.innerWidth >= 720 && window.innerHeight >= 421) ||
+        (window.innerWidth < 720 && window.innerHeight >= 481);
+
+      return {
+        viewport: `${window.innerWidth}x${window.innerHeight}`,
+        scrollHeight: doc.scrollHeight,
+        innerHeight: window.innerHeight,
+        profileBottomGap: Math.round(window.innerHeight - profile.bottom),
+        profileFreeBottomGap: Math.round(profile.height - title.height - svg.height),
+        profileSvgBottomGap: Math.round(profile.bottom - svg.bottom),
+        profileAreaBottomGap: Math.round(svg.bottom - area.bottom),
+        profileGridBottomGap: Math.round(svg.bottom - grid.bottom),
+        profileGuideBottomGap: Math.round(svg.bottom - guideBottom),
+        profileCurrentLegBottomGap: Math.round(svg.bottom - currentLeg.bottom),
+        profileContentBottomGap: Math.round(svg.bottom - contentBottom),
+        bottomBufferMin: normalChromeBudget ? 12 : 8,
+        bottomBufferMax: normalChromeBudget ? 36 : 24
+      };
+    }));
+  }
+  await page.close();
+  return sweep;
+}
+
+function bottomSweepHasFailure(item) {
+  return (
+    item.scrollHeight > item.innerHeight + 1 ||
+    Math.abs(item.profileBottomGap) > 1 ||
+    Math.abs(item.profileFreeBottomGap) > 1 ||
+    Math.abs(item.profileSvgBottomGap) > 1 ||
+    Math.abs(item.profileAreaBottomGap) > 1 ||
+    Math.abs(item.profileGridBottomGap) > 1 ||
+    Math.abs(item.profileGuideBottomGap) > 1 ||
+    Math.abs(item.profileCurrentLegBottomGap) > 1 ||
+    item.profileContentBottomGap < item.bottomBufferMin ||
+    item.profileContentBottomGap > item.bottomBufferMax
+  );
 }
 
 execFileSync(process.execPath, [path.join(ROOT, "scripts", "generate.js")], {
@@ -519,46 +591,26 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     { width: 390, height: 667 },
     { width: 390, height: 844 }
   ];
-  const trackerBottomSweepPage = await browser.newPage({ deviceScaleFactor: 1 });
-  const trackerBottomSweep = [];
-  for (const viewport of trackerBottomSweepViewports) {
-    await trackerBottomSweepPage.setViewportSize(viewport);
-    await trackerBottomSweepPage.goto(trackerUrl(), { waitUntil: "domcontentloaded" });
-    await trackerBottomSweepPage.waitForFunction(
-      () => Boolean(
-        document.getElementById("profile-line")?.getAttribute("d") &&
-        document.querySelectorAll("#profile-stops circle").length
-      ),
-      null,
-      { timeout: 10000 }
-    );
-    await trackerBottomSweepPage.waitForTimeout(100);
-    trackerBottomSweep.push(await trackerBottomSweepPage.evaluate(() => {
-      const profile = document.querySelector(".bottom-profile-viz").getBoundingClientRect();
-      const svg = document.getElementById("profile-svg").getBoundingClientRect();
-      const area = document.getElementById("profile-area").getBoundingClientRect();
-      const contentBottom = Math.max(
-        ...[...document.querySelectorAll("#profile-line, #profile-stops circle")]
-          .map((el) => el.getBoundingClientRect().bottom)
-      );
-      const doc = document.documentElement;
-      const normalChromeBudget =
-        (window.innerWidth >= 720 && window.innerHeight >= 421) ||
-        (window.innerWidth < 720 && window.innerHeight >= 481);
+  const trackerBottomSweep = await collectTrackerBottomSweep(browser, trackerBottomSweepViewports);
 
-      return {
-        viewport: `${window.innerWidth}x${window.innerHeight}`,
-        scrollHeight: doc.scrollHeight,
-        innerHeight: window.innerHeight,
-        profileBottomGap: Math.round(window.innerHeight - profile.bottom),
-        profileSvgBottomGap: Math.round(profile.bottom - svg.bottom),
-        profileAreaBottomGap: Math.round(svg.bottom - area.bottom),
-        profileContentBottomGap: Math.round(svg.bottom - contentBottom),
-        bottomChromeBudget: normalChromeBudget ? 64 : 28
-      };
-    }));
+  const trackerWebkitBottomSweepViewports = [
+    { width: 2048, height: 409 },
+    { width: 2048, height: 420 },
+    { width: 2048, height: 517 },
+    { width: 390, height: 400 },
+    { width: 390, height: 844 }
+  ];
+  let trackerWebkitBottomSweep = [];
+  let trackerWebkitError = "";
+  let webkitBrowser = null;
+  try {
+    webkitBrowser = await webkit.launch();
+    trackerWebkitBottomSweep = await collectTrackerBottomSweep(webkitBrowser, trackerWebkitBottomSweepViewports);
+  } catch (error) {
+    trackerWebkitError = String(error.message || error).split("\n")[0];
+  } finally {
+    if (webkitBrowser) await webkitBrowser.close();
   }
-  await trackerBottomSweepPage.close();
 
   await browser.close();
 
@@ -569,7 +621,9 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerStartResupply: trackerStartResupplyMetrics,
     trackerShortMobile: trackerShortMobileMetrics,
     trackerShortLandscape: trackerShortLandscapeMetrics,
-    trackerBottomSweep
+    trackerBottomSweep,
+    trackerWebkitBottomSweep,
+    trackerWebkitError
   };
   console.log(JSON.stringify(metrics, null, 2));
   const mileLabelMatch = trackerMetrics.mileLabel.match(/([\d.]+)\s*\/\s*([\d.]+)\s*mi/);
@@ -629,8 +683,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     Math.abs(trackerDesktopMetrics.appHeight - trackerDesktopMetrics.innerHeight) > 1 ||
     Math.abs(trackerDesktopMetrics.profileBottomGap) > 1 ||
     Math.abs(trackerDesktopMetrics.profileSvgBottomGap) > 1 ||
-    trackerDesktopMetrics.profileContentBottomGap < 56 ||
-    trackerDesktopMetrics.profileContentBottomGap > 86 ||
+    trackerDesktopMetrics.profileContentBottomGap < 12 ||
+    trackerDesktopMetrics.profileContentBottomGap > 36 ||
     !trackerDesktopMetrics.mapFitsStage ||
     !trackerDesktopMetrics.detailsBelowMap ||
     trackerDesktopMetrics.profileDragDeltaPx > 5 ||
@@ -653,9 +707,10 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerShortMobileMetrics.profileHeight < 180 ||
     trackerShortMobileMetrics.svgHeight < 140 ||
     Math.abs(trackerShortMobileMetrics.profileSvgBottomGap) > 1 ||
-    trackerShortMobileMetrics.profileLineBottomGap < 56 ||
-    trackerShortMobileMetrics.profileContentBottomGap < 56 ||
-    trackerShortMobileMetrics.profileContentBottomGap > 86 ||
+    trackerShortMobileMetrics.profileLineBottomGap < 14 ||
+    trackerShortMobileMetrics.profileLineBottomGap > 36 ||
+    trackerShortMobileMetrics.profileContentBottomGap < 12 ||
+    trackerShortMobileMetrics.profileContentBottomGap > 36 ||
     trackerShortMobileMetrics.profilePathWidth < trackerShortMobileMetrics.profileSvgWidth * 0.95 ||
     trackerShortLandscapeMetrics.scrollHeight > trackerShortLandscapeMetrics.innerHeight + 1 ||
     Math.abs(trackerShortLandscapeMetrics.appHeight - trackerShortLandscapeMetrics.innerHeight) > 1 ||
@@ -664,16 +719,12 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerShortLandscapeMetrics.profileHeight < 80 ||
     trackerShortLandscapeMetrics.svgHeight < 50 ||
     Math.abs(trackerShortLandscapeMetrics.profileSvgBottomGap) > 1 ||
-    trackerShortLandscapeMetrics.profileLineBottomGap < 28 ||
-    trackerShortLandscapeMetrics.profileContentBottomGap < 28 ||
-    trackerShortLandscapeMetrics.profileContentBottomGap > 44 ||
-    trackerBottomSweep.some((item) =>
-      item.scrollHeight > item.innerHeight + 1 ||
-      Math.abs(item.profileBottomGap) > 1 ||
-      Math.abs(item.profileSvgBottomGap) > 1 ||
-      Math.abs(item.profileAreaBottomGap) > 1 ||
-      item.profileContentBottomGap < item.bottomChromeBudget
-    ) ||
+    trackerShortLandscapeMetrics.profileLineBottomGap < 10 ||
+    trackerShortLandscapeMetrics.profileLineBottomGap > 24 ||
+    trackerShortLandscapeMetrics.profileContentBottomGap < 8 ||
+    trackerShortLandscapeMetrics.profileContentBottomGap > 24 ||
+    trackerBottomSweep.some(bottomSweepHasFailure) ||
+    trackerWebkitBottomSweep.some(bottomSweepHasFailure) ||
     trackerMetrics.scrollWidth > trackerMetrics.innerWidth + 1 ||
     trackerMetrics.scrollHeight > trackerMetrics.innerHeight + 1
   ) {
