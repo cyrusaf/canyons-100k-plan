@@ -808,13 +808,13 @@ ${styles}
     const totalMiles = routeData.course.totalMiles;
     const coursePoints = routeData.course.points;
     const segmentStops = routeData.segmentStops || routeData.stops;
-    const mapHighlightColor = "#d6336c";
-    const mapHighlightSoft = "#fff1f5";
+    const mapHighlightColor = "#ff5a3d";
+    const mapHighlightSoft = "#ffe7e2";
     const stopColors = {
       "full-aid": { stroke: "#527a2f", fill: "#edf6e6", mapRadius: 4, profileRadius: 4.2 },
       hydration: { stroke: "#1d6fb8", fill: "#e7f2ff", mapRadius: 4, profileRadius: 4.2 },
       "no-aid": { stroke: "#7b847d", fill: "#f4f7f5", mapRadius: 3, profileRadius: 3.2 },
-      crew: { stroke: "#c72f59", fill: "#fde7ee", mapRadius: 6, profileRadius: 5 },
+      crew: { stroke: "#ff5a3d", fill: "#ffe7e2", mapRadius: 6, profileRadius: 5 },
       start: { stroke: "#6366a8", fill: "#ececff", mapRadius: 5, profileRadius: 4.6 },
       finish: { stroke: "#0f766e", fill: "#dff7f2", mapRadius: 6, profileRadius: 5 },
       aid: { stroke: "#0f766e", fill: "#ffffff", mapRadius: 4, profileRadius: 4.2 }
@@ -942,10 +942,10 @@ ${styles}
       const left = 8;
       const right = width - 8;
       const top = 18;
-      const minBottomPadding = 24;
+      const minBottomPadding = 40;
       const minPlotHeight = 48;
       const height = Math.max(measuredHeight, top + minBottomPadding + minPlotHeight);
-      const bottom = height - Math.max(minBottomPadding, Math.round(height * 0.08));
+      const bottom = height - Math.max(minBottomPadding, Math.round(height * 0.16));
       const points = coursePoints.map((point) => {
         const x = left + (point.mile / totalMiles) * (right - left);
         const y = bottom - ((point.eleFt - minElevation) / (maxElevation - minElevation)) * (bottom - top);
