@@ -398,6 +398,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       mapBottom: Math.round(map.bottom),
       detailsTop: Math.round(details.top),
       profileBottomGap: Math.round(window.innerHeight - profile.bottom),
+      profileSvgBottomGap: Math.round(profile.bottom - svg.bottom),
       profileContentBottomGap: Math.round(svg.bottom - contentBottom),
       mapFitsStage: map.bottom <= stage.bottom + 1,
       detailsBelowMap: details.top >= map.bottom - 1,
@@ -452,6 +453,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       svgHeight: Math.round(svg.height),
       stationHeight: Math.round(station.height),
       stationAboveProfile: station.bottom <= profile.top + 1,
+      profileSvgBottomGap: Math.round(profile.bottom - svg.bottom),
       profileLineBottomGap: Math.round(svg.bottom - profilePath.bottom),
       profileContentBottomGap: Math.round(svg.bottom - contentBottom),
       profilePathWidth: Math.round(profilePath.width),
@@ -489,6 +491,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       svgHeight: Math.round(svg.height),
       stationHeight: Math.round(station.height),
       stationAboveProfile: station.bottom <= profile.top + 1,
+      profileSvgBottomGap: Math.round(profile.bottom - svg.bottom),
       profileLineBottomGap: Math.round(svg.bottom - profilePath.bottom),
       profileContentBottomGap: Math.round(svg.bottom - contentBottom),
       profileWithinApp: profile.bottom <= app.bottom + 1
@@ -562,7 +565,9 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerDesktopMetrics.scrollHeight > trackerDesktopMetrics.innerHeight + 1 ||
     Math.abs(trackerDesktopMetrics.appHeight - trackerDesktopMetrics.innerHeight) > 1 ||
     Math.abs(trackerDesktopMetrics.profileBottomGap) > 1 ||
-    trackerDesktopMetrics.profileContentBottomGap < 48 ||
+    Math.abs(trackerDesktopMetrics.profileSvgBottomGap) > 1 ||
+    trackerDesktopMetrics.profileContentBottomGap < 8 ||
+    trackerDesktopMetrics.profileContentBottomGap > 22 ||
     !trackerDesktopMetrics.mapFitsStage ||
     !trackerDesktopMetrics.detailsBelowMap ||
     trackerDesktopMetrics.profileDragDeltaPx > 5 ||
@@ -584,8 +589,10 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     !trackerShortMobileMetrics.metricContentFits ||
     trackerShortMobileMetrics.profileHeight < 180 ||
     trackerShortMobileMetrics.svgHeight < 140 ||
-    trackerShortMobileMetrics.profileLineBottomGap < 48 ||
-    trackerShortMobileMetrics.profileContentBottomGap < 42 ||
+    Math.abs(trackerShortMobileMetrics.profileSvgBottomGap) > 1 ||
+    trackerShortMobileMetrics.profileLineBottomGap < 12 ||
+    trackerShortMobileMetrics.profileContentBottomGap < 8 ||
+    trackerShortMobileMetrics.profileContentBottomGap > 22 ||
     trackerShortMobileMetrics.profilePathWidth < trackerShortMobileMetrics.profileSvgWidth * 0.95 ||
     trackerShortLandscapeMetrics.scrollHeight > trackerShortLandscapeMetrics.innerHeight + 1 ||
     Math.abs(trackerShortLandscapeMetrics.appHeight - trackerShortLandscapeMetrics.innerHeight) > 1 ||
@@ -593,8 +600,10 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     !trackerShortLandscapeMetrics.profileWithinApp ||
     trackerShortLandscapeMetrics.profileHeight < 80 ||
     trackerShortLandscapeMetrics.svgHeight < 50 ||
-    trackerShortLandscapeMetrics.profileLineBottomGap < 24 ||
-    trackerShortLandscapeMetrics.profileContentBottomGap < 20 ||
+    Math.abs(trackerShortLandscapeMetrics.profileSvgBottomGap) > 1 ||
+    trackerShortLandscapeMetrics.profileLineBottomGap < 8 ||
+    trackerShortLandscapeMetrics.profileContentBottomGap < 6 ||
+    trackerShortLandscapeMetrics.profileContentBottomGap > 18 ||
     trackerMetrics.scrollWidth > trackerMetrics.innerWidth + 1 ||
     trackerMetrics.scrollHeight > trackerMetrics.innerHeight + 1
   ) {
