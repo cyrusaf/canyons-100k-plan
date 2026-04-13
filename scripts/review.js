@@ -381,6 +381,11 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     const app = document.querySelector(".route-app").getBoundingClientRect();
     const profile = document.querySelector(".bottom-profile-viz").getBoundingClientRect();
     const profileLine = document.getElementById("profile-cursor-line").getBoundingClientRect();
+    const svg = document.getElementById("profile-svg").getBoundingClientRect();
+    const contentBottom = Math.max(
+      ...[...document.querySelectorAll("#profile-line, #profile-stops circle")]
+        .map((el) => el.getBoundingClientRect().bottom)
+    );
     const zoomButton = document.querySelector(".maplibregl-ctrl-zoom-in")?.getBoundingClientRect();
     const cursorCenter = profileLine.left + profileLine.width / 2;
     const doc = document.documentElement;
@@ -393,6 +398,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       mapBottom: Math.round(map.bottom),
       detailsTop: Math.round(details.top),
       profileBottomGap: Math.round(window.innerHeight - profile.bottom),
+      profileContentBottomGap: Math.round(svg.bottom - contentBottom),
       mapFitsStage: map.bottom <= stage.bottom + 1,
       detailsBelowMap: details.top >= map.bottom - 1,
       profileDragDeltaPx: Math.abs(cursorCenter - desktopProfileTargetX),
@@ -423,6 +429,11 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     const station = document.querySelector(".station-panel").getBoundingClientRect();
     const svg = document.getElementById("profile-svg").getBoundingClientRect();
     const profilePath = document.getElementById("profile-line").getBoundingClientRect();
+    const contentBottom = Math.max(
+      profilePath.bottom,
+      ...[...document.querySelectorAll("#profile-stops circle")]
+        .map((el) => el.getBoundingClientRect().bottom)
+    );
     const metricContentFits = [...document.querySelectorAll(".station-metric")]
       .every((el) => {
         const label = el.querySelector("span").getBoundingClientRect();
@@ -442,6 +453,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       stationHeight: Math.round(station.height),
       stationAboveProfile: station.bottom <= profile.top + 1,
       profileLineBottomGap: Math.round(svg.bottom - profilePath.bottom),
+      profileContentBottomGap: Math.round(svg.bottom - contentBottom),
       profilePathWidth: Math.round(profilePath.width),
       profileSvgWidth: Math.round(svg.width),
       metricContentFits
@@ -462,6 +474,11 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     const station = document.querySelector(".station-panel").getBoundingClientRect();
     const svg = document.getElementById("profile-svg").getBoundingClientRect();
     const profilePath = document.getElementById("profile-line").getBoundingClientRect();
+    const contentBottom = Math.max(
+      profilePath.bottom,
+      ...[...document.querySelectorAll("#profile-stops circle")]
+        .map((el) => el.getBoundingClientRect().bottom)
+    );
     const doc = document.documentElement;
 
     return {
@@ -473,6 +490,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       stationHeight: Math.round(station.height),
       stationAboveProfile: station.bottom <= profile.top + 1,
       profileLineBottomGap: Math.round(svg.bottom - profilePath.bottom),
+      profileContentBottomGap: Math.round(svg.bottom - contentBottom),
       profileWithinApp: profile.bottom <= app.bottom + 1
     };
   });
@@ -544,6 +562,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerDesktopMetrics.scrollHeight > trackerDesktopMetrics.innerHeight + 1 ||
     Math.abs(trackerDesktopMetrics.appHeight - trackerDesktopMetrics.innerHeight) > 1 ||
     Math.abs(trackerDesktopMetrics.profileBottomGap) > 1 ||
+    trackerDesktopMetrics.profileContentBottomGap < 48 ||
     !trackerDesktopMetrics.mapFitsStage ||
     !trackerDesktopMetrics.detailsBelowMap ||
     trackerDesktopMetrics.profileDragDeltaPx > 5 ||
@@ -565,7 +584,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     !trackerShortMobileMetrics.metricContentFits ||
     trackerShortMobileMetrics.profileHeight < 180 ||
     trackerShortMobileMetrics.svgHeight < 140 ||
-    trackerShortMobileMetrics.profileLineBottomGap < 16 ||
+    trackerShortMobileMetrics.profileLineBottomGap < 48 ||
+    trackerShortMobileMetrics.profileContentBottomGap < 42 ||
     trackerShortMobileMetrics.profilePathWidth < trackerShortMobileMetrics.profileSvgWidth * 0.95 ||
     trackerShortLandscapeMetrics.scrollHeight > trackerShortLandscapeMetrics.innerHeight + 1 ||
     Math.abs(trackerShortLandscapeMetrics.appHeight - trackerShortLandscapeMetrics.innerHeight) > 1 ||
@@ -573,7 +593,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     !trackerShortLandscapeMetrics.profileWithinApp ||
     trackerShortLandscapeMetrics.profileHeight < 80 ||
     trackerShortLandscapeMetrics.svgHeight < 50 ||
-    trackerShortLandscapeMetrics.profileLineBottomGap < 10 ||
+    trackerShortLandscapeMetrics.profileLineBottomGap < 24 ||
+    trackerShortLandscapeMetrics.profileContentBottomGap < 20 ||
     trackerMetrics.scrollWidth > trackerMetrics.innerWidth + 1 ||
     trackerMetrics.scrollHeight > trackerMetrics.innerHeight + 1
   ) {

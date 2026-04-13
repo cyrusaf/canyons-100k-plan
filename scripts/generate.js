@@ -942,10 +942,10 @@ ${styles}
       const left = 8;
       const right = width - 8;
       const top = 18;
-      const minBottomPadding = 40;
+      const minBottomPadding = 72;
       const minPlotHeight = 48;
       const height = Math.max(measuredHeight, top + minBottomPadding + minPlotHeight);
-      const bottom = height - Math.max(minBottomPadding, Math.round(height * 0.16));
+      const bottom = height - Math.max(minBottomPadding, Math.round(height * 0.22));
       const points = coursePoints.map((point) => {
         const x = left + (point.mile / totalMiles) * (right - left);
         const y = bottom - ((point.eleFt - minElevation) / (maxElevation - minElevation)) * (bottom - top);
