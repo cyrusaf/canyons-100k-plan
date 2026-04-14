@@ -190,10 +190,11 @@ function renderStats() {
 function renderCrewStrip() {
   return `
       <div class="crew-timeline" aria-label="Crew timeline">
+        <div class="crew-timeline-title"><span class="label">Crew Timeline</span><strong>Arrive-by times are the working target</strong></div>
 ${plan.crewStops
   .map(
     (stop) => `        <div class="crew-timeline-row">
-          <div class="crew-arrive"><span class="label">Arrive</span><strong>${escapeHtml(stripMeridiem(stop.arriveBy))}</strong></div>
+          <div class="crew-arrive"><span class="label">Arrive by</span><strong>${escapeHtml(stripMeridiem(stop.arriveBy))}</strong></div>
           <div class="crew-stop-name"><strong>${escapeHtml(stop.name)}</strong><em>Runner ${escapeHtml(stop.eta)}</em></div>
           <div class="crew-task"><strong>${escapeHtml(stop.action || stop.summary)}</strong>${stop.detail ? `<span>${escapeHtml(stop.detail)}</span>` : ""}</div>
         </div>`

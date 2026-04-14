@@ -186,6 +186,21 @@ h1 {
   background: linear-gradient(var(--crew), #f0b83f);
 }
 
+.crew-timeline-title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: baseline;
+  min-width: 0;
+  padding: 7px 9px 5px 19px;
+}
+
+.crew-timeline-title strong {
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.12;
+}
+
 .crew-timeline-row {
   display: grid;
   grid-template-columns: 76px minmax(0, 1fr);
@@ -1566,6 +1581,10 @@ h2 {
     bottom: 9px;
     left: 9px;
     width: 4px;
+  }
+
+  .crew-timeline-title {
+    padding: 8px 12px 5px 25px;
   }
 
   .crew-timeline-row {
