@@ -151,6 +151,15 @@ function classForStop(stop) {
   return "stop";
 }
 
+function crewStopFor(stop) {
+  return plan.crewStops.find((crewStop) => crewStop.name === stop.name) || null;
+}
+
+function cutLabelFor(stop) {
+  const cutTag = (stop.tags || []).find((tag) => /^cut\s+/i.test(tag.label));
+  return cutTag ? cutTag.label.replace(/^cut\s+/i, "") : "";
+}
+
 function renderTags(tags) {
   return tags
     .map((tag) => {
@@ -202,12 +211,19 @@ function getStopIndex(name) {
   return plan.stops.findIndex((stop) => stop.name === name);
 }
 
+function resupplyContextFor(stop) {
+  if (stop?.kind === "finish") return "to finish";
+  if (stop?.kind === "crew") return "to next crew";
+  return "to target";
+}
+
 function resupplyFor(stop, index) {
   if (!stop.resupplyTo) return null;
   const toIndex = getStopIndex(stop.resupplyTo);
   if (toIndex <= index) {
     throw new Error(`Invalid resupply target '${stop.resupplyTo}' for '${stop.name}'`);
   }
+  const targetStop = plan.stops[toIndex];
 
   let miles = 0;
   let minutes = 0;
@@ -223,6 +239,7 @@ function resupplyFor(stop, index) {
 
   return {
     label: stop.resupplyLabel || stop.resupplyTo,
+    context: resupplyContextFor(targetStop),
     miles,
     minutes,
     nutrition,
@@ -235,49 +252,103 @@ function renderResupply(stop, index) {
   if (!resupply) return "";
 
   return `
-          <div class="resupply" aria-label="Resupply target from ${escapeAttr(stop.name)} to ${escapeAttr(resupply.label)}">
-            <div class="resupply-head"><span>Resupply to ${escapeHtml(resupply.label)}</span><strong>${formatMiles(resupply.miles)} mi | ${formatDuration(resupply.minutes)}</strong></div>
-            <div class="resupply-grid">
-              <div class="resupply-metric"><span>Carbs</span><strong>${formatNumber(resupply.nutrition.carbs)} g</strong></div>
-              <div class="resupply-metric"><span>Sodium</span><strong>${formatNumber(resupply.nutrition.sodiumLow)}-${formatNumber(resupply.nutrition.sodiumHigh)} mg</strong></div>
-              <div class="resupply-metric"><span>Fluid</span><strong>${formatFluid(resupply.nutrition.fluidLow)}-${formatFluid(resupply.nutrition.fluidHigh)} L</strong></div>
-            </div>
-            <p>${escapeHtml(resupply.note)}</p>
-          </div>`;
+              <div class="resupply" aria-label="Load out from ${escapeAttr(stop.name)} to ${escapeAttr(resupply.label)}">
+                <div class="resupply-head">
+                  <span class="label">Load out</span>
+                  <strong>To ${escapeHtml(resupply.label)}</strong>
+                  <span class="resupply-range">${formatMiles(resupply.miles)} mi | ${formatDuration(resupply.minutes)} ${escapeHtml(resupply.context)}</span>
+                </div>
+                <div class="resupply-fuel" aria-label="Block total to cover before ${escapeAttr(resupply.label)}">
+                  <span class="resupply-total"><span class="label">Block total</span></span>
+                  <span><span class="label">Carbs</span><strong>${formatNumber(resupply.nutrition.carbs)} g</strong></span>
+                  <span><span class="label">Sodium</span><strong>${formatNumber(resupply.nutrition.sodiumLow)}-${formatNumber(resupply.nutrition.sodiumHigh)} mg</strong></span>
+                  <span><span class="label">Fluid</span><strong>${formatFluid(resupply.nutrition.fluidLow)}-${formatFluid(resupply.nutrition.fluidHigh)} L</strong></span>
+                </div>
+                <p class="resupply-note">${escapeHtml(resupply.note)}</p>
+              </div>`;
+}
+
+function renderStopMetrics(stop) {
+  const crewStop = crewStopFor(stop);
+  const cutLabel = cutLabelFor(stop);
+  const thirdMetric = crewStop
+    ? { label: "Crew by", value: crewStop.arriveBy }
+    : cutLabel
+      ? { label: "Cut", value: cutLabel }
+      : stop.nextLeg
+        ? { label: "Next", value: `${formatMiles(stop.nextLeg.distanceMi)} mi` }
+        : { label: "Status", value: "Finish" };
+
+  return [
+    { label: "Mile", value: formatMiles(stop.mile) },
+    { label: "ETA", value: stop.eta },
+    thirdMetric
+  ]
+    .map(
+      (metric) => `                <span class="stop-metric"><span class="label">${escapeHtml(metric.label)}</span><strong>${escapeHtml(metric.value)}</strong></span>`
+    )
+    .join("\n");
 }
 
 function renderLeg(leg) {
   if (!leg) return "";
 
   const nutrition = nutritionForMinutes(leg.plannedMinutes);
+  const arrivalStop = plan.stops[getStopIndex(leg.to)];
+  const arrivalEta = arrivalStop ? arrivalStop.eta : "";
 
   return `
-          <div class="leg">
-            <div class="leg-row"><span class="row-label">Next</span><strong>${escapeHtml(leg.to)}</strong></div>
-            <div class="leg-row"><span class="row-label">Leg</span><strong>${formatMiles(leg.distanceMi)} mi | +${formatNumber(leg.gainFt)} / -${formatNumber(leg.lossFt)} ft</strong></div>
-            <div class="leg-row"><span class="row-label">Time/Pace</span><strong>${escapeHtml(leg.plannedTime)} | ${escapeHtml(leg.pace)}</strong></div>
-            <div class="leg-row"><span class="row-label">Leg Fuel</span><strong>${formatNutritionLine(nutrition)}</strong></div>
-          </div>`;
+          <section class="leg" aria-label="Leg to ${escapeAttr(leg.to)}">
+            <div class="leg-rail" aria-hidden="true">
+              <span class="rail-thread"></span>
+              <span class="rail-arrow"></span>
+            </div>
+            <div class="leg-content">
+              <div class="split-main">
+                <span class="label">Split</span>
+                <strong>${escapeHtml(leg.plannedTime)}</strong>
+                <span class="split-distance">${formatMiles(leg.distanceMi)} mi</span>
+              </div>
+              <div class="split-data">
+                <div class="split-summary">
+                  <span class="split-pair"><span class="label">Pace</span><strong>${escapeHtml(leg.pace)}</strong></span>
+                  <span class="split-pair"><span class="label">Gain/Loss</span><strong>+${formatNumber(leg.gainFt)} / -${formatNumber(leg.lossFt)} ft</strong></span>
+                  <span class="split-pair"><span class="label">Arrive</span><strong>${escapeHtml(arrivalEta)}</strong></span>
+                </div>
+                <div class="split-fuel" aria-label="Fuel to consume before ${escapeAttr(leg.to)}">
+                  <span><span class="label">Carbs</span><strong>${formatNumber(nutrition.carbs)} g</strong></span>
+                  <span><span class="label">Sodium</span><strong>${formatNumber(nutrition.sodiumLow)}-${formatNumber(nutrition.sodiumHigh)} mg</strong></span>
+                  <span><span class="label">Fluid</span><strong>${formatFluid(nutrition.fluidLow)}-${formatFluid(nutrition.fluidHigh)} L</strong></span>
+                </div>
+              </div>
+            </div>
+          </section>`;
 }
 
 function renderStop(stop, index) {
   const bodyCopy = stop.crewCallout
-    ? `<div class="crew-callout">${escapeHtml(stop.crewCallout)}</div>`
+    ? `<p class="stop-note">${escapeHtml(stop.crewCallout)}</p>`
     : stop.note
-      ? `<p class="note">${escapeHtml(stop.note)}</p>`
+      ? `<p class="stop-note">${escapeHtml(stop.note)}</p>`
       : "";
 
   return `        <article class="${classForStop(stop)}">
-          <div class="stop-top">
-            <div class="milebox"><div><strong>${formatMiles(stop.mile)}</strong><span>mi</span></div></div>
+          <div class="stop-station">
             <div class="stop-main">
-              <h3>${escapeHtml(stop.name)}</h3>
+              <div class="stop-title">
+                <h3>${escapeHtml(stop.name)}</h3>
+                <span class="stop-mile">Mile ${formatMiles(stop.mile)}</span>
+              </div>
               <div class="badges">${renderTags(stop.tags)}</div>
-            </div>
-            <div class="eta"><span>ETA</span>${escapeHtml(stop.eta)}</div>
-          </div>
-          ${bodyCopy}
+              ${bodyCopy}
 ${renderResupply(stop, index)}
+            </div>
+            <div class="stop-side" aria-label="${escapeAttr(stop.name)} timing">
+              <div class="stop-metrics">
+${renderStopMetrics(stop)}
+              </div>
+            </div>
+          </div>
 ${renderLeg(stop.nextLeg)}
         </article>`;
 }
@@ -387,6 +458,7 @@ function routeStopForClient(stop, index) {
     resupply: resupply
       ? {
           label: resupply.label,
+          context: resupply.context,
           miles: resupply.miles,
           minutes: resupply.minutes,
           nutrition: resupply.nutrition,
@@ -578,7 +650,7 @@ ${renderCrewStrip()}
     <section id="plan" aria-labelledby="plan-title">
       <div class="section-head">
         <h2 id="plan-title">Course Plan</h2>
-        <p>Each card shows the current stop, ETA, crew status, and the next-leg distance, climb/descent, planned split, pace, and fuel to consume before the next stop. Resupply bands sum the leg-fuel targets to the next crew stop or finish; add buffer for extra stop time, delays, and heat.</p>
+        <p>Each stop band shows the station, crew status, timing, and carry target. Split sections show the next-leg duration, distance, pace, gain/loss, arrival time, and fuel to consume before the next stop.</p>
       </div>
 
       <div class="course-list">
@@ -708,9 +780,9 @@ ${styles}
         </div>
 
         <div class="station-resupply" id="station-resupply" hidden>
-          <span id="resupply-label">Resupply to Michigan Bluff</span>
-          <strong id="resupply-block">24.0 mi | 6h40</strong>
-          <em id="resupply-nutrition">590 g carbs | 3,250-4,900 mg Na | 3.3-4.9 L</em>
+          <span id="resupply-label">Load out to Michigan Bluff</span>
+          <strong id="resupply-block">24.0 mi | 6h32 to next crew</strong>
+          <em id="resupply-nutrition">Block total: 590 g carbs | 3,250-4,900 mg Na | 3.3-4.9 L</em>
           <p id="resupply-note"></p>
         </div>
       </article>
@@ -1615,9 +1687,9 @@ ${styles}
         const resupply = stop.resupply;
         elements.stationPanel.classList.add("has-resupply");
         elements.stationResupply.hidden = false;
-        elements.resupplyLabel.textContent = "Resupply to " + resupply.label;
-        elements.resupplyBlock.textContent = formatMiles(resupply.miles) + " mi | " + formatDuration(resupply.minutes);
-        elements.resupplyNutrition.textContent = formatNutritionLine(resupply.nutrition);
+        elements.resupplyLabel.textContent = "Load out to " + resupply.label;
+        elements.resupplyBlock.textContent = formatMiles(resupply.miles) + " mi | " + formatDuration(resupply.minutes) + " " + resupply.context;
+        elements.resupplyNutrition.textContent = "Block total: " + formatNutritionLine(resupply.nutrition);
         elements.resupplyNote.textContent = resupply.note;
       } else {
         elements.stationPanel.classList.remove("has-resupply");

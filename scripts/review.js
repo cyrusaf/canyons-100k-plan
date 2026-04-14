@@ -691,7 +691,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerDesktopMetrics.profilePathWidth < trackerDesktopMetrics.profileSvgWidth * 0.95 ||
     trackerDesktopMapFailed ||
     !trackerStartResupplyMetrics.visible ||
-    !trackerStartResupplyMetrics.text.includes("Resupply to Michigan Bluff") ||
+    !trackerStartResupplyMetrics.text.includes("Load out to Michigan Bluff") ||
+    !trackerStartResupplyMetrics.text.includes("Block total") ||
     !trackerStartResupplyMetrics.text.includes("590 g") ||
     !trackerStartResupplyMetrics.stationText.includes("10.1 mi") ||
     !trackerStartResupplyMetrics.stationText.includes("+1,787 / -2,870 ft") ||
