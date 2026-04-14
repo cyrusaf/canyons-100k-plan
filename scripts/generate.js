@@ -169,38 +169,33 @@ function renderTags(tags) {
     .join("");
 }
 
+function stripMeridiem(value) {
+  return String(value ?? "").replace(/\s+(AM|PM)$/i, "");
+}
+
+function compactGoalTime(value) {
+  return String(value ?? "").replace(":00 ", " ");
+}
+
 function renderStats() {
   return `
-      <div class="stats" aria-label="Race facts">
-        <div class="stat">
-          <span>Start</span>
-          <strong>${escapeHtml(plan.race.start)}</strong>
-        </div>
-        <div class="stat">
-          <span>Finish Goal</span>
-          <strong>${escapeHtml(plan.race.finishGoal)}</strong>
-        </div>
-        <div class="stat">
-          <span>Course</span>
-          <strong>${formatMiles(plan.race.courseDistanceMi)} mi</strong>
-        </div>
-        <div class="stat">
-          <span>Fuel / Electrolytes</span>
-          <strong>${formatNumber(plan.nutrition.carbsPerHour)} g/hr carbs</strong>
-          <em>${formatNumber(plan.nutrition.sodiumMgPerHour.low)}-${formatNumber(plan.nutrition.sodiumMgPerHour.high)} mg Na/hr</em>
-        </div>
+      <div class="race-facts" aria-label="Race facts">
+        <span><strong>Start</strong> ${escapeHtml(plan.race.start)}</span>
+        <span><strong>Goal</strong> ${escapeHtml(compactGoalTime(plan.race.finishGoal))}</span>
+        <span><strong>Course</strong> ${formatMiles(plan.race.courseDistanceMi)} mi</span>
+        <span><strong>Fuel</strong> ${formatNumber(plan.nutrition.carbsPerHour)} g/hr carbs - ${formatNumber(plan.nutrition.sodiumMgPerHour.low)}-${formatNumber(plan.nutrition.sodiumMgPerHour.high)} mg Na/hr</span>
       </div>`;
 }
 
 function renderCrewStrip() {
   return `
-      <div class="crew-strip" aria-label="Crew stops">
+      <div class="crew-timeline" aria-label="Crew timeline">
 ${plan.crewStops
   .map(
-    (stop, index) => `        <div class="crew-pill">
-          <span>Crew Stop ${index + 1}</span>
-          <strong>${escapeHtml(stop.name)} - ${escapeHtml(stop.eta)}</strong>
-          <em>Arrive by ${escapeHtml(stop.arriveBy)}. ${escapeHtml(stop.summary)}</em>
+    (stop) => `        <div class="crew-timeline-row">
+          <div class="crew-arrive"><span class="label">Arrive</span><strong>${escapeHtml(stripMeridiem(stop.arriveBy))}</strong></div>
+          <div class="crew-stop-name"><strong>${escapeHtml(stop.name)}</strong><em>Runner ${escapeHtml(stop.eta)}</em></div>
+          <div class="crew-task"><strong>${escapeHtml(stop.action || stop.summary)}</strong>${stop.detail ? `<span>${escapeHtml(stop.detail)}</span>` : ""}</div>
         </div>`
   )
   .join("\n")}

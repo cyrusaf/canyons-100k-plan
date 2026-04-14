@@ -1,7 +1,7 @@
 {
   "title": "Canyons 100K Crew Guide",
   "eyebrow": "Canyons 100K by UTMB",
-  "subtitle": "Compact 17-hour working plan. All ETAs and leg paces are planning estimates; official course markings and race-week updates win.",
+  "subtitle": "17-hour plan. Crew arrivals include a 60-minute buffer. Official updates win.",
   "versionNote": "Version: generated compact draft, 17-hour schedule. Next pass: exact target time, maps, parking screenshots, and product-specific fuel math.",
   "race": {
     "start": "5:00 AM",
@@ -27,18 +27,24 @@
       "name": "Michigan Bluff",
       "eta": "11:40 AM",
       "arriveBy": "10:40 AM",
+      "action": "Refill + cooling",
+      "detail": "Bottles, sunscreen, stomach check.",
       "summary": "Quick refill and cooling."
     },
     {
       "name": "Foresthill",
       "eta": "1:15 PM",
       "arriveBy": "12:15 PM",
+      "action": "Drop bag + reset",
+      "detail": "Socks/lube, Cal Street fuel.",
       "summary": "Drop bag and main reset."
     },
     {
       "name": "Drivers Flat",
       "eta": "5:45 PM",
       "arriveBy": "4:45 PM",
+      "action": "Last handoff",
+      "detail": "Lights, warmth, finish fuel.",
       "summary": "Last handoff to finish."
     }
   ],
