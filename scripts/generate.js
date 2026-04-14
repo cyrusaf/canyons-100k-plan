@@ -248,19 +248,17 @@ function renderResupply(stop, index) {
   if (!resupply) return "";
 
   return `
-              <div class="resupply" aria-label="Load out from ${escapeAttr(stop.name)} to ${escapeAttr(resupply.label)}">
+              <div class="resupply" aria-label="Resupply from ${escapeAttr(stop.name)} to ${escapeAttr(resupply.label)}">
                 <div class="resupply-head">
-                  <span class="label">Load out</span>
-                  <strong>To ${escapeHtml(resupply.label)}</strong>
-                  <span class="resupply-range">${formatMiles(resupply.miles)} mi | ${formatDuration(resupply.minutes)} ${escapeHtml(resupply.context)}</span>
+                  <span class="label">Resupply</span>
                 </div>
-                <div class="resupply-fuel" aria-label="Block total to cover before ${escapeAttr(resupply.label)}">
-                  <span class="resupply-total"><span class="label">Block total</span></span>
+                <div class="resupply-fuel" aria-label="Fuel to cover before ${escapeAttr(resupply.label)}">
                   <span><span class="label">Carbs</span><strong>${formatNumber(resupply.nutrition.carbs)} g</strong></span>
                   <span><span class="label">Sodium</span><strong>${formatNumber(resupply.nutrition.sodiumLow)}-${formatNumber(resupply.nutrition.sodiumHigh)} mg</strong></span>
                   <span><span class="label">Fluid</span><strong>${formatFluid(resupply.nutrition.fluidLow)}-${formatFluid(resupply.nutrition.fluidHigh)} L</strong></span>
                 </div>
                 <p class="resupply-note">${escapeHtml(resupply.note)}</p>
+                <p class="resupply-context"><span class="resupply-context-label">Next resupply</span> <span class="resupply-context-detail"><strong>${escapeHtml(resupply.label)}</strong> | ${formatMiles(resupply.miles)} mi | ${formatDuration(resupply.minutes)} ${escapeHtml(resupply.context)}</span></p>
               </div>`;
 }
 
@@ -776,9 +774,9 @@ ${styles}
         </div>
 
         <div class="station-resupply" id="station-resupply" hidden>
-          <span id="resupply-label">Load out to Michigan Bluff</span>
-          <strong id="resupply-block">24.0 mi | 6h32 to next crew</strong>
-          <em id="resupply-nutrition">Block total: 590 g carbs | 3,250-4,900 mg Na | 3.3-4.9 L</em>
+          <span id="resupply-label">Resupply</span>
+          <strong id="resupply-block">590 g carbs | 3,250-4,900 mg Na | 3.3-4.9 L</strong>
+          <div class="station-resupply-meta"><span>Next resupply</span> <em id="resupply-nutrition">Michigan Bluff | 24.0 mi | 6h32 to next crew</em></div>
           <p id="resupply-note"></p>
         </div>
       </article>
@@ -1683,9 +1681,13 @@ ${styles}
         const resupply = stop.resupply;
         elements.stationPanel.classList.add("has-resupply");
         elements.stationResupply.hidden = false;
-        elements.resupplyLabel.textContent = "Load out to " + resupply.label;
-        elements.resupplyBlock.textContent = formatMiles(resupply.miles) + " mi | " + formatDuration(resupply.minutes) + " " + resupply.context;
-        elements.resupplyNutrition.textContent = "Block total: " + formatNutritionLine(resupply.nutrition);
+        elements.resupplyLabel.textContent = "Resupply";
+        elements.resupplyBlock.textContent = formatNutritionLine(resupply.nutrition);
+        elements.resupplyNutrition.textContent =
+          resupply.label + " | " +
+          formatMiles(resupply.miles) + " mi | " +
+          formatDuration(resupply.minutes) + " " +
+          resupply.context;
         elements.resupplyNote.textContent = resupply.note;
       } else {
         elements.stationPanel.classList.remove("has-resupply");
