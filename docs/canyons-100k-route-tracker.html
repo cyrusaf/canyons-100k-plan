@@ -2170,6 +2170,853 @@ h2 {
   }
 }
 
+/* Route tracker compact split layout */
+.route-stage {
+  display: grid;
+  grid-template-rows: 68px minmax(0, 1fr);
+}
+
+.route-head {
+  position: relative;
+  inset: auto;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 10px max(16px, calc((100% - 1180px) / 2)) 13px;
+  border-bottom: 1px solid rgba(24, 32, 29, 0.14);
+  background: rgba(244, 248, 247, 0.97);
+  pointer-events: auto;
+}
+
+.route-head h1 {
+  font-size: 32px;
+  line-height: 0.96;
+}
+
+.route-head-meta span,
+.route-head-meta a {
+  min-height: 32px;
+  box-shadow: none;
+}
+
+.real-map-viz {
+  height: auto;
+  min-height: 0;
+}
+
+.route-details {
+  grid-template-rows: 184px minmax(0, 1fr);
+}
+
+.tracker-split-panel {
+  --station-panel-max: 1180px;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: start;
+  gap: 8px;
+  padding: 10px max(16px, calc((100% - var(--station-panel-max)) / 2)) 12px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(90deg, rgba(255, 247, 244, 0.96), rgba(255, 255, 255, 0.98));
+  overflow: hidden;
+}
+
+.tracker-split-primary {
+  display: grid;
+  grid-template-columns: minmax(124px, 0.24fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+  min-width: 0;
+}
+
+.tracker-split-hero {
+  display: grid;
+  align-content: start;
+  gap: 1px;
+  min-width: 0;
+}
+
+.tracker-split-panel .label {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.tracker-split-hero strong {
+  display: block;
+  color: var(--trail);
+  font-size: 54px;
+  font-weight: 950;
+  line-height: 0.88;
+}
+
+.tracker-split-distance {
+  display: block;
+  color: var(--muted);
+  font-size: 24px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.tracker-route-block {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 14px;
+  align-items: center;
+  min-width: 0;
+}
+
+.tracker-route-title {
+  min-width: 0;
+}
+
+.tracker-route-title h2 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
+  min-width: 0;
+  margin: 0;
+  color: var(--ink);
+  font-size: 28px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.tracker-route-title span,
+.tracker-route-title strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tracker-route-title h2 > span:nth-child(2) {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.tracker-route-times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.tracker-route-times span {
+  min-width: 0;
+}
+
+.tracker-distance-large {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  text-align: right;
+}
+
+.tracker-distance-large strong {
+  display: block;
+  color: var(--muted);
+  font-size: 32px;
+  font-weight: 950;
+  line-height: 0.95;
+}
+
+.tracker-distance-large span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.tracker-support-row {
+  display: grid;
+  grid-template-columns: 0.78fr 0.72fr minmax(0, 1.72fr);
+  gap: 0 22px;
+  min-width: 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(24, 32, 29, 0.1);
+}
+
+.tracker-data-cell {
+  min-width: 0;
+}
+
+.tracker-data-cell strong {
+  display: block;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 950;
+  line-height: 1.05;
+}
+
+.tracker-resupply-cell {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 13px;
+  align-items: baseline;
+  min-width: 0;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(24, 32, 29, 0.1);
+}
+
+.tracker-resupply-cell[hidden] {
+  display: none;
+}
+
+.tracker-resupply-cell .label {
+  flex: 0 0 auto;
+}
+
+.tracker-resupply-cell strong,
+.tracker-resupply-refill,
+.tracker-resupply-next {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.tracker-resupply-refill {
+  display: inline-flex;
+  gap: 9px;
+  min-width: 0;
+}
+
+.tracker-resupply-cell p {
+  display: none;
+}
+
+.bottom-profile-viz {
+  grid-template-rows: minmax(42px, auto) minmax(0, 1fr);
+}
+
+.bottom-profile-viz .viz-title {
+  min-height: 42px;
+  padding: 6px 10px 4px;
+}
+
+@media (max-width: 719px) {
+  .route-app {
+    --route-stage-height: calc(var(--route-vh, 1vh) * 48);
+  }
+
+  .route-stage {
+    grid-template-rows: 64px minmax(0, 1fr);
+  }
+
+  .route-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 8px 10px 12px;
+  }
+
+  .route-head h1 {
+    font-size: 30px;
+  }
+
+  .route-head-meta {
+    grid-template-columns: auto;
+    gap: 4px;
+  }
+
+  .route-head-meta span {
+    display: none;
+  }
+
+  .route-head-meta a {
+    min-height: 44px;
+    padding: 0 9px;
+    font-size: 11px;
+  }
+
+  .route-details {
+    grid-template-rows: 252px minmax(0, 1fr);
+  }
+
+  .tracker-split-panel {
+    gap: 7px;
+    padding: 9px 12px 8px;
+  }
+
+  .tracker-split-primary {
+    grid-template-columns: clamp(168px, 55%, 210px) minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+  }
+
+  .tracker-split-hero strong {
+    font-size: 48px;
+  }
+
+  .tracker-split-distance {
+    font-size: 22px;
+  }
+
+  .tracker-route-block {
+    display: block;
+  }
+
+  .tracker-route-title h2 {
+    display: block;
+    font-size: 24px;
+    line-height: 1.02;
+  }
+
+  .tracker-route-title span,
+  .tracker-route-title strong {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  .tracker-route-title h2 > span:nth-child(2) {
+    font-size: 11px;
+  }
+
+  .tracker-route-times {
+    display: grid;
+    gap: 3px;
+    margin-top: 7px;
+    font-size: 11px;
+  }
+
+  .tracker-distance-large {
+    display: none;
+  }
+
+  .tracker-support-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding-top: 0;
+  }
+
+  .tracker-data-cell {
+    display: grid;
+    grid-template-columns: 74px minmax(0, 1fr);
+    gap: 7px;
+    align-items: baseline;
+    padding: 5px 0;
+    border-top: 1px solid rgba(24, 32, 29, 0.09);
+  }
+
+  .tracker-data-cell:first-child {
+    border-top: 0;
+  }
+
+  .tracker-data-cell strong {
+    margin-top: 0;
+    font-size: 13px;
+    line-height: 1.08;
+  }
+
+  .tracker-nutrition-cell strong {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .tracker-resupply-cell {
+    display: grid;
+    grid-template-columns: 74px minmax(0, 1fr);
+    gap: 3px 7px;
+    margin-top: 0;
+    padding-top: 6px;
+  }
+
+  .tracker-resupply-cell[hidden] {
+    display: none;
+  }
+
+  .tracker-resupply-cell .label {
+    grid-row: 1 / span 3;
+  }
+
+  .tracker-resupply-cell strong,
+  .tracker-resupply-refill,
+  .tracker-resupply-next {
+    font-size: 10.5px;
+    line-height: 1.12;
+  }
+
+  .tracker-resupply-refill {
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .tracker-resupply-next {
+    white-space: normal;
+  }
+
+  .bottom-profile-viz {
+    grid-template-rows: minmax(38px, auto) minmax(0, 1fr);
+  }
+
+  .bottom-profile-viz .viz-title {
+    min-height: 38px;
+    padding: 5px 8px 3px;
+  }
+}
+
+@media (max-width: 719px) and (min-height: 601px) and (max-height: 720px) {
+  .route-app {
+    --route-stage-height: calc(var(--route-vh, 1vh) * 42);
+  }
+
+  .route-details {
+    grid-template-rows: 202px minmax(0, 1fr);
+  }
+
+  .tracker-split-panel {
+    gap: 5px;
+    padding: 7px 12px 6px;
+  }
+
+  .tracker-split-primary {
+    grid-template-columns: clamp(156px, 52%, 196px) minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .tracker-split-hero strong {
+    font-size: 42px;
+  }
+
+  .tracker-split-distance {
+    font-size: 19px;
+  }
+
+  .tracker-route-title h2 {
+    font-size: 21px;
+  }
+
+  .tracker-route-times {
+    margin-top: 5px;
+  }
+
+  .tracker-data-cell {
+    padding: 3px 0;
+  }
+
+  .tracker-data-cell strong {
+    font-size: 12px;
+  }
+
+  .tracker-resupply-cell {
+    padding-top: 5px;
+  }
+
+  .tracker-resupply-cell strong,
+  .tracker-resupply-refill,
+  .tracker-resupply-next {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 719px) and (max-height: 600px) {
+  .route-app {
+    --route-stage-height: calc(var(--route-vh, 1vh) * 42);
+  }
+
+  .route-details {
+    grid-template-rows: 202px minmax(0, 1fr);
+  }
+
+  .tracker-split-panel {
+    padding-top: 7px;
+  }
+
+  .tracker-split-hero strong {
+    font-size: 42px;
+  }
+
+  .tracker-route-title h2 {
+    font-size: 21px;
+  }
+
+  .tracker-data-cell {
+    padding: 4px 0;
+  }
+}
+
+@media (max-width: 719px) and (max-height: 480px) {
+  .route-app {
+    --route-stage-height: calc(var(--route-vh, 1vh) * 34);
+  }
+
+  .route-details {
+    grid-template-rows: 154px minmax(0, 1fr);
+  }
+
+  .tracker-split-panel {
+    gap: 4px;
+    padding: 6px 10px 5px;
+  }
+
+  .tracker-split-primary {
+    grid-template-columns: clamp(132px, 48%, 166px) minmax(0, 1fr);
+  }
+
+  .tracker-split-hero strong {
+    font-size: 34px;
+  }
+
+  .tracker-split-distance {
+    font-size: 16px;
+  }
+
+  .tracker-route-title h2 {
+    font-size: 17px;
+  }
+
+  .tracker-route-times {
+    margin-top: 3px;
+  }
+
+  .tracker-data-cell {
+    padding: 2px 0;
+  }
+
+  .tracker-resupply-cell {
+    display: none;
+  }
+}
+
+@media (min-width: 720px) and (max-height: 520px) {
+  .route-details {
+    grid-template-rows: 142px minmax(0, 1fr);
+  }
+
+  .tracker-split-panel {
+    gap: 6px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .tracker-split-hero strong {
+    font-size: 44px;
+  }
+
+  .tracker-route-title h2 {
+    font-size: 24px;
+  }
+
+  .tracker-support-row {
+    padding-top: 6px;
+  }
+
+  .tracker-resupply-cell {
+    margin-top: 7px;
+    padding-top: 6px;
+  }
+}
+
+@media (min-width: 720px) and (max-height: 420px) {
+  .route-details {
+    grid-template-rows: 124px minmax(0, 1fr);
+  }
+
+  .tracker-split-panel {
+    gap: 4px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  .tracker-split-primary {
+    gap: 14px;
+  }
+
+  .tracker-split-hero strong {
+    font-size: 36px;
+  }
+
+  .tracker-split-distance {
+    font-size: 18px;
+  }
+
+  .tracker-route-title h2 {
+    font-size: 21px;
+  }
+
+  .tracker-route-times {
+    font-size: 11px;
+  }
+
+  .tracker-data-cell strong {
+    font-size: 13px;
+  }
+
+  .tracker-resupply-cell {
+    display: none;
+  }
+
+  .bottom-profile-viz {
+    grid-template-rows: minmax(36px, auto) minmax(0, 1fr);
+  }
+
+  .bottom-profile-viz .viz-title {
+    min-height: 36px;
+    padding: 4px 8px 2px;
+  }
+
+  .bottom-profile-viz .viz-title strong {
+    font-size: 13px;
+  }
+
+  .bottom-profile-viz .viz-title em {
+    min-width: 72px;
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+}
+
+/* Profile-first route tracker refinements */
+.bottom-profile-viz {
+  order: 1;
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.tracker-split-panel {
+  order: 2;
+}
+
+.route-details {
+  grid-template-rows: minmax(0, 1fr) 184px;
+}
+
+.bottom-profile-viz .profile-readout {
+  position: absolute;
+  z-index: 5;
+  top: 8px;
+  right: max(10px, calc((100% - 1180px) / 2));
+  display: block;
+  min-height: 0;
+  padding: 0;
+  pointer-events: none;
+}
+
+.bottom-profile-viz .profile-readout em {
+  display: inline-flex;
+  align-items: center;
+  min-width: 84px;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 4px;
+  background: var(--trail-soft);
+  color: #0b554f;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 950;
+  justify-content: center;
+}
+
+.tracker-split-primary {
+  grid-template-columns: minmax(128px, 0.18fr) minmax(0, 1fr);
+}
+
+.tracker-time-rail {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 5px 8px;
+  align-content: center;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.tracker-time-rail strong {
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 950;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.tracker-route-duration {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.tracker-route-duration strong {
+  color: var(--trail);
+  font-size: 34px;
+  font-weight: 950;
+  line-height: 0.9;
+}
+
+.tracker-route-duration .tracker-split-distance {
+  display: none;
+}
+
+@media (max-width: 719px) {
+  .route-details {
+    grid-template-rows: minmax(0, 1fr) 252px;
+  }
+
+  .tracker-split-primary {
+    grid-template-columns: 88px minmax(0, 1fr);
+  }
+
+  .tracker-time-rail {
+    grid-template-columns: 1fr;
+    gap: 2px;
+    align-content: start;
+  }
+
+  .tracker-time-rail strong {
+    margin-bottom: 4px;
+    font-size: 14px;
+  }
+
+  .tracker-route-duration {
+    gap: 8px;
+    margin-top: 7px;
+  }
+
+  .tracker-route-duration strong {
+    font-size: 42px;
+  }
+
+  .tracker-route-duration .tracker-split-distance {
+    display: block;
+    font-size: 19px;
+  }
+
+  .bottom-profile-viz .profile-readout {
+    top: 7px;
+    right: 10px;
+  }
+}
+
+@media (max-width: 719px) and (min-height: 601px) and (max-height: 720px) {
+  .route-details {
+    grid-template-rows: minmax(0, 1fr) 202px;
+  }
+
+  .tracker-split-primary {
+    grid-template-columns: 82px minmax(0, 1fr);
+  }
+
+  .tracker-time-rail strong {
+    font-size: 13px;
+  }
+
+  .tracker-route-duration {
+    margin-top: 5px;
+  }
+
+  .tracker-route-duration strong {
+    font-size: 36px;
+  }
+
+  .tracker-route-duration .tracker-split-distance {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 719px) and (max-height: 600px) {
+  .route-details {
+    grid-template-rows: minmax(0, 1fr) 202px;
+  }
+
+  .tracker-split-primary {
+    grid-template-columns: 82px minmax(0, 1fr);
+  }
+
+  .tracker-route-duration strong {
+    font-size: 36px;
+  }
+
+  .tracker-route-duration .tracker-split-distance {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 719px) and (max-height: 480px) {
+  .route-details {
+    grid-template-rows: minmax(0, 1fr) 154px;
+  }
+
+  .tracker-split-primary {
+    grid-template-columns: 70px minmax(0, 1fr);
+  }
+
+  .tracker-time-rail strong {
+    font-size: 11px;
+  }
+
+  .tracker-route-duration {
+    margin-top: 3px;
+  }
+
+  .tracker-route-duration strong {
+    font-size: 30px;
+  }
+
+  .tracker-route-duration .tracker-split-distance {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 720px) and (max-height: 520px) {
+  .route-details {
+    grid-template-rows: minmax(0, 1fr) 142px;
+  }
+
+  .tracker-route-duration strong {
+    font-size: 28px;
+  }
+}
+
+@media (min-width: 720px) and (max-height: 420px) {
+  .route-details {
+    grid-template-rows: minmax(0, 1fr) 124px;
+  }
+
+  .tracker-time-rail strong {
+    font-size: 14px;
+  }
+
+  .tracker-route-duration strong {
+    font-size: 24px;
+  }
+}
+
+.route-stage {
+  border-bottom: 0;
+}
+
+.route-details {
+  border-top: 0;
+}
+
+.tracker-split-panel {
+  overflow: hidden;
+  padding-bottom: 6px;
+}
+
+@media (max-width: 719px) {
+  .tracker-split-panel {
+    padding-bottom: 4px;
+  }
+}
+
 .route-viz.bottom-profile-viz > #profile-svg {
   align-self: stretch;
   justify-self: stretch;
@@ -2208,7 +3055,7 @@ h2 {
     <section class="route-stage" aria-label="Course visualizations">
       <div class="route-head">
         <div>
-          <p class="eyebrow">Canyons 100K by UTMB</p>
+          <p class="eyebrow">Canyons 100K</p>
           <h1>Route Tracker</h1>
         </div>
         <div class="route-head-meta">
@@ -2224,66 +3071,60 @@ h2 {
     </section>
 
     <section class="route-details real-route-details" aria-label="Current route details">
-      <article class="station-panel" id="station-panel">
-        <div class="station-route-summary">
-          <div class="station-route-kicker">
-            <div class="station-overline" id="station-overline">Current leg</div>
-            <div class="station-tags" id="station-tags"></div>
+      <article class="station-panel tracker-split-panel" id="station-panel">
+        <div class="tracker-split-primary">
+          <div class="tracker-time-rail" aria-label="Current leg timing">
+            <span class="label">Depart</span>
+            <strong id="station-meta">5:00 AM</strong>
+            <span class="label">Arrive</span>
+            <strong id="arrival-meta">7:25 AM</strong>
           </div>
-          <div class="station-route-line">
-            <h2 id="station-name">China Wall Start</h2>
-            <span class="station-route-arrow">to</span>
-            <strong id="next-stop">Deadwood 1</strong>
+          <div class="tracker-route-block">
+            <div class="tracker-route-title">
+              <h2><span id="station-name">China Wall Start</span> <span>to</span> <strong id="next-stop">Deadwood 1</strong></h2>
+            </div>
+            <div class="tracker-route-duration">
+              <span class="label" id="station-overline">Split</span>
+              <strong id="leg-duration">2h25</strong>
+              <span class="tracker-split-distance" id="next-leg">10.1 mi</span>
+            </div>
+            <div class="tracker-distance-large" aria-hidden="true">
+              <strong id="leg-distance-large">10.1 mi</strong>
+              <span>Distance</span>
+            </div>
           </div>
-          <div class="station-route-times" aria-label="Current leg timing">
-            <span id="station-meta">Depart 5:00 AM</span>
-            <span id="arrival-meta">Arrive 7:25 AM</span>
-          </div>
-          <p class="station-note" id="station-note"></p>
         </div>
 
-        <div class="station-grid station-leg-metrics" id="station-grid" aria-label="Current leg distance and elevation">
-          <div class="station-section-title">Leg effort</div>
-          <div class="station-metric primary">
-            <span>Distance</span>
-            <strong id="next-leg">10.1 mi</strong>
-          </div>
-          <div class="station-metric">
-            <span>Elevation</span>
+        <div class="tracker-support-row">
+          <div class="tracker-data-cell">
+            <span class="label">Elevation</span>
             <strong id="leg-elevation">+1,787 / -2,870 ft</strong>
           </div>
-        </div>
-
-        <div class="station-grid station-nutrition-metrics" id="station-nutrition" aria-label="Nutrition needed for this leg">
-          <div class="station-section-title">Fuel for this leg</div>
-          <div class="station-metric">
-            <span>Carbs</span>
-            <strong id="next-fuel">220 g</strong>
+          <div class="tracker-data-cell">
+            <span class="label">Pace</span>
+            <strong id="leg-pace">14:22/mi</strong>
           </div>
-          <div class="station-metric">
-            <span>Salt</span>
-            <strong id="leg-sodium">1,200-1,800 mg</strong>
+          <div class="tracker-data-cell tracker-nutrition-cell">
+            <span class="label">Nutrition</span>
+            <strong id="leg-nutrition">220 g carbs · 1,200-1,800 mg Na · 1.2-1.8 L</strong>
           </div>
-          <div class="station-metric">
-            <span>Fluid</span>
-            <strong id="leg-fluid">1.2-1.8 L</strong>
+          <div class="tracker-data-cell tracker-resupply-cell" id="station-resupply" hidden>
+            <span class="label" id="resupply-label">Resupply</span>
+            <strong id="resupply-arrival">Deadwood 1 arrival · full aid</strong>
+            <span class="tracker-resupply-refill" id="resupply-block">
+              <span id="resupply-carbs">590g carbs</span>
+              <span id="resupply-sodium">Na 3.25-4.9g</span>
+              <span id="resupply-fluid">3.3-4.9L</span>
+            </span>
+            <span class="tracker-resupply-next" id="resupply-nutrition">Next Michigan Bluff · 24.0 mi / 6h32</span>
+            <p id="resupply-note"></p>
           </div>
-        </div>
-
-        <div class="station-resupply" id="station-resupply" hidden>
-          <span id="resupply-label">Resupply</span>
-          <strong id="resupply-block">590 g carbs | 3,250-4,900 mg Na | 3.3-4.9 L</strong>
-          <div class="station-resupply-meta"><span>Next resupply</span> <em id="resupply-nutrition">Michigan Bluff | 24.0 mi | 6h32 to next crew</em></div>
-          <p id="resupply-note"></p>
         </div>
       </article>
 
       <article class="route-viz profile-viz bottom-profile-viz" aria-labelledby="profile-title">
-        <div class="viz-title">
-          <div>
-            <span>Full GPX Elevation Profile</span>
-            <strong id="profile-title">Tap or drag to move the marker</strong>
-          </div>
+        <div class="viz-title profile-readout">
+          <h2 id="profile-title" class="sr-only">Full course elevation profile</h2>
           <em id="route-elevation-label">0 ft</em>
         </div>
         <svg id="profile-svg" class="route-svg" preserveAspectRatio="none" role="img" aria-label="Full course elevation profile with current position line">
@@ -2335,18 +3176,20 @@ h2 {
       stationName: document.getElementById("station-name"),
       stationMeta: document.getElementById("station-meta"),
       arrivalMeta: document.getElementById("arrival-meta"),
-      stationTags: document.getElementById("station-tags"),
-      stationNote: document.getElementById("station-note"),
-      stationGrid: document.getElementById("station-grid"),
       stationResupply: document.getElementById("station-resupply"),
       nextStop: document.getElementById("next-stop"),
       nextLeg: document.getElementById("next-leg"),
+      legDuration: document.getElementById("leg-duration"),
+      legDistanceLarge: document.getElementById("leg-distance-large"),
       legElevation: document.getElementById("leg-elevation"),
-      nextFuel: document.getElementById("next-fuel"),
-      legSodium: document.getElementById("leg-sodium"),
-      legFluid: document.getElementById("leg-fluid"),
+      legPace: document.getElementById("leg-pace"),
+      legNutrition: document.getElementById("leg-nutrition"),
       resupplyLabel: document.getElementById("resupply-label"),
+      resupplyArrival: document.getElementById("resupply-arrival"),
       resupplyBlock: document.getElementById("resupply-block"),
+      resupplyCarbs: document.getElementById("resupply-carbs"),
+      resupplySodium: document.getElementById("resupply-sodium"),
+      resupplyFluid: document.getElementById("resupply-fluid"),
       resupplyNutrition: document.getElementById("resupply-nutrition"),
       resupplyNote: document.getElementById("resupply-note"),
       profileViz: document.querySelector(".bottom-profile-viz"),
@@ -2446,6 +3289,10 @@ h2 {
       return Number(value).toFixed(1);
     }
 
+    function formatTightDecimal(value) {
+      return Number(value).toFixed(2).replace(/\.0+$/, "").replace(/(\.\d*[1-9])0+$/, "$1");
+    }
+
     function stopTypeLabel(stop) {
       return stopTypeLabels[stop.type] || "Aid";
     }
@@ -2480,6 +3327,20 @@ h2 {
         formatFluid(nutrition.fluidLow) + "-" + formatFluid(nutrition.fluidHigh) + " L";
     }
 
+    function formatCompactNutritionLine(nutrition) {
+      return formatNumber(nutrition.carbs) + " g carbs · " +
+        formatNumber(nutrition.sodiumLow) + "-" + formatNumber(nutrition.sodiumHigh) + " mg Na · " +
+        formatFluid(nutrition.fluidLow) + "-" + formatFluid(nutrition.fluidHigh) + " L";
+    }
+
+    function formatSodiumGramsRange(nutrition) {
+      return formatTightDecimal(nutrition.sodiumLow / 1000) + "-" + formatTightDecimal(nutrition.sodiumHigh / 1000) + "g";
+    }
+
+    function formatCompactFluidRange(nutrition) {
+      return formatFluid(nutrition.fluidLow) + "-" + formatFluid(nutrition.fluidHigh) + "L";
+    }
+
     function legContext(stop, index) {
       if (stop.nextLeg) {
         return {
@@ -2509,7 +3370,9 @@ h2 {
     function fitProfileSvgToContainer() {
       const profileRect = elements.profileViz.getBoundingClientRect();
       const titleRect = elements.profileTitle.getBoundingClientRect();
-      const targetHeight = Math.max(1, Math.round(profileRect.height - titleRect.height));
+      const titleStyle = window.getComputedStyle(elements.profileTitle);
+      const titleHeight = titleStyle.position === "absolute" ? 0 : titleRect.height;
+      const targetHeight = Math.max(1, Math.round(profileRect.height - titleHeight));
       const nextHeight = targetHeight + "px";
       if (targetHeight > 1 && elements.profileSvg.style.height !== nextHeight) {
         elements.profileSvg.style.setProperty("height", nextHeight, "important");
@@ -2525,8 +3388,8 @@ h2 {
       const maxElevation = Math.max(...coursePoints.map((point) => point.eleFt)) + 120;
       const left = 8;
       const right = width - 8;
-      const top = 18;
-      const bottomPadding = Math.max(18, Math.min(32, Math.round(measuredHeight * 0.1)));
+      const top = 2;
+      const bottomPadding = Math.max(24, Math.min(32, Math.round(measuredHeight * 0.1)));
       const minPlotHeight = 48;
       const height = Math.max(measuredHeight, top + bottomPadding + minPlotHeight);
       const paintBottom = height;
@@ -3042,7 +3905,7 @@ h2 {
           {
             duration: 0,
             padding: isMobile
-              ? { top: 150, right: 76, bottom: 76, left: 20 }
+              ? { top: 42, right: 76, bottom: 42, left: 20 }
               : { top: 84, right: 96, bottom: 56, left: 24 }
           }
         );
@@ -3166,25 +4029,30 @@ h2 {
         state.map.getSource(mapSourceIds.progressPoint).setData(pointFeature(currentCourse, {}));
       }
 
-      elements.stationOverline.textContent = context.complete ? "Last leg complete" : "Current leg";
+      elements.stationOverline.textContent = context.complete ? "Last split" : "Split";
       elements.stationName.textContent = context.depart.name;
-      elements.stationMeta.textContent = "Depart " + context.depart.eta;
-      elements.nextStop.textContent = context.arrive ? context.arrive.name : "Done";
-      elements.arrivalMeta.textContent = context.arrive ? "Arrive " + context.arrive.eta : "";
-      elements.stationTags.innerHTML = context.depart.tags.map((tag) => '<span class="badge ' + escapeHtml(tag.type || "default") + '">' + escapeHtml(tag.label) + "</span>").join("");
-      elements.stationNote.textContent = context.complete && context.arrive ? context.arrive.note : context.depart.note;
+      elements.stationMeta.textContent = context.depart.eta;
+      elements.nextStop.textContent = context.arrive ? context.arrive.name : "Finish";
+      elements.arrivalMeta.textContent = context.arrive ? context.arrive.eta : "";
 
-      if (stop.resupply) {
-        const resupply = stop.resupply;
+      if (context.depart.resupply) {
+        const resupply = context.depart.resupply;
+        const arrivalStatus = context.arrive ? stopTypeLabel(context.arrive).toLowerCase() : "finish";
+        const resupplyRefillLabel = formatNumber(resupply.nutrition.carbs) + "g carbs, Na " +
+          formatSodiumGramsRange(resupply.nutrition) + ", " +
+          formatCompactFluidRange(resupply.nutrition);
         elements.stationPanel.classList.add("has-resupply");
         elements.stationResupply.hidden = false;
         elements.resupplyLabel.textContent = "Resupply";
-        elements.resupplyBlock.textContent = formatNutritionLine(resupply.nutrition);
+        elements.resupplyArrival.textContent = context.arrive ? context.arrive.name + " arrival · " + arrivalStatus : "Finish";
+        elements.resupplyCarbs.textContent = formatNumber(resupply.nutrition.carbs) + "g carbs";
+        elements.resupplySodium.textContent = "Na " + formatSodiumGramsRange(resupply.nutrition);
+        elements.resupplyFluid.textContent = formatCompactFluidRange(resupply.nutrition);
+        elements.resupplyBlock.setAttribute("aria-label", "Refill " + resupplyRefillLabel);
         elements.resupplyNutrition.textContent =
-          resupply.label + " | " +
-          formatMiles(resupply.miles) + " mi | " +
-          formatDuration(resupply.minutes) + " " +
-          resupply.context;
+          "Next " + resupply.label + " · " +
+          formatMiles(resupply.miles) + " mi / " +
+          formatDuration(resupply.minutes);
         elements.resupplyNote.textContent = resupply.note;
       } else {
         elements.stationPanel.classList.remove("has-resupply");
@@ -3192,17 +4060,20 @@ h2 {
       }
 
       if (leg) {
-        elements.nextLeg.textContent = formatMiles(leg.distanceMi) + " mi";
+        const legDistance = formatMiles(leg.distanceMi) + " mi";
+        elements.legDuration.textContent = formatDuration(leg.plannedMinutes);
+        elements.nextLeg.textContent = legDistance;
+        elements.legDistanceLarge.textContent = legDistance;
         elements.legElevation.textContent = formatElevationLine(leg);
-        elements.nextFuel.textContent = formatNumber(fuel.carbs) + " g";
-        elements.legSodium.textContent = formatNumber(fuel.sodiumLow) + "-" + formatNumber(fuel.sodiumHigh) + " mg";
-        elements.legFluid.textContent = formatFluid(fuel.fluidLow) + "-" + formatFluid(fuel.fluidHigh) + " L";
+        elements.legPace.textContent = leg.pace;
+        elements.legNutrition.textContent = formatCompactNutritionLine(fuel);
       } else {
+        elements.legDuration.textContent = "Done";
         elements.nextLeg.textContent = "Finish";
+        elements.legDistanceLarge.textContent = "Finish";
         elements.legElevation.textContent = "Done";
-        elements.nextFuel.textContent = "Recover";
-        elements.legSodium.textContent = "--";
-        elements.legFluid.textContent = "--";
+        elements.legPace.textContent = "--";
+        elements.legNutrition.textContent = "Recover";
       }
     }
 

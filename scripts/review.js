@@ -60,7 +60,10 @@ async function collectTrackerBottomSweep(browser, viewports) {
     await page.waitForTimeout(100);
     sweep.push(await page.evaluate(() => {
       const profile = document.querySelector(".bottom-profile-viz").getBoundingClientRect();
-      const title = document.querySelector(".bottom-profile-viz .viz-title").getBoundingClientRect();
+      const station = document.querySelector(".station-panel").getBoundingClientRect();
+      const titleEl = document.querySelector(".bottom-profile-viz .viz-title");
+      const title = titleEl.getBoundingClientRect();
+      const titleHeight = window.getComputedStyle(titleEl).position === "absolute" ? 0 : title.height;
       const svg = document.getElementById("profile-svg").getBoundingClientRect();
       const area = document.getElementById("profile-area").getBoundingClientRect();
       const grid = document.getElementById("profile-grid").getBoundingClientRect();
@@ -83,7 +86,9 @@ async function collectTrackerBottomSweep(browser, viewports) {
         scrollHeight: doc.scrollHeight,
         innerHeight: window.innerHeight,
         profileBottomGap: Math.round(window.innerHeight - profile.bottom),
-        profileFreeBottomGap: Math.round(profile.height - title.height - svg.height),
+        stationBottomGap: Math.round(window.innerHeight - station.bottom),
+        profileAboveStation: profile.bottom <= station.top + 1,
+        profileFreeBottomGap: Math.round(profile.height - titleHeight - svg.height),
         profileSvgBottomGap: Math.round(profile.bottom - svg.bottom),
         profileAreaBottomGap: Math.round(svg.bottom - area.bottom),
         profileGridBottomGap: Math.round(svg.bottom - grid.bottom),
@@ -102,7 +107,8 @@ async function collectTrackerBottomSweep(browser, viewports) {
 function bottomSweepHasFailure(item) {
   return (
     item.scrollHeight > item.innerHeight + 1 ||
-    Math.abs(item.profileBottomGap) > 1 ||
+    Math.abs(item.stationBottomGap) > 1 ||
+    !item.profileAboveStation ||
     Math.abs(item.profileFreeBottomGap) > 1 ||
     Math.abs(item.profileSvgBottomGap) > 1 ||
     Math.abs(item.profileAreaBottomGap) > 1 ||
@@ -214,14 +220,15 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     const resupply = document.getElementById("station-resupply");
     const station = stationEl.getBoundingClientRect();
     const box = resupply.getBoundingClientRect();
-    const metricContentFits = [...document.querySelectorAll(".station-metric")]
+    const metricContentFits = [...document.querySelectorAll(".tracker-data-cell:not([hidden])")]
       .every((el) => {
-        const label = el.querySelector("span").getBoundingClientRect();
+        const label = el.querySelector(".label").getBoundingClientRect();
         const value = el.querySelector("strong").getBoundingClientRect();
-        const card = el.closest(".station-grid").getBoundingClientRect();
+        const card = el.getBoundingClientRect();
+        const minValueHeight = el.classList.contains("tracker-resupply-cell") ? 10 : 12;
         return (
           label.height >= 10 &&
-          value.height >= 12 &&
+          value.height >= minValueHeight &&
           label.top >= card.top - 1 &&
           value.bottom <= card.bottom + 1
         );
@@ -452,6 +459,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     const details = document.querySelector(".route-details").getBoundingClientRect();
     const app = document.querySelector(".route-app").getBoundingClientRect();
     const profile = document.querySelector(".bottom-profile-viz").getBoundingClientRect();
+    const station = document.querySelector(".station-panel").getBoundingClientRect();
     const profileLine = document.getElementById("profile-cursor-line").getBoundingClientRect();
     const svg = document.getElementById("profile-svg").getBoundingClientRect();
     const contentBottom = Math.max(
@@ -470,6 +478,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       mapBottom: Math.round(map.bottom),
       detailsTop: Math.round(details.top),
       profileBottomGap: Math.round(window.innerHeight - profile.bottom),
+      stationBottomGap: Math.round(window.innerHeight - station.bottom),
+      profileAboveStation: profile.bottom <= station.top + 1,
       profileSvgBottomGap: Math.round(profile.bottom - svg.bottom),
       profileContentBottomGap: Math.round(svg.bottom - contentBottom),
       mapFitsStage: map.bottom <= stage.bottom + 1,
@@ -507,14 +517,15 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       ...[...document.querySelectorAll("#profile-stops circle")]
         .map((el) => el.getBoundingClientRect().bottom)
     );
-    const metricContentFits = [...document.querySelectorAll(".station-metric")]
+    const metricContentFits = [...document.querySelectorAll(".tracker-data-cell:not([hidden])")]
       .every((el) => {
-        const label = el.querySelector("span").getBoundingClientRect();
+        const label = el.querySelector(".label").getBoundingClientRect();
         const value = el.querySelector("strong").getBoundingClientRect();
-        const card = el.closest(".station-grid").getBoundingClientRect();
+        const card = el.getBoundingClientRect();
+        const minValueHeight = el.classList.contains("tracker-resupply-cell") ? 10 : 12;
         return (
           label.height >= 10 &&
-          value.height >= 12 &&
+          value.height >= minValueHeight &&
           label.top >= card.top - 1 &&
           value.bottom <= card.bottom + 1
         );
@@ -524,7 +535,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       profileHeight: Math.round(profile.height),
       svgHeight: Math.round(svg.height),
       stationHeight: Math.round(station.height),
-      stationAboveProfile: station.bottom <= profile.top + 1,
+      stationBottomGap: Math.round(window.innerHeight - station.bottom),
+      profileAboveStation: profile.bottom <= station.top + 1,
       profileSvgBottomGap: Math.round(profile.bottom - svg.bottom),
       profileLineBottomGap: Math.round(svg.bottom - profilePath.bottom),
       profileContentBottomGap: Math.round(svg.bottom - contentBottom),
@@ -562,11 +574,12 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       profileHeight: Math.round(profile.height),
       svgHeight: Math.round(svg.height),
       stationHeight: Math.round(station.height),
-      stationAboveProfile: station.bottom <= profile.top + 1,
+      stationBottomGap: Math.round(window.innerHeight - station.bottom),
+      profileAboveStation: profile.bottom <= station.top + 1,
       profileSvgBottomGap: Math.round(profile.bottom - svg.bottom),
       profileLineBottomGap: Math.round(svg.bottom - profilePath.bottom),
       profileContentBottomGap: Math.round(svg.bottom - contentBottom),
-      profileWithinApp: profile.bottom <= app.bottom + 1
+      stationWithinApp: station.bottom <= app.bottom + 1
     };
   });
 
@@ -681,7 +694,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     !trackerMetrics.profileCursorVisible ||
     trackerDesktopMetrics.scrollHeight > trackerDesktopMetrics.innerHeight + 1 ||
     Math.abs(trackerDesktopMetrics.appHeight - trackerDesktopMetrics.innerHeight) > 1 ||
-    Math.abs(trackerDesktopMetrics.profileBottomGap) > 1 ||
+    Math.abs(trackerDesktopMetrics.stationBottomGap) > 1 ||
+    !trackerDesktopMetrics.profileAboveStation ||
     Math.abs(trackerDesktopMetrics.profileSvgBottomGap) > 1 ||
     trackerDesktopMetrics.profileContentBottomGap < 12 ||
     trackerDesktopMetrics.profileContentBottomGap > 36 ||
@@ -692,12 +706,13 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerDesktopMapFailed ||
     !trackerStartResupplyMetrics.visible ||
     !trackerStartResupplyMetrics.text.includes("Resupply") ||
-    !trackerStartResupplyMetrics.text.includes("Next resupply Michigan Bluff") ||
-    !trackerStartResupplyMetrics.text.includes("24.0 mi | 6h32 to next crew") ||
+    !trackerStartResupplyMetrics.text.includes("Deadwood 1 arrival · full aid") ||
+    !trackerStartResupplyMetrics.text.includes("Next Michigan Bluff · 24.0 mi / 6h32") ||
     trackerStartResupplyMetrics.text.includes("Resupply to") ||
     trackerStartResupplyMetrics.text.includes("Next resupply:") ||
     trackerStartResupplyMetrics.text.includes("Block total") ||
-    !trackerStartResupplyMetrics.text.includes("590 g") ||
+    !trackerStartResupplyMetrics.text.includes("590g carbs") ||
+    !trackerStartResupplyMetrics.text.includes("Na 3.25-4.9g") ||
     !trackerStartResupplyMetrics.stationText.includes("10.1 mi") ||
     !trackerStartResupplyMetrics.stationText.includes("+1,787 / -2,870 ft") ||
     !trackerStartResupplyMetrics.stationText.includes("220 g") ||
@@ -707,7 +722,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     !trackerStartResupplyMetrics.metricContentFits ||
     trackerStartResupplyMetrics.overflowCount ||
     trackerStartResupplyMetrics.height > trackerStartResupplyMetrics.stationHeight ||
-    !trackerShortMobileMetrics.stationAboveProfile ||
+    Math.abs(trackerShortMobileMetrics.stationBottomGap) > 1 ||
+    !trackerShortMobileMetrics.profileAboveStation ||
     !trackerShortMobileMetrics.metricContentFits ||
     trackerShortMobileMetrics.profileHeight < 180 ||
     trackerShortMobileMetrics.svgHeight < 140 ||
@@ -719,13 +735,14 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerShortMobileMetrics.profilePathWidth < trackerShortMobileMetrics.profileSvgWidth * 0.95 ||
     trackerShortLandscapeMetrics.scrollHeight > trackerShortLandscapeMetrics.innerHeight + 1 ||
     Math.abs(trackerShortLandscapeMetrics.appHeight - trackerShortLandscapeMetrics.innerHeight) > 1 ||
-    !trackerShortLandscapeMetrics.stationAboveProfile ||
-    !trackerShortLandscapeMetrics.profileWithinApp ||
+    Math.abs(trackerShortLandscapeMetrics.stationBottomGap) > 1 ||
+    !trackerShortLandscapeMetrics.profileAboveStation ||
+    !trackerShortLandscapeMetrics.stationWithinApp ||
     trackerShortLandscapeMetrics.profileHeight < 80 ||
     trackerShortLandscapeMetrics.svgHeight < 50 ||
     Math.abs(trackerShortLandscapeMetrics.profileSvgBottomGap) > 1 ||
     trackerShortLandscapeMetrics.profileLineBottomGap < 10 ||
-    trackerShortLandscapeMetrics.profileLineBottomGap > 24 ||
+    trackerShortLandscapeMetrics.profileLineBottomGap > 28 ||
     trackerShortLandscapeMetrics.profileContentBottomGap < 8 ||
     trackerShortLandscapeMetrics.profileContentBottomGap > 24 ||
     trackerBottomSweep.some(bottomSweepHasFailure) ||

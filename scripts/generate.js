@@ -711,7 +711,7 @@ ${styles}
     <section class="route-stage" aria-label="Course visualizations">
       <div class="route-head">
         <div>
-          <p class="eyebrow">Canyons 100K by UTMB</p>
+          <p class="eyebrow">Canyons 100K</p>
           <h1>Route Tracker</h1>
         </div>
         <div class="route-head-meta">
@@ -727,66 +727,60 @@ ${styles}
     </section>
 
     <section class="route-details real-route-details" aria-label="Current route details">
-      <article class="station-panel" id="station-panel">
-        <div class="station-route-summary">
-          <div class="station-route-kicker">
-            <div class="station-overline" id="station-overline">Current leg</div>
-            <div class="station-tags" id="station-tags"></div>
+      <article class="station-panel tracker-split-panel" id="station-panel">
+        <div class="tracker-split-primary">
+          <div class="tracker-time-rail" aria-label="Current leg timing">
+            <span class="label">Depart</span>
+            <strong id="station-meta">5:00 AM</strong>
+            <span class="label">Arrive</span>
+            <strong id="arrival-meta">7:25 AM</strong>
           </div>
-          <div class="station-route-line">
-            <h2 id="station-name">China Wall Start</h2>
-            <span class="station-route-arrow">to</span>
-            <strong id="next-stop">Deadwood 1</strong>
+          <div class="tracker-route-block">
+            <div class="tracker-route-title">
+              <h2><span id="station-name">China Wall Start</span> <span>to</span> <strong id="next-stop">Deadwood 1</strong></h2>
+            </div>
+            <div class="tracker-route-duration">
+              <span class="label" id="station-overline">Split</span>
+              <strong id="leg-duration">2h25</strong>
+              <span class="tracker-split-distance" id="next-leg">10.1 mi</span>
+            </div>
+            <div class="tracker-distance-large" aria-hidden="true">
+              <strong id="leg-distance-large">10.1 mi</strong>
+              <span>Distance</span>
+            </div>
           </div>
-          <div class="station-route-times" aria-label="Current leg timing">
-            <span id="station-meta">Depart 5:00 AM</span>
-            <span id="arrival-meta">Arrive 7:25 AM</span>
-          </div>
-          <p class="station-note" id="station-note"></p>
         </div>
 
-        <div class="station-grid station-leg-metrics" id="station-grid" aria-label="Current leg distance and elevation">
-          <div class="station-section-title">Leg effort</div>
-          <div class="station-metric primary">
-            <span>Distance</span>
-            <strong id="next-leg">10.1 mi</strong>
-          </div>
-          <div class="station-metric">
-            <span>Elevation</span>
+        <div class="tracker-support-row">
+          <div class="tracker-data-cell">
+            <span class="label">Elevation</span>
             <strong id="leg-elevation">+1,787 / -2,870 ft</strong>
           </div>
-        </div>
-
-        <div class="station-grid station-nutrition-metrics" id="station-nutrition" aria-label="Nutrition needed for this leg">
-          <div class="station-section-title">Fuel for this leg</div>
-          <div class="station-metric">
-            <span>Carbs</span>
-            <strong id="next-fuel">220 g</strong>
+          <div class="tracker-data-cell">
+            <span class="label">Pace</span>
+            <strong id="leg-pace">14:22/mi</strong>
           </div>
-          <div class="station-metric">
-            <span>Salt</span>
-            <strong id="leg-sodium">1,200-1,800 mg</strong>
+          <div class="tracker-data-cell tracker-nutrition-cell">
+            <span class="label">Nutrition</span>
+            <strong id="leg-nutrition">220 g carbs · 1,200-1,800 mg Na · 1.2-1.8 L</strong>
           </div>
-          <div class="station-metric">
-            <span>Fluid</span>
-            <strong id="leg-fluid">1.2-1.8 L</strong>
+          <div class="tracker-data-cell tracker-resupply-cell" id="station-resupply" hidden>
+            <span class="label" id="resupply-label">Resupply</span>
+            <strong id="resupply-arrival">Deadwood 1 arrival · full aid</strong>
+            <span class="tracker-resupply-refill" id="resupply-block">
+              <span id="resupply-carbs">590g carbs</span>
+              <span id="resupply-sodium">Na 3.25-4.9g</span>
+              <span id="resupply-fluid">3.3-4.9L</span>
+            </span>
+            <span class="tracker-resupply-next" id="resupply-nutrition">Next Michigan Bluff · 24.0 mi / 6h32</span>
+            <p id="resupply-note"></p>
           </div>
-        </div>
-
-        <div class="station-resupply" id="station-resupply" hidden>
-          <span id="resupply-label">Resupply</span>
-          <strong id="resupply-block">590 g carbs | 3,250-4,900 mg Na | 3.3-4.9 L</strong>
-          <div class="station-resupply-meta"><span>Next resupply</span> <em id="resupply-nutrition">Michigan Bluff | 24.0 mi | 6h32 to next crew</em></div>
-          <p id="resupply-note"></p>
         </div>
       </article>
 
       <article class="route-viz profile-viz bottom-profile-viz" aria-labelledby="profile-title">
-        <div class="viz-title">
-          <div>
-            <span>Full GPX Elevation Profile</span>
-            <strong id="profile-title">Tap or drag to move the marker</strong>
-          </div>
+        <div class="viz-title profile-readout">
+          <h2 id="profile-title" class="sr-only">Full course elevation profile</h2>
           <em id="route-elevation-label">0 ft</em>
         </div>
         <svg id="profile-svg" class="route-svg" preserveAspectRatio="none" role="img" aria-label="Full course elevation profile with current position line">
@@ -838,18 +832,20 @@ ${styles}
       stationName: document.getElementById("station-name"),
       stationMeta: document.getElementById("station-meta"),
       arrivalMeta: document.getElementById("arrival-meta"),
-      stationTags: document.getElementById("station-tags"),
-      stationNote: document.getElementById("station-note"),
-      stationGrid: document.getElementById("station-grid"),
       stationResupply: document.getElementById("station-resupply"),
       nextStop: document.getElementById("next-stop"),
       nextLeg: document.getElementById("next-leg"),
+      legDuration: document.getElementById("leg-duration"),
+      legDistanceLarge: document.getElementById("leg-distance-large"),
       legElevation: document.getElementById("leg-elevation"),
-      nextFuel: document.getElementById("next-fuel"),
-      legSodium: document.getElementById("leg-sodium"),
-      legFluid: document.getElementById("leg-fluid"),
+      legPace: document.getElementById("leg-pace"),
+      legNutrition: document.getElementById("leg-nutrition"),
       resupplyLabel: document.getElementById("resupply-label"),
+      resupplyArrival: document.getElementById("resupply-arrival"),
       resupplyBlock: document.getElementById("resupply-block"),
+      resupplyCarbs: document.getElementById("resupply-carbs"),
+      resupplySodium: document.getElementById("resupply-sodium"),
+      resupplyFluid: document.getElementById("resupply-fluid"),
       resupplyNutrition: document.getElementById("resupply-nutrition"),
       resupplyNote: document.getElementById("resupply-note"),
       profileViz: document.querySelector(".bottom-profile-viz"),
@@ -949,6 +945,10 @@ ${styles}
       return Number(value).toFixed(1);
     }
 
+    function formatTightDecimal(value) {
+      return Number(value).toFixed(2).replace(/\\.0+$/, "").replace(/(\\.\\d*[1-9])0+$/, "$1");
+    }
+
     function stopTypeLabel(stop) {
       return stopTypeLabels[stop.type] || "Aid";
     }
@@ -983,6 +983,20 @@ ${styles}
         formatFluid(nutrition.fluidLow) + "-" + formatFluid(nutrition.fluidHigh) + " L";
     }
 
+    function formatCompactNutritionLine(nutrition) {
+      return formatNumber(nutrition.carbs) + " g carbs · " +
+        formatNumber(nutrition.sodiumLow) + "-" + formatNumber(nutrition.sodiumHigh) + " mg Na · " +
+        formatFluid(nutrition.fluidLow) + "-" + formatFluid(nutrition.fluidHigh) + " L";
+    }
+
+    function formatSodiumGramsRange(nutrition) {
+      return formatTightDecimal(nutrition.sodiumLow / 1000) + "-" + formatTightDecimal(nutrition.sodiumHigh / 1000) + "g";
+    }
+
+    function formatCompactFluidRange(nutrition) {
+      return formatFluid(nutrition.fluidLow) + "-" + formatFluid(nutrition.fluidHigh) + "L";
+    }
+
     function legContext(stop, index) {
       if (stop.nextLeg) {
         return {
@@ -1012,7 +1026,9 @@ ${styles}
     function fitProfileSvgToContainer() {
       const profileRect = elements.profileViz.getBoundingClientRect();
       const titleRect = elements.profileTitle.getBoundingClientRect();
-      const targetHeight = Math.max(1, Math.round(profileRect.height - titleRect.height));
+      const titleStyle = window.getComputedStyle(elements.profileTitle);
+      const titleHeight = titleStyle.position === "absolute" ? 0 : titleRect.height;
+      const targetHeight = Math.max(1, Math.round(profileRect.height - titleHeight));
       const nextHeight = targetHeight + "px";
       if (targetHeight > 1 && elements.profileSvg.style.height !== nextHeight) {
         elements.profileSvg.style.setProperty("height", nextHeight, "important");
@@ -1028,8 +1044,8 @@ ${styles}
       const maxElevation = Math.max(...coursePoints.map((point) => point.eleFt)) + 120;
       const left = 8;
       const right = width - 8;
-      const top = 18;
-      const bottomPadding = Math.max(18, Math.min(32, Math.round(measuredHeight * 0.1)));
+      const top = 2;
+      const bottomPadding = Math.max(24, Math.min(32, Math.round(measuredHeight * 0.1)));
       const minPlotHeight = 48;
       const height = Math.max(measuredHeight, top + bottomPadding + minPlotHeight);
       const paintBottom = height;
@@ -1545,7 +1561,7 @@ ${styles}
           {
             duration: 0,
             padding: isMobile
-              ? { top: 150, right: 76, bottom: 76, left: 20 }
+              ? { top: 42, right: 76, bottom: 42, left: 20 }
               : { top: 84, right: 96, bottom: 56, left: 24 }
           }
         );
@@ -1669,25 +1685,30 @@ ${styles}
         state.map.getSource(mapSourceIds.progressPoint).setData(pointFeature(currentCourse, {}));
       }
 
-      elements.stationOverline.textContent = context.complete ? "Last leg complete" : "Current leg";
+      elements.stationOverline.textContent = context.complete ? "Last split" : "Split";
       elements.stationName.textContent = context.depart.name;
-      elements.stationMeta.textContent = "Depart " + context.depart.eta;
-      elements.nextStop.textContent = context.arrive ? context.arrive.name : "Done";
-      elements.arrivalMeta.textContent = context.arrive ? "Arrive " + context.arrive.eta : "";
-      elements.stationTags.innerHTML = context.depart.tags.map((tag) => '<span class="badge ' + escapeHtml(tag.type || "default") + '">' + escapeHtml(tag.label) + "</span>").join("");
-      elements.stationNote.textContent = context.complete && context.arrive ? context.arrive.note : context.depart.note;
+      elements.stationMeta.textContent = context.depart.eta;
+      elements.nextStop.textContent = context.arrive ? context.arrive.name : "Finish";
+      elements.arrivalMeta.textContent = context.arrive ? context.arrive.eta : "";
 
-      if (stop.resupply) {
-        const resupply = stop.resupply;
+      if (context.depart.resupply) {
+        const resupply = context.depart.resupply;
+        const arrivalStatus = context.arrive ? stopTypeLabel(context.arrive).toLowerCase() : "finish";
+        const resupplyRefillLabel = formatNumber(resupply.nutrition.carbs) + "g carbs, Na " +
+          formatSodiumGramsRange(resupply.nutrition) + ", " +
+          formatCompactFluidRange(resupply.nutrition);
         elements.stationPanel.classList.add("has-resupply");
         elements.stationResupply.hidden = false;
         elements.resupplyLabel.textContent = "Resupply";
-        elements.resupplyBlock.textContent = formatNutritionLine(resupply.nutrition);
+        elements.resupplyArrival.textContent = context.arrive ? context.arrive.name + " arrival · " + arrivalStatus : "Finish";
+        elements.resupplyCarbs.textContent = formatNumber(resupply.nutrition.carbs) + "g carbs";
+        elements.resupplySodium.textContent = "Na " + formatSodiumGramsRange(resupply.nutrition);
+        elements.resupplyFluid.textContent = formatCompactFluidRange(resupply.nutrition);
+        elements.resupplyBlock.setAttribute("aria-label", "Refill " + resupplyRefillLabel);
         elements.resupplyNutrition.textContent =
-          resupply.label + " | " +
-          formatMiles(resupply.miles) + " mi | " +
-          formatDuration(resupply.minutes) + " " +
-          resupply.context;
+          "Next " + resupply.label + " · " +
+          formatMiles(resupply.miles) + " mi / " +
+          formatDuration(resupply.minutes);
         elements.resupplyNote.textContent = resupply.note;
       } else {
         elements.stationPanel.classList.remove("has-resupply");
@@ -1695,17 +1716,20 @@ ${styles}
       }
 
       if (leg) {
-        elements.nextLeg.textContent = formatMiles(leg.distanceMi) + " mi";
+        const legDistance = formatMiles(leg.distanceMi) + " mi";
+        elements.legDuration.textContent = formatDuration(leg.plannedMinutes);
+        elements.nextLeg.textContent = legDistance;
+        elements.legDistanceLarge.textContent = legDistance;
         elements.legElevation.textContent = formatElevationLine(leg);
-        elements.nextFuel.textContent = formatNumber(fuel.carbs) + " g";
-        elements.legSodium.textContent = formatNumber(fuel.sodiumLow) + "-" + formatNumber(fuel.sodiumHigh) + " mg";
-        elements.legFluid.textContent = formatFluid(fuel.fluidLow) + "-" + formatFluid(fuel.fluidHigh) + " L";
+        elements.legPace.textContent = leg.pace;
+        elements.legNutrition.textContent = formatCompactNutritionLine(fuel);
       } else {
+        elements.legDuration.textContent = "Done";
         elements.nextLeg.textContent = "Finish";
+        elements.legDistanceLarge.textContent = "Finish";
         elements.legElevation.textContent = "Done";
-        elements.nextFuel.textContent = "Recover";
-        elements.legSodium.textContent = "--";
-        elements.legFluid.textContent = "--";
+        elements.legPace.textContent = "--";
+        elements.legNutrition.textContent = "Recover";
       }
     }
 
