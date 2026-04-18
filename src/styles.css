@@ -797,6 +797,40 @@ h2 {
   fill: rgba(15, 118, 110, 0.07);
 }
 
+.profile-climbs {
+  pointer-events: none;
+}
+
+.profile-climb-band {
+  fill: rgba(var(--crew-rgb), 0.085);
+}
+
+.profile-climb-line {
+  fill: none;
+  stroke: var(--warn);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3.2;
+  opacity: 0.62;
+  vector-effect: non-scaling-stroke;
+}
+
+.profile-mode-splits .profile-climbs {
+  display: none;
+}
+
+.profile-mode-climbs .profile-current-leg {
+  display: none;
+}
+
+.profile-mode-climbs .profile-stop-guide {
+  opacity: 0.16;
+}
+
+.profile-mode-climbs .profile-stop-guide.resupply-guide {
+  opacity: 0.24;
+}
+
 .profile-grid-line {
   stroke: rgba(24, 32, 29, 0.09);
   stroke-width: 1;
@@ -1564,6 +1598,22 @@ h2 {
   color: var(--muted);
   font-size: 10px;
   font-weight: 850;
+}
+
+.profile-popup-climb {
+  min-width: 0;
+  padding-top: 4px;
+  overflow: hidden;
+  border-top: 1px solid rgba(184, 74, 24, 0.16);
+  color: var(--warn);
+  font-size: 10px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-popup-climb[hidden] {
+  display: none;
 }
 
 .profile-popup-leg span {
@@ -2356,6 +2406,20 @@ h2 {
   line-height: 1.05;
 }
 
+.tracker-metric-note {
+  display: block;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.tracker-metric-note[hidden] {
+  display: none;
+}
+
 .tracker-resupply-cell {
   grid-column: 1 / -1;
   display: flex;
@@ -2505,7 +2569,7 @@ h2 {
     grid-template-columns: 74px minmax(0, 1fr);
     gap: 7px;
     align-items: baseline;
-    padding: 5px 0;
+    padding: 4px 0;
     border-top: 1px solid rgba(24, 32, 29, 0.09);
   }
 
@@ -2524,12 +2588,18 @@ h2 {
     white-space: nowrap;
   }
 
+  .tracker-metric-note {
+    grid-column: 2;
+    margin-top: 0;
+    font-size: 10.5px;
+  }
+
   .tracker-resupply-cell {
     display: grid;
     grid-template-columns: 74px minmax(0, 1fr);
     gap: 3px 7px;
     margin-top: 0;
-    padding-top: 6px;
+    padding-top: 4px;
   }
 
   .tracker-resupply-cell[hidden] {
@@ -2817,6 +2887,52 @@ h2 {
   justify-content: center;
 }
 
+.profile-mode-toggle {
+  position: absolute;
+  z-index: 5;
+  bottom: 8px;
+  left: max(10px, calc((100% - 1180px) / 2));
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(24, 32, 29, 0.14);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 2px 8px rgba(24, 32, 29, 0.08);
+  pointer-events: auto;
+}
+
+.profile-mode-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.profile-mode-button.is-active {
+  background: var(--trail-soft);
+  color: var(--trail);
+}
+
+.profile-mode-button[data-profile-mode="climbs"].is-active {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
 .tracker-split-primary {
   grid-template-columns: minmax(128px, 0.18fr) minmax(0, 1fr);
 }
@@ -2893,6 +3009,16 @@ h2 {
   .bottom-profile-viz .profile-readout {
     top: 7px;
     right: 10px;
+  }
+
+  .profile-mode-toggle {
+    bottom: 7px;
+    left: 10px;
+  }
+
+  .profile-mode-button {
+    min-width: 44px;
+    padding: 0 6px;
   }
 }
 

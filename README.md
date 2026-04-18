@@ -4,8 +4,8 @@ Generated race-day crew guide for the Canyons 100K.
 
 ## Files
 
-- `data/race-plan.json` is the editable race plan: stops, ETAs, leg splits, elevation, crew notes, fuel targets, map notes, and source links.
-- `data/canyons-100k-course.gpx` is the official 2026 100K GPX used for the route tracker map and elevation profile.
+- `data/race-plan.json` is the editable race plan: stops, total moving-time target, station ETA padding, crew notes, fuel targets, map notes, and source links.
+- `data/canyons-100k-course.gpx` is the official 2026 100K GPX used for leg pacing, gain/loss, the route tracker map, and the elevation profile.
 - `src/styles.css` is the report styling.
 - `scripts/generate.js` builds the HTML report and route tracker.
 - `scripts/review.js` builds the pages, captures Playwright screenshots, and checks mobile overflow, tap targets, tiny text, and route-tracker cursor movement.
@@ -31,9 +31,11 @@ To change nutrition targets, edit:
 }
 ```
 
-To change the schedule, edit each stop `eta` and the `plannedMinutes` / `plannedTime` values in `nextLeg`.
+To change the schedule, edit `pacing.targetMovingMinutes` for the total moving-time budget. The generator allocates that time across legs from the smoothed GPX elevation profile, then derives each leg split, pace, gain, loss, and downstream ETA.
 
-The guide intentionally keeps ETAs explicit because the displayed ETAs include practical race-day stop time and rounding, while nutrition math is based on planned leg split minutes.
+Each `nextLeg.schedulePaddingMinutes` value preserves practical stop time or ETA rounding after that leg. Nutrition math is based on the GPX-derived planned leg minutes.
+
+Crew `arriveBy` times are generated from each crew stop ETA minus `arriveByBufferMinutes`.
 
 ## Build
 

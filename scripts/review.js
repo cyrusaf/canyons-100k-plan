@@ -249,6 +249,22 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
       overflowCount: overflow.length
     };
   });
+  await trackerMobile.locator('[data-profile-mode="climbs"]').click();
+  await trackerMobile.waitForTimeout(200);
+  const trackerClimbModeMetrics = await trackerMobile.evaluate(() => {
+    const stationEl = document.querySelector(".station-panel");
+    return {
+      active: document.querySelector('[data-profile-mode="climbs"]').getAttribute("aria-pressed") === "true",
+      stationText: stationEl.textContent.trim().replace(/\s+/g, " "),
+      primary: document.getElementById("leg-duration").textContent.trim(),
+      secondary: document.getElementById("next-leg").textContent.trim(),
+      label: document.getElementById("station-overline").textContent.trim(),
+      grade: document.getElementById("leg-distance-large").textContent.trim(),
+      range: document.getElementById("leg-nutrition").textContent.trim()
+    };
+  });
+  await trackerMobile.locator('[data-profile-mode="splits"]').click();
+  await trackerMobile.waitForTimeout(200);
   const mobileProfileBoxBeforeWheel = await trackerMobile.locator("#profile-svg").boundingBox();
   await trackerMobile.mouse.move(
     mobileProfileBoxBeforeWheel.x + mobileProfileBoxBeforeWheel.width / 2,
@@ -632,6 +648,7 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     tracker: trackerMetrics,
     trackerDesktop: trackerDesktopMetrics,
     trackerStartResupply: trackerStartResupplyMetrics,
+    trackerClimbMode: trackerClimbModeMetrics,
     trackerShortMobile: trackerShortMobileMetrics,
     trackerShortLandscape: trackerShortLandscapeMetrics,
     trackerBottomSweep,
@@ -707,21 +724,27 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     !trackerStartResupplyMetrics.visible ||
     !trackerStartResupplyMetrics.text.includes("Resupply") ||
     !trackerStartResupplyMetrics.text.includes("Deadwood 1 arrival · full aid") ||
-    !trackerStartResupplyMetrics.text.includes("Next Michigan Bluff · 24.0 mi / 6h32") ||
+    !trackerStartResupplyMetrics.text.includes("Next Michigan Bluff · 24.0 mi / 6h35") ||
     trackerStartResupplyMetrics.text.includes("Resupply to") ||
     trackerStartResupplyMetrics.text.includes("Next resupply:") ||
     trackerStartResupplyMetrics.text.includes("Block total") ||
-    !trackerStartResupplyMetrics.text.includes("590g carbs") ||
-    !trackerStartResupplyMetrics.text.includes("Na 3.25-4.9g") ||
+    !trackerStartResupplyMetrics.text.includes("595g carbs") ||
+    !trackerStartResupplyMetrics.text.includes("Na 3.35-4.95g") ||
     !trackerStartResupplyMetrics.stationText.includes("10.1 mi") ||
-    !trackerStartResupplyMetrics.stationText.includes("+1,787 / -2,870 ft") ||
-    !trackerStartResupplyMetrics.stationText.includes("220 g") ||
-    !trackerStartResupplyMetrics.stationText.includes("1,200-1,800 mg") ||
-    !trackerStartResupplyMetrics.stationText.includes("1.2-1.8 L") ||
-    !trackerStartResupplyMetrics.stationText.includes("Arrive 7:25 AM") ||
+    !trackerStartResupplyMetrics.stationText.includes("+1,620 / -2,552 ft") ||
+    !trackerStartResupplyMetrics.stationText.includes("Climb 2.9 mi @ 11.9%") ||
+    !trackerStartResupplyMetrics.stationText.includes("230 g") ||
+    !trackerStartResupplyMetrics.stationText.includes("1,300-1,900 mg") ||
+    !trackerStartResupplyMetrics.stationText.includes("1.3-1.9 L") ||
+    !trackerStartResupplyMetrics.stationText.includes("Arrive 7:33 AM") ||
     !trackerStartResupplyMetrics.metricContentFits ||
     trackerStartResupplyMetrics.overflowCount ||
     trackerStartResupplyMetrics.height > trackerStartResupplyMetrics.stationHeight ||
+    !trackerClimbModeMetrics.active ||
+    trackerClimbModeMetrics.primary !== "2.9 mi" ||
+    !trackerClimbModeMetrics.secondary.includes("+1,835 ft") ||
+    !trackerClimbModeMetrics.grade.includes("11.9%") ||
+    !trackerClimbModeMetrics.range.includes("mile 8.2-11.1") ||
     Math.abs(trackerShortMobileMetrics.stationBottomGap) > 1 ||
     !trackerShortMobileMetrics.profileAboveStation ||
     !trackerShortMobileMetrics.metricContentFits ||

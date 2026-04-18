@@ -13,9 +13,19 @@ const TRACKER_OUTPUT_PATH = path.join(ROOT, "docs", "canyons-100k-route-tracker.
 const NOJEKYLL_OUTPUT_PATH = path.join(ROOT, "docs", ".nojekyll");
 const FEET_PER_METER = 3.28084;
 const EARTH_RADIUS_MI = 3958.7613;
+const PACE_SAMPLE_MILES = 0.05;
+const PACE_SMOOTHING_WINDOW_MILES = 0.15;
+const CLIMB_SAMPLE_MILES = 0.05;
+const CLIMB_SMOOTHING_WINDOW_MILES = 0.15;
+const CLIMB_BREAK_LOSS_FT = 100;
+const MAJOR_CLIMB_MIN_GAIN_FT = 500;
+const MAJOR_CLIMB_MIN_DISTANCE_MI = 0.75;
+const MAJOR_CLIMB_MIN_AVG_GRADE = 3;
 
 const plan = JSON.parse(fs.readFileSync(DATA_PATH, "utf8"));
 const styles = fs.readFileSync(STYLE_PATH, "utf8");
+let cachedCourse = null;
+let cachedClimbs = null;
 
 validatePlan(plan);
 
@@ -62,6 +72,24 @@ function formatDuration(minutes) {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
   return mins ? `${hours}h${String(mins).padStart(2, "0")}` : `${hours}h00`;
+}
+
+function parseClockMinutes(value) {
+  const match = String(value ?? "").trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return null;
+  let hours = Number(match[1]) % 12;
+  const minutes = Number(match[2]);
+  if (match[3].toUpperCase() === "PM") hours += 12;
+  return hours * 60 + minutes;
+}
+
+function formatClockMinutes(value) {
+  const total = ((Math.round(value) % 1440) + 1440) % 1440;
+  const hours24 = Math.floor(total / 60);
+  const minutes = total % 60;
+  const period = hours24 >= 12 ? "PM" : "AM";
+  const hours12 = hours24 % 12 || 12;
+  return `${hours12}:${String(minutes).padStart(2, "0")} ${period}`;
 }
 
 function formatPace(minutes, miles) {
@@ -145,6 +173,31 @@ function formatNutritionLine(nutrition) {
   return `${formatNumber(nutrition.carbs)} g carbs | ${formatNumber(nutrition.sodiumLow)}-${formatNumber(nutrition.sodiumHigh)} mg Na | ${formatFluid(nutrition.fluidLow)}-${formatFluid(nutrition.fluidHigh)} L`;
 }
 
+function formatCompactNutritionLine(nutrition) {
+  return `${formatNumber(nutrition.carbs)} g carbs · ${formatNumber(nutrition.sodiumLow)}-${formatNumber(nutrition.sodiumHigh)} mg Na · ${formatFluid(nutrition.fluidLow)}-${formatFluid(nutrition.fluidHigh)} L`;
+}
+
+function formatElevationLine(leg) {
+  return `+${formatNumber(leg.gainFt)} / -${formatNumber(leg.lossFt)} ft`;
+}
+
+function formatLegClimbLine(climbs) {
+  if (!climbs?.length) return "";
+
+  const totalDistance = climbs.reduce((total, climb) => total + climb.distanceMi, 0);
+  if (climbs.length === 1) {
+    return `${formatMiles(climbs[0].distanceMi)} mi @ ${climbs[0].avgGradePct}%`;
+  }
+  return `${formatMiles(totalDistance)} mi across ${climbs.length} climbs`;
+}
+
+function climbsForLeg(climbs, fromStop, toStop) {
+  return climbs.filter((climb) => {
+    const dominant = dominantLegForRange(climb.startMile, climb.endMile);
+    return dominant?.from.name === fromStop.name && dominant?.to.name === toStop.name;
+  });
+}
+
 function classForStop(stop) {
   if (stop.kind === "crew") return "stop crew";
   if (stop.kind === "finish") return "stop finish";
@@ -153,6 +206,18 @@ function classForStop(stop) {
 
 function crewStopFor(stop) {
   return plan.crewStops.find((crewStop) => crewStop.name === stop.name) || null;
+}
+
+function crewCalloutFor(stop) {
+  if (!stop.crewCallout) return "";
+
+  const crewStop = crewStopFor(stop);
+  if (!crewStop?.arriveBy) return stop.crewCallout;
+
+  return stop.crewCallout.replace(
+    /arrive by\s+\d{1,2}:\d{2}\s*(?:AM|PM)/i,
+    `arrive by ${crewStop.arriveBy}`
+  );
 }
 
 function cutLabelFor(stop) {
@@ -290,6 +355,10 @@ function renderLeg(leg) {
   const nutrition = nutritionForMinutes(leg.plannedMinutes);
   const arrivalStop = plan.stops[getStopIndex(leg.to)];
   const arrivalEta = arrivalStop ? arrivalStop.eta : "";
+  const climbLine = formatLegClimbLine(leg.climbs);
+  const climbSummary = climbLine
+    ? `                  <span class="split-pair"><span class="label">Climb</span><strong>${escapeHtml(climbLine)}</strong></span>\n`
+    : "";
 
   return `
           <section class="leg" aria-label="Leg to ${escapeAttr(leg.to)}">
@@ -306,8 +375,8 @@ function renderLeg(leg) {
               <div class="split-data">
                 <div class="split-summary">
                   <span class="split-pair"><span class="label">Pace</span><strong>${escapeHtml(leg.pace)}</strong></span>
-                  <span class="split-pair"><span class="label">Gain/Loss</span><strong>+${formatNumber(leg.gainFt)} / -${formatNumber(leg.lossFt)} ft</strong></span>
-                  <span class="split-pair"><span class="label">Arrive</span><strong>${escapeHtml(arrivalEta)}</strong></span>
+                  <span class="split-pair"><span class="label">Gain/Loss</span><strong>${formatElevationLine(leg)}</strong></span>
+${climbSummary}                  <span class="split-pair"><span class="label">Arrive</span><strong>${escapeHtml(arrivalEta)}</strong></span>
                 </div>
                 <div class="split-fuel" aria-label="Fuel to consume before ${escapeAttr(leg.to)}">
                   <span><span class="label">Carbs</span><strong>${formatNumber(nutrition.carbs)} g</strong></span>
@@ -320,8 +389,9 @@ function renderLeg(leg) {
 }
 
 function renderStop(stop, index) {
-  const bodyCopy = stop.crewCallout
-    ? `<p class="stop-note">${escapeHtml(stop.crewCallout)}</p>`
+  const crewCallout = crewCalloutFor(stop);
+  const bodyCopy = crewCallout
+    ? `<p class="stop-note">${escapeHtml(crewCallout)}</p>`
     : stop.note
       ? `<p class="stop-note">${escapeHtml(stop.note)}</p>`
       : "";
@@ -413,6 +483,8 @@ function mergedNextLeg(fromIndex, toIndex) {
   let gainFt = 0;
   let lossFt = 0;
   let plannedMinutes = 0;
+  let effortDistanceMi = 0;
+  const climbs = [];
 
   for (let index = fromIndex; index < toIndex; index += 1) {
     const leg = plan.stops[index].nextLeg;
@@ -423,6 +495,8 @@ function mergedNextLeg(fromIndex, toIndex) {
     gainFt += leg.gainFt;
     lossFt += leg.lossFt;
     plannedMinutes += leg.plannedMinutes;
+    effortDistanceMi += leg.effortDistanceMi || 0;
+    climbs.push(...(leg.climbs || []));
   }
 
   const roundedDistance = Number(distanceMi.toFixed(1));
@@ -431,6 +505,8 @@ function mergedNextLeg(fromIndex, toIndex) {
     distanceMi: roundedDistance,
     gainFt: Math.round(gainFt),
     lossFt: Math.round(lossFt),
+    effortDistanceMi: Number(effortDistanceMi.toFixed(3)),
+    climbs,
     plannedTime: formatDuration(plannedMinutes),
     plannedMinutes,
     pace: formatPace(plannedMinutes, roundedDistance)
@@ -535,6 +611,11 @@ function parseGpxCourse() {
   };
 }
 
+function getCourse() {
+  if (!cachedCourse) cachedCourse = parseGpxCourse();
+  return cachedCourse;
+}
+
 function interpolateCoursePoint(points, mile) {
   if (mile <= points[0].mile) return points[0];
   for (let index = 0; index < points.length - 1; index += 1) {
@@ -551,6 +632,376 @@ function interpolateCoursePoint(points, mile) {
     }
   }
   return points[points.length - 1];
+}
+
+function smoothElevationSamples(samples, windowMiles = CLIMB_SMOOTHING_WINDOW_MILES) {
+  return samples.map((sample) => {
+    let totalElevation = 0;
+    let count = 0;
+
+    samples.forEach((candidate) => {
+      if (Math.abs(candidate.mile - sample.mile) <= windowMiles) {
+        totalElevation += candidate.eleFt;
+        count += 1;
+      }
+    });
+
+    return {
+      ...sample,
+      smoothEleFt: totalElevation / Math.max(1, count)
+    };
+  });
+}
+
+function sampledElevationProfile(points, totalMiles, sampleMiles, smoothingWindowMiles) {
+  const samples = [];
+  for (let mile = 0; mile <= totalMiles; mile += sampleMiles) {
+    const point = interpolateCoursePoint(points, mile);
+    samples.push({ mile, eleFt: point.eleFt });
+  }
+  if (samples[samples.length - 1].mile < totalMiles) {
+    const point = interpolateCoursePoint(points, totalMiles);
+    samples.push({ mile: totalMiles, eleFt: point.eleFt });
+  }
+  return smoothElevationSamples(samples, smoothingWindowMiles);
+}
+
+function interpolateSmoothElevation(samples, mile) {
+  if (mile <= samples[0].mile) return samples[0].smoothEleFt;
+  for (let index = 0; index < samples.length - 1; index += 1) {
+    const from = samples[index];
+    const to = samples[index + 1];
+    if (mile <= to.mile) {
+      const t = (mile - from.mile) / Math.max(0.001, to.mile - from.mile);
+      return from.smoothEleFt + (to.smoothEleFt - from.smoothEleFt) * t;
+    }
+  }
+  return samples[samples.length - 1].smoothEleFt;
+}
+
+function samplesForRange(samples, startMile, endMile) {
+  const start = Math.min(startMile, endMile);
+  const end = Math.max(startMile, endMile);
+  const range = [{ mile: start, smoothEleFt: interpolateSmoothElevation(samples, start) }];
+
+  samples.forEach((sample) => {
+    if (sample.mile > start && sample.mile < end) {
+      range.push(sample);
+    }
+  });
+
+  range.push({ mile: end, smoothEleFt: interpolateSmoothElevation(samples, end) });
+  return range;
+}
+
+function gradeEffortFactor(grade) {
+  const pct = grade * 100;
+  if (pct >= 0) {
+    return Math.min(3.5, 1 + pct * 0.04 + pct * pct * 0.0015);
+  }
+
+  const downhill = Math.abs(pct);
+  if (downhill <= 10) {
+    return Math.max(0.82, 1 - downhill * 0.018);
+  }
+  return Math.min(1.8, 0.82 + (downhill - 10) * 0.018 + (downhill - 10) ** 2 * 0.0008);
+}
+
+function analyzePacingRange(samples, startMile, endMile) {
+  const range = samplesForRange(samples, startMile, endMile);
+  let gainFt = 0;
+  let lossFt = 0;
+  let effortDistanceMi = 0;
+
+  for (let index = 1; index < range.length; index += 1) {
+    const from = range[index - 1];
+    const to = range[index];
+    const distance = to.mile - from.mile;
+    if (distance <= 0) continue;
+
+    const elevationDelta = to.smoothEleFt - from.smoothEleFt;
+    if (elevationDelta > 0) gainFt += elevationDelta;
+    else lossFt += Math.abs(elevationDelta);
+
+    effortDistanceMi += distance * gradeEffortFactor(elevationDelta / (distance * 5280));
+  }
+
+  return {
+    gainFt: Math.round(gainFt),
+    lossFt: Math.round(lossFt),
+    effortDistanceMi: Number(effortDistanceMi.toFixed(3))
+  };
+}
+
+function plannedMinutesTotal() {
+  return plan.stops.reduce((total, stop) => total + (stop.nextLeg?.plannedMinutes || 0), 0);
+}
+
+function configuredTargetMovingMinutes() {
+  const configured = Number(plan.pacing?.targetMovingMinutes);
+  if (Number.isFinite(configured) && configured > 0) return Math.round(configured);
+  const legacyTotal = plannedMinutesTotal();
+  if (legacyTotal > 0) return legacyTotal;
+  throw new Error("Set pacing.targetMovingMinutes before deriving GPX pacing");
+}
+
+function monotonicStopEtaMinutes() {
+  let dayOffset = 0;
+  let previous = null;
+  return plan.stops.map((stop) => {
+    const parsed = parseClockMinutes(stop.eta);
+    if (parsed === null) return null;
+    let absolute = parsed + dayOffset;
+    if (previous !== null) {
+      while (absolute < previous) {
+        dayOffset += 1440;
+        absolute = parsed + dayOffset;
+      }
+    }
+    previous = absolute;
+    return absolute;
+  });
+}
+
+function originalLegPaddingMinutes(stopEtaMinutes) {
+  return plan.stops.slice(0, -1).map((stop, index) => {
+    const configured = Number(stop.nextLeg?.schedulePaddingMinutes);
+    if (Number.isFinite(configured) && configured >= 0) return Math.round(configured);
+
+    const depart = stopEtaMinutes[index];
+    const arrive = stopEtaMinutes[index + 1];
+    const plannedMinutes = stop.nextLeg?.plannedMinutes;
+    if (depart === null || arrive === null || !plannedMinutes) return 0;
+    return Math.max(0, arrive - depart - plannedMinutes);
+  });
+}
+
+function crewArriveByBuffers() {
+  return new Map(
+    plan.crewStops.map((crewStop) => {
+      const configured = Number(crewStop.arriveByBufferMinutes);
+      if (Number.isFinite(configured) && configured >= 0) {
+        return [crewStop.name, Math.round(configured)];
+      }
+
+      const eta = parseClockMinutes(crewStop.eta);
+      const arriveBy = parseClockMinutes(crewStop.arriveBy);
+      const buffer = eta === null || arriveBy === null ? 60 : (eta - arriveBy + 1440) % 1440;
+      return [crewStop.name, buffer || 60];
+    })
+  );
+}
+
+function allocateMinutesByWeight(items, targetMinutes) {
+  const totalWeight = items.reduce((total, item) => total + item.weight, 0);
+  if (!totalWeight) return items.map(() => 0);
+
+  const allocations = items.map((item, index) => {
+    const exact = (item.weight / totalWeight) * targetMinutes;
+    const minutes = Math.floor(exact);
+    return { index, exact, minutes, remainder: exact - minutes };
+  });
+  let remaining = targetMinutes - allocations.reduce((total, item) => total + item.minutes, 0);
+
+  allocations
+    .slice()
+    .sort((a, b) => b.remainder - a.remainder)
+    .forEach((item) => {
+      if (remaining <= 0) return;
+      allocations[item.index].minutes += 1;
+      remaining -= 1;
+    });
+
+  return allocations.map((item) => item.minutes);
+}
+
+function applyDerivedPacing() {
+  if (plan.pacing?.model === "manual") return;
+
+  const course = getCourse();
+  const sampleMiles = Number(plan.pacing?.sampleMiles) || PACE_SAMPLE_MILES;
+  const smoothingWindowMiles = Number(plan.pacing?.smoothingWindowMiles) || PACE_SMOOTHING_WINDOW_MILES;
+  const samples = sampledElevationProfile(course.points, course.officialTotalMiles, sampleMiles, smoothingWindowMiles);
+  const majorClimbs = getMajorClimbs(course);
+  const targetMovingMinutes = configuredTargetMovingMinutes();
+  const stopEtaMinutes = monotonicStopEtaMinutes();
+  const legPaddingMinutes = originalLegPaddingMinutes(stopEtaMinutes);
+  const crewBuffers = crewArriveByBuffers();
+
+  const legAnalyses = plan.stops.slice(0, -1).map((stop, index) => {
+    const nextStop = plan.stops[index + 1];
+    const analysis = analyzePacingRange(samples, stop.mile, nextStop.mile);
+    const manualFactor = Number(stop.nextLeg?.effortFactor) || 1;
+    return {
+      stop,
+      nextStop,
+      analysis,
+      weight: Math.max(0.001, analysis.effortDistanceMi * manualFactor)
+    };
+  });
+  const allocatedMinutes = allocateMinutesByWeight(legAnalyses, targetMovingMinutes);
+
+  legAnalyses.forEach((item, index) => {
+    const leg = item.stop.nextLeg;
+    if (!leg) return;
+    const plannedMinutes = allocatedMinutes[index];
+    leg.gainFt = item.analysis.gainFt;
+    leg.lossFt = item.analysis.lossFt;
+    leg.effortDistanceMi = item.analysis.effortDistanceMi;
+    leg.climbs = climbsForLeg(majorClimbs, item.stop, item.nextStop);
+    leg.plannedMinutes = plannedMinutes;
+    leg.plannedTime = formatDuration(plannedMinutes);
+    leg.pace = formatPace(plannedMinutes, leg.distanceMi);
+  });
+
+  let runningClock = stopEtaMinutes[0] ?? parseClockMinutes(plan.race.start) ?? parseClockMinutes(plan.stops[0]?.eta) ?? 0;
+  plan.stops[0].eta = formatClockMinutes(runningClock);
+  for (let index = 0; index < plan.stops.length - 1; index += 1) {
+    runningClock += (plan.stops[index].nextLeg?.plannedMinutes || 0) + (legPaddingMinutes[index] || 0);
+    plan.stops[index + 1].eta = formatClockMinutes(runningClock);
+  }
+
+  plan.crewStops.forEach((crewStop) => {
+    const stop = stopForName(crewStop.name);
+    if (!stop) return;
+    const stopMinutes = parseClockMinutes(stop.eta);
+    if (stopMinutes === null) return;
+    const buffer = crewBuffers.get(crewStop.name) || 60;
+    crewStop.eta = stop.eta;
+    crewStop.arriveBy = formatClockMinutes(stopMinutes - buffer);
+  });
+}
+
+function dominantLegForRange(startMile, endMile) {
+  let best = null;
+
+  for (let index = 0; index < plan.stops.length - 1; index += 1) {
+    const from = plan.stops[index];
+    const to = plan.stops[index + 1];
+    const overlap = Math.min(endMile, to.mile) - Math.max(startMile, from.mile);
+    if (overlap > 0 && (!best || overlap > best.overlap)) {
+      best = { from, to, overlap };
+    }
+  }
+
+  return best;
+}
+
+function shortStopName(name) {
+  return String(name)
+    .replace("Downtown Auburn Finish", "Finish")
+    .replace("China Wall Start", "China Wall");
+}
+
+function climbLabelForRange(startMile, endMile) {
+  const leg = dominantLegForRange(startMile, endMile);
+  if (!leg) return `Mile ${formatMiles(startMile)} to ${formatMiles(endMile)}`;
+  return `${leg.from.name} to ${leg.to.name}`;
+}
+
+function shortClimbLabelForRange(startMile, endMile) {
+  const leg = dominantLegForRange(startMile, endMile);
+  if (!leg) return `Mile ${formatMiles(startMile)}-${formatMiles(endMile)}`;
+  return `${shortStopName(leg.from.name)} to ${shortStopName(leg.to.name)}`;
+}
+
+function detectMajorClimbs(points, totalMiles) {
+  const samples = [];
+  for (let mile = 0; mile <= totalMiles; mile += CLIMB_SAMPLE_MILES) {
+    const point = interpolateCoursePoint(points, mile);
+    samples.push({ mile, eleFt: point.eleFt });
+  }
+  if (samples[samples.length - 1].mile < totalMiles) {
+    const point = interpolateCoursePoint(points, totalMiles);
+    samples.push({ mile: totalMiles, eleFt: point.eleFt });
+  }
+
+  const smoothed = smoothElevationSamples(samples);
+  const climbs = [];
+  let inClimb = false;
+  let startIndex = 0;
+  let peakIndex = 0;
+  let gainFt = 0;
+  let lossFt = 0;
+  let currentDescentFt = 0;
+
+  const finalizeClimb = () => {
+    const start = smoothed[startIndex];
+    const end = smoothed[peakIndex];
+    const distanceMi = end.mile - start.mile;
+    const netGainFt = end.smoothEleFt - start.smoothEleFt;
+    const avgGradePct = distanceMi > 0 ? (netGainFt / (distanceMi * 5280)) * 100 : 0;
+
+    if (
+      gainFt >= MAJOR_CLIMB_MIN_GAIN_FT &&
+      distanceMi >= MAJOR_CLIMB_MIN_DISTANCE_MI &&
+      avgGradePct >= MAJOR_CLIMB_MIN_AVG_GRADE
+    ) {
+      climbs.push({
+        id: `climb-${climbs.length + 1}`,
+        index: climbs.length + 1,
+        label: climbLabelForRange(start.mile, end.mile),
+        shortLabel: shortClimbLabelForRange(start.mile, end.mile),
+        startMile: roundMile(start.mile),
+        endMile: roundMile(end.mile),
+        distanceMi: Number(distanceMi.toFixed(1)),
+        gainFt: Math.round(gainFt),
+        lossFt: Math.round(lossFt),
+        netGainFt: Math.round(netGainFt),
+        avgGradePct: Number(avgGradePct.toFixed(1)),
+        startEleFt: roundElevation(start.smoothEleFt),
+        endEleFt: roundElevation(end.smoothEleFt)
+      });
+    }
+  };
+
+  for (let index = 1; index < smoothed.length; index += 1) {
+    const deltaFt = smoothed[index].smoothEleFt - smoothed[index - 1].smoothEleFt;
+
+    if (deltaFt > 0) {
+      if (!inClimb) {
+        inClimb = true;
+        startIndex = index - 1;
+        peakIndex = index;
+        gainFt = 0;
+        lossFt = 0;
+        currentDescentFt = 0;
+      }
+
+      gainFt += deltaFt;
+      currentDescentFt = 0;
+      if (smoothed[index].smoothEleFt > smoothed[peakIndex].smoothEleFt) {
+        peakIndex = index;
+      }
+      continue;
+    }
+
+    if (!inClimb) continue;
+
+    const descentFt = Math.abs(deltaFt);
+    lossFt += descentFt;
+    currentDescentFt += descentFt;
+    if (currentDescentFt > CLIMB_BREAK_LOSS_FT) {
+      finalizeClimb();
+      inClimb = false;
+      startIndex = index;
+      peakIndex = index;
+      gainFt = 0;
+      lossFt = 0;
+      currentDescentFt = 0;
+    }
+  }
+
+  if (inClimb) finalizeClimb();
+
+  return climbs;
+}
+
+function getMajorClimbs(course = getCourse()) {
+  if (!cachedClimbs) {
+    cachedClimbs = detectMajorClimbs(course.points, course.officialTotalMiles);
+  }
+  return cachedClimbs;
 }
 
 function waypointForStop(stop, waypoints) {
@@ -572,7 +1023,8 @@ function waypointForStop(stop, waypoints) {
 }
 
 function buildRouteData() {
-  const course = parseGpxCourse();
+  const course = getCourse();
+  const climbs = getMajorClimbs(course);
   const stops = plan.stops.map((stop, index) => {
     const waypoint = waypointForStop(stop, course.waypoints);
     const coordinate = waypoint || interpolateCoursePoint(course.points, stop.mile);
@@ -600,6 +1052,7 @@ function buildRouteData() {
       totalMiles: course.officialTotalMiles
     },
     stops,
+    climbs,
     segmentStops: segmentStopIndexes.map((stopIndex, segmentIndex) => ({
       ...stops[stopIndex],
       nextLeg:
@@ -644,7 +1097,7 @@ ${renderCrewStrip()}
     <section id="plan" aria-labelledby="plan-title">
       <div class="section-head">
         <h2 id="plan-title">Course Plan</h2>
-        <p>Each stop band shows the station, crew status, timing, and carry target. Split sections show the next-leg duration, distance, pace, gain/loss, arrival time, and fuel to consume before the next stop.</p>
+        <p>Pacing follows the smoothed course profile, with the total moving-time budget held steady through the finish.</p>
       </div>
 
       <div class="course-list">
@@ -694,6 +1147,12 @@ ${renderSources()}
 function renderRouteTrackerHtml() {
   const routeData = buildRouteData();
   const routeJson = jsonForScript(routeData);
+  const firstDepart = routeData.segmentStops[0] || routeData.stops[0];
+  const firstArrive = routeData.segmentStops[1] || routeData.stops[1];
+  const firstLeg = firstDepart?.nextLeg || null;
+  const firstLegDistance = firstLeg ? `${formatMiles(firstLeg.distanceMi)} mi` : "Finish";
+  const firstLegClimb = firstLeg ? formatLegClimbLine(firstLeg.climbs) : "";
+  const firstLegNutrition = firstLeg ? formatCompactNutritionLine(nutritionForMinutes(firstLeg.plannedMinutes)) : "Recover";
 
   return `<!doctype html>
 <html lang="en">
@@ -730,39 +1189,40 @@ ${styles}
       <article class="station-panel tracker-split-panel" id="station-panel">
         <div class="tracker-split-primary">
           <div class="tracker-time-rail" aria-label="Current leg timing">
-            <span class="label">Depart</span>
-            <strong id="station-meta">5:00 AM</strong>
-            <span class="label">Arrive</span>
-            <strong id="arrival-meta">7:25 AM</strong>
+            <span class="label" id="station-meta-label">Depart</span>
+            <strong id="station-meta">${escapeHtml(firstDepart?.eta || plan.race.start)}</strong>
+            <span class="label" id="arrival-meta-label">Arrive</span>
+            <strong id="arrival-meta">${escapeHtml(firstArrive?.eta || "")}</strong>
           </div>
           <div class="tracker-route-block">
             <div class="tracker-route-title">
-              <h2><span id="station-name">China Wall Start</span> <span>to</span> <strong id="next-stop">Deadwood 1</strong></h2>
+              <h2><span id="station-name">${escapeHtml(firstDepart?.name || "")}</span> <span id="route-title-joiner">to</span> <strong id="next-stop">${escapeHtml(firstArrive?.name || "Finish")}</strong></h2>
             </div>
             <div class="tracker-route-duration">
               <span class="label" id="station-overline">Split</span>
-              <strong id="leg-duration">2h25</strong>
-              <span class="tracker-split-distance" id="next-leg">10.1 mi</span>
+              <strong id="leg-duration">${firstLeg ? formatDuration(firstLeg.plannedMinutes) : "Done"}</strong>
+              <span class="tracker-split-distance" id="next-leg">${escapeHtml(firstLegDistance)}</span>
             </div>
             <div class="tracker-distance-large" aria-hidden="true">
-              <strong id="leg-distance-large">10.1 mi</strong>
-              <span>Distance</span>
+              <strong id="leg-distance-large">${escapeHtml(firstLegDistance)}</strong>
+              <span id="leg-distance-label">Distance</span>
             </div>
           </div>
         </div>
 
         <div class="tracker-support-row">
           <div class="tracker-data-cell">
-            <span class="label">Elevation</span>
-            <strong id="leg-elevation">+1,787 / -2,870 ft</strong>
+            <span class="label" id="leg-elevation-label">Elevation</span>
+            <strong id="leg-elevation">${firstLeg ? formatElevationLine(firstLeg) : "Done"}</strong>
+            <span class="tracker-metric-note" id="leg-climb"${firstLegClimb ? "" : " hidden"}>${firstLegClimb ? `Climb ${escapeHtml(firstLegClimb)}` : ""}</span>
           </div>
           <div class="tracker-data-cell">
-            <span class="label">Pace</span>
-            <strong id="leg-pace">14:22/mi</strong>
+            <span class="label" id="leg-pace-label">Pace</span>
+            <strong id="leg-pace">${firstLeg ? escapeHtml(firstLeg.pace) : "--"}</strong>
           </div>
           <div class="tracker-data-cell tracker-nutrition-cell">
-            <span class="label">Nutrition</span>
-            <strong id="leg-nutrition">220 g carbs · 1,200-1,800 mg Na · 1.2-1.8 L</strong>
+            <span class="label" id="leg-nutrition-label">Nutrition</span>
+            <strong id="leg-nutrition">${escapeHtml(firstLegNutrition)}</strong>
           </div>
           <div class="tracker-data-cell tracker-resupply-cell" id="station-resupply" hidden>
             <span class="label" id="resupply-label">Resupply</span>
@@ -783,9 +1243,14 @@ ${styles}
           <h2 id="profile-title" class="sr-only">Full course elevation profile</h2>
           <em id="route-elevation-label">0 ft</em>
         </div>
+        <div class="profile-mode-toggle" role="group" aria-label="Elevation profile mode">
+          <button type="button" class="profile-mode-button is-active" data-profile-mode="splits" aria-pressed="true">Splits</button>
+          <button type="button" class="profile-mode-button" data-profile-mode="climbs" aria-pressed="false">Climbs</button>
+        </div>
         <svg id="profile-svg" class="route-svg" preserveAspectRatio="none" role="img" aria-label="Full course elevation profile with current position line">
           <g class="profile-grid" id="profile-grid"></g>
           <path class="profile-area" id="profile-area"></path>
+          <g class="profile-climbs" id="profile-climbs"></g>
           <rect class="profile-current-leg" id="profile-current-leg" x="0" y="0" width="0" height="0"></rect>
           <g class="profile-stop-guides" id="profile-stop-guides"></g>
           <path class="profile-line-shadow" id="profile-line-shadow"></path>
@@ -805,6 +1270,7 @@ ${styles}
             <span id="profile-popup-leg-route">China Wall Start -> Deadwood 1</span>
             <span id="profile-popup-leg-stats">10.1 mi / +1,787 / -2,870 ft</span>
           </div>
+          <div class="profile-popup-climb" id="profile-popup-climb"></div>
         </div>
       </article>
     </section>
@@ -821,6 +1287,7 @@ ${styles}
       touchY: null,
       raf: null,
       map: null,
+      profileMode: "splits",
       profileDragging: false
     };
 
@@ -830,15 +1297,23 @@ ${styles}
       stationPanel: document.getElementById("station-panel"),
       stationOverline: document.getElementById("station-overline"),
       stationName: document.getElementById("station-name"),
+      routeTitleJoiner: document.getElementById("route-title-joiner"),
+      stationMetaLabel: document.getElementById("station-meta-label"),
       stationMeta: document.getElementById("station-meta"),
+      arrivalMetaLabel: document.getElementById("arrival-meta-label"),
       arrivalMeta: document.getElementById("arrival-meta"),
       stationResupply: document.getElementById("station-resupply"),
       nextStop: document.getElementById("next-stop"),
       nextLeg: document.getElementById("next-leg"),
       legDuration: document.getElementById("leg-duration"),
       legDistanceLarge: document.getElementById("leg-distance-large"),
+      legDistanceLabel: document.getElementById("leg-distance-label"),
+      legElevationLabel: document.getElementById("leg-elevation-label"),
       legElevation: document.getElementById("leg-elevation"),
+      legPaceLabel: document.getElementById("leg-pace-label"),
       legPace: document.getElementById("leg-pace"),
+      legClimb: document.getElementById("leg-climb"),
+      legNutritionLabel: document.getElementById("leg-nutrition-label"),
       legNutrition: document.getElementById("leg-nutrition"),
       resupplyLabel: document.getElementById("resupply-label"),
       resupplyArrival: document.getElementById("resupply-arrival"),
@@ -852,6 +1327,8 @@ ${styles}
       profileTitle: document.querySelector(".bottom-profile-viz .viz-title"),
       profileSvg: document.getElementById("profile-svg"),
       profileGrid: document.getElementById("profile-grid"),
+      profileClimbs: document.getElementById("profile-climbs"),
+      profileModeButtons: [...document.querySelectorAll("[data-profile-mode]")],
       profileStopGuides: document.getElementById("profile-stop-guides"),
       profileCurrentLeg: document.getElementById("profile-current-leg"),
       profileArea: document.getElementById("profile-area"),
@@ -866,12 +1343,14 @@ ${styles}
       profilePopupElevation: document.getElementById("profile-popup-elevation"),
       profilePopupGrade: document.getElementById("profile-popup-grade"),
       profilePopupLegRoute: document.getElementById("profile-popup-leg-route"),
-      profilePopupLegStats: document.getElementById("profile-popup-leg-stats")
+      profilePopupLegStats: document.getElementById("profile-popup-leg-stats"),
+      profilePopupClimb: document.getElementById("profile-popup-climb")
     };
 
     const totalMiles = routeData.course.totalMiles;
     const coursePoints = routeData.course.points;
     const segmentStops = routeData.segmentStops || routeData.stops;
+    const majorClimbs = routeData.climbs || [];
     const mapHighlightColor = "#ff5a3d";
     const mapHighlightSoft = "#ffe7e2";
     const stopColors = {
@@ -997,6 +1476,37 @@ ${styles}
       return formatFluid(nutrition.fluidLow) + "-" + formatFluid(nutrition.fluidHigh) + "L";
     }
 
+    function formatClimbStats(climb) {
+      return formatMiles(climb.distanceMi) + " mi / +" + formatNumber(climb.gainFt) + " ft / " + climb.avgGradePct + "%";
+    }
+
+    function formatLegClimbLine(climbs) {
+      if (!climbs || !climbs.length) return "";
+      const totalDistance = climbs.reduce((total, climb) => total + climb.distanceMi, 0);
+      return climbs.length === 1
+        ? formatMiles(climbs[0].distanceMi) + " mi @ " + climbs[0].avgGradePct + "%"
+        : formatMiles(totalDistance) + " mi across " + climbs.length + " climbs";
+    }
+
+    function formatElevationRange(climb) {
+      return formatNumber(climb.startEleFt) + " -> " + formatNumber(climb.endEleFt) + " ft";
+    }
+
+    function climbContext(mile) {
+      for (let index = 0; index < majorClimbs.length; index += 1) {
+        const climb = majorClimbs[index];
+        if (mile >= climb.startMile && mile <= climb.endMile) {
+          return { climb, index, status: "active" };
+        }
+        if (mile < climb.startMile) {
+          return { climb, index, status: "next" };
+        }
+      }
+      return majorClimbs.length
+        ? { climb: majorClimbs[majorClimbs.length - 1], index: majorClimbs.length - 1, status: "done" }
+        : null;
+    }
+
     function legContext(stop, index) {
       if (stop.nextLeg) {
         return {
@@ -1117,6 +1627,17 @@ ${styles}
       return pointPath(drawn);
     }
 
+    function profileSegmentPath(startMile, endMile) {
+      const segment = [profilePoint(startMile)];
+      profile.points.forEach((point) => {
+        if (point.mile > startMile && point.mile < endMile) {
+          segment.push(point);
+        }
+      });
+      segment.push(profilePoint(endMile));
+      return pointPath(segment);
+    }
+
     function partialLatLngs(mile) {
       const latLngs = [];
       for (let index = 0; index < coursePoints.length; index += 1) {
@@ -1201,6 +1722,36 @@ ${styles}
       elements.profileLineShadow.setAttribute("d", profileD);
       elements.profileCursorLine.setAttribute("y1", profile.top);
       elements.profileCursorLine.setAttribute("y2", profile.paintBottom);
+
+      const climbFragment = document.createDocumentFragment();
+      majorClimbs.forEach((climb) => {
+        const start = profilePoint(climb.startMile);
+        const end = profilePoint(climb.endMile);
+        const titleText =
+          "Climb " + climb.index + ": " + climb.label + " | mile " +
+          formatMiles(climb.startMile) + "-" + formatMiles(climb.endMile) +
+          " | " + formatClimbStats(climb);
+
+        const band = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        band.setAttribute("class", "profile-climb-band");
+        band.setAttribute("x", Math.min(start.x, end.x).toFixed(2));
+        band.setAttribute("y", profile.top);
+        band.setAttribute("width", Math.abs(end.x - start.x).toFixed(2));
+        band.setAttribute("height", Math.max(0, profile.paintBottom - profile.top).toFixed(2));
+        const bandTitle = document.createElementNS("http://www.w3.org/2000/svg", "title");
+        bandTitle.textContent = titleText;
+        band.appendChild(bandTitle);
+        climbFragment.appendChild(band);
+
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        line.setAttribute("class", "profile-climb-line");
+        line.setAttribute("d", profileSegmentPath(climb.startMile, climb.endMile));
+        const lineTitle = document.createElementNS("http://www.w3.org/2000/svg", "title");
+        lineTitle.textContent = titleText;
+        line.appendChild(lineTitle);
+        climbFragment.appendChild(line);
+      });
+      elements.profileClimbs.replaceChildren(climbFragment);
 
       const guideFragment = document.createDocumentFragment();
       routeData.stops.forEach((stop) => {
@@ -1629,6 +2180,16 @@ ${styles}
       elements.profilePopupLegStats.textContent = context.leg
         ? formatMiles(context.leg.distanceMi) + " mi / " + formatElevationLine(context.leg)
         : "Finish";
+      const currentClimb = climbContext(mile);
+      if (state.profileMode === "climbs" && currentClimb && currentClimb.status !== "done") {
+        elements.profilePopupClimb.textContent =
+          (currentClimb.status === "active" ? "On climb " : "Next climb ") +
+          currentClimb.climb.index + ": " + currentClimb.climb.shortLabel + " | " +
+          formatClimbStats(currentClimb.climb);
+        elements.profilePopupClimb.hidden = false;
+      } else {
+        elements.profilePopupClimb.hidden = true;
+      }
       elements.profilePopup.hidden = false;
       elements.profilePopup.setAttribute("aria-hidden", "false");
 
@@ -1661,29 +2222,35 @@ ${styles}
       state.raf = requestAnimationFrame(animate);
     }
 
-    function update(mile) {
-      const currentCourse = coursePoint(mile);
-      const currentProfile = profilePoint(mile);
-      const { stop, index } = previousStop(mile);
-      const context = legContext(stop, index);
-      const leg = context.leg;
-      const fuel = leg ? nutritionForMinutes(leg.plannedMinutes) : null;
+    function syncProfileModeUi() {
+      const isClimbs = state.profileMode === "climbs";
+      elements.profileViz.classList.toggle("profile-mode-climbs", isClimbs);
+      elements.profileViz.classList.toggle("profile-mode-splits", !isClimbs);
+      elements.profileModeButtons.forEach((button) => {
+        const active = button.dataset.profileMode === state.profileMode;
+        button.classList.toggle("is-active", active);
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+    }
 
-      elements.distanceLabel.textContent = formatMiles(mile) + " / " + formatMiles(totalMiles) + " mi";
-      elements.elevationLabel.textContent = formatNumber(Math.round(currentCourse.eleFt)) + " ft";
-      elements.profileCursor.setAttribute("cx", currentProfile.x);
-      elements.profileCursor.setAttribute("cy", currentProfile.y);
-      elements.profileCursorLine.setAttribute("x1", currentProfile.x);
-      elements.profileCursorLine.setAttribute("x2", currentProfile.x);
-      elements.profileProgress.setAttribute("d", partialProfilePath(mile));
-      updateCurrentLegHighlight(index);
-      updateProfilePopup(mile, currentCourse, currentProfile, context);
-      window.routeTrackerCurrentPoint = [currentCourse.lon, currentCourse.lat];
+    function setProfileMode(mode) {
+      if (mode !== "splits" && mode !== "climbs") return;
+      state.profileMode = mode;
+      syncProfileModeUi();
+      hideProfilePopup();
+      update(state.currentMile);
+    }
 
-      if (state.map && state.map.loaded() && state.map.getSource(mapSourceIds.progressRoute) && state.map.getSource(mapSourceIds.progressPoint)) {
-        state.map.getSource(mapSourceIds.progressRoute).setData(lineFeatureFromLatLngs(partialLatLngs(mile)));
-        state.map.getSource(mapSourceIds.progressPoint).setData(pointFeature(currentCourse, {}));
-      }
+    function updateSplitPanel(context, leg, fuel) {
+      elements.stationPanel.classList.remove("is-climb-panel");
+      elements.stationMetaLabel.textContent = "Depart";
+      elements.arrivalMetaLabel.textContent = "Arrive";
+      elements.routeTitleJoiner.hidden = false;
+      elements.routeTitleJoiner.textContent = "to";
+      elements.legDistanceLabel.textContent = "Distance";
+      elements.legElevationLabel.textContent = "Elevation";
+      elements.legPaceLabel.textContent = "Pace";
+      elements.legNutritionLabel.textContent = "Nutrition";
 
       elements.stationOverline.textContent = context.complete ? "Last split" : "Split";
       elements.stationName.textContent = context.depart.name;
@@ -1717,11 +2284,14 @@ ${styles}
 
       if (leg) {
         const legDistance = formatMiles(leg.distanceMi) + " mi";
+        const climbLine = formatLegClimbLine(leg.climbs);
         elements.legDuration.textContent = formatDuration(leg.plannedMinutes);
         elements.nextLeg.textContent = legDistance;
         elements.legDistanceLarge.textContent = legDistance;
         elements.legElevation.textContent = formatElevationLine(leg);
         elements.legPace.textContent = leg.pace;
+        elements.legClimb.hidden = !climbLine;
+        elements.legClimb.textContent = climbLine ? "Climb " + climbLine : "";
         elements.legNutrition.textContent = formatCompactNutritionLine(fuel);
       } else {
         elements.legDuration.textContent = "Done";
@@ -1729,8 +2299,90 @@ ${styles}
         elements.legDistanceLarge.textContent = "Finish";
         elements.legElevation.textContent = "Done";
         elements.legPace.textContent = "--";
+        elements.legClimb.hidden = true;
+        elements.legClimb.textContent = "";
         elements.legNutrition.textContent = "Recover";
       }
+    }
+
+    function updateClimbPanel(mile) {
+      const context = climbContext(mile);
+      elements.stationPanel.classList.add("is-climb-panel");
+      elements.stationPanel.classList.remove("has-resupply");
+      elements.stationResupply.hidden = true;
+      elements.stationMetaLabel.textContent = "Start";
+      elements.arrivalMetaLabel.textContent = "Top";
+      elements.routeTitleJoiner.hidden = true;
+      elements.legDistanceLabel.textContent = "Avg grade";
+      elements.legElevationLabel.textContent = "Elevation";
+      elements.legPaceLabel.textContent = "Avg grade";
+      elements.legNutritionLabel.textContent = "Range";
+      elements.legClimb.hidden = true;
+      elements.legClimb.textContent = "";
+
+      if (!context) {
+        elements.stationOverline.textContent = "Climbs";
+        elements.stationName.textContent = "Major climbs";
+        elements.stationMeta.textContent = "--";
+        elements.nextStop.textContent = "None detected";
+        elements.arrivalMeta.textContent = "--";
+        elements.legDuration.textContent = "--";
+        elements.nextLeg.textContent = "--";
+        elements.legDistanceLarge.textContent = "--";
+        elements.legElevation.textContent = "--";
+        elements.legPace.textContent = "--";
+        elements.legNutrition.textContent = "No qualifying climb windows";
+        return;
+      }
+
+      const climb = context.climb;
+      const statusLabel =
+        context.status === "active"
+          ? "Current climb"
+          : context.status === "next"
+            ? "Next climb"
+            : "Last climb";
+      elements.stationOverline.textContent = statusLabel;
+      elements.stationName.textContent = "Climb " + climb.index + "/" + majorClimbs.length + ":";
+      elements.stationMeta.textContent = "mi " + formatMiles(climb.startMile);
+      elements.nextStop.textContent = climb.shortLabel;
+      elements.arrivalMeta.textContent = "mi " + formatMiles(climb.endMile);
+      elements.legDuration.textContent = formatMiles(climb.distanceMi) + " mi";
+      elements.nextLeg.textContent = "+" + formatNumber(climb.gainFt) + " ft";
+      elements.legDistanceLarge.textContent = climb.avgGradePct + "%";
+      elements.legElevation.textContent = formatElevationRange(climb);
+      elements.legPace.textContent = climb.avgGradePct + "%";
+      elements.legNutrition.textContent =
+        "mile " + formatMiles(climb.startMile) + "-" + formatMiles(climb.endMile) +
+        " | +" + formatNumber(climb.netGainFt) + " ft net | -" + formatNumber(climb.lossFt) + " ft inside";
+    }
+
+    function update(mile) {
+      const currentCourse = coursePoint(mile);
+      const currentProfile = profilePoint(mile);
+      const { stop, index } = previousStop(mile);
+      const context = legContext(stop, index);
+      const leg = context.leg;
+      const fuel = leg ? nutritionForMinutes(leg.plannedMinutes) : null;
+
+      elements.distanceLabel.textContent = formatMiles(mile) + " / " + formatMiles(totalMiles) + " mi";
+      elements.elevationLabel.textContent = formatNumber(Math.round(currentCourse.eleFt)) + " ft";
+      elements.profileCursor.setAttribute("cx", currentProfile.x);
+      elements.profileCursor.setAttribute("cy", currentProfile.y);
+      elements.profileCursorLine.setAttribute("x1", currentProfile.x);
+      elements.profileCursorLine.setAttribute("x2", currentProfile.x);
+      elements.profileProgress.setAttribute("d", partialProfilePath(mile));
+      updateCurrentLegHighlight(index);
+      updateProfilePopup(mile, currentCourse, currentProfile, context);
+      window.routeTrackerCurrentPoint = [currentCourse.lon, currentCourse.lat];
+
+      if (state.map && state.map.loaded() && state.map.getSource(mapSourceIds.progressRoute) && state.map.getSource(mapSourceIds.progressPoint)) {
+        state.map.getSource(mapSourceIds.progressRoute).setData(lineFeatureFromLatLngs(partialLatLngs(mile)));
+        state.map.getSource(mapSourceIds.progressPoint).setData(pointFeature(currentCourse, {}));
+      }
+
+      if (state.profileMode === "climbs") updateClimbPanel(mile);
+      else updateSplitPanel(context, leg, fuel);
     }
 
     function isMapEvent(event) {
@@ -1804,11 +2456,16 @@ ${styles}
       hideProfilePopup();
     });
 
+    elements.profileModeButtons.forEach((button) => {
+      button.addEventListener("click", () => setProfileMode(button.dataset.profileMode));
+    });
+
     let layoutFrame = null;
     function refreshLayout() {
       layoutFrame = null;
       syncViewportHeight();
       initProfile();
+      syncProfileModeUi();
       update(state.currentMile);
       if (state.map) state.map.resize();
     }
@@ -1820,6 +2477,7 @@ ${styles}
 
     syncViewportHeight();
     initProfile();
+    syncProfileModeUi();
     initMap();
     update(0);
     window.addEventListener("resize", scheduleLayoutRefresh);
@@ -1847,6 +2505,7 @@ function validatePlan(data) {
   }
 }
 
+applyDerivedPacing();
 fs.mkdirSync(path.dirname(GUIDE_OUTPUT_PATH), { recursive: true });
 const guideHtml = renderGuideHtml();
 fs.writeFileSync(INDEX_OUTPUT_PATH, guideHtml);
