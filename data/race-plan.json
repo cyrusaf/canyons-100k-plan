@@ -1,7 +1,7 @@
 {
   "title": "Canyons 100K Crew Guide",
   "eyebrow": "Canyons 100K by UTMB",
-  "subtitle": "16h36 expected plan. Crew arrivals include a 60-minute buffer. Bags are labeled by aid station; bring the matching bag to each crew stop.",
+  "subtitle": "16h36 expected plan. Crew arrivals include a 45-minute buffer. Bags are labeled by aid station; bring the matching bag to each crew stop.",
   "versionNote": "Version: Pantoll-calibrated expected pace, 16h36 schedule. Next pass: exact maps, parking screenshots, and product-specific fuel math.",
   "race": {
     "start": "5:00 AM",
@@ -31,28 +31,34 @@
   "crewStops": [
     {
       "name": "Michigan Bluff",
-      "arriveByBufferMinutes": 60,
+      "arriveByBufferMinutes": 45,
       "driveUrl": "https://maps.app.goo.gl/unka31nx7UN6oFwf8",
       "guideUrl": "https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15",
       "guideLabel": "Guide p. 15",
+      "offlineGuideImageUrl": "./assets/guide-michigan-bluff-parking.png",
+      "offlineGuideImageLabel": "Offline image",
       "crewNote": "Park on Chicken Hawk Rd only; no Michigan Bluff Rd parking and no parking past the Chicken Hawk intersection. Walk in about 1/2 mile.",
       "summary": "Parking and walk-in directions."
     },
     {
       "name": "Foresthill",
-      "arriveByBufferMinutes": 60,
+      "arriveByBufferMinutes": 45,
       "driveUrl": "https://maps.app.goo.gl/nbjFvFMT7uwBT8tAA",
       "guideUrl": "https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=14",
       "guideLabel": "Guide p. 14",
-      "crewNote": "No parking on Church St, in front of businesses/residences, or in front of the school. Arrive early and carpool.",
+      "offlineGuideImageUrl": "./assets/guide-foresthill-parking.png",
+      "offlineGuideImageLabel": "Offline image",
+      "crewNote": "No parking on Church St, in front of businesses/residences, or in front of the school.",
       "summary": "Parking and walk-in directions."
     },
     {
       "name": "Drivers Flat",
-      "arriveByBufferMinutes": 60,
+      "arriveByBufferMinutes": 45,
       "driveUrl": "https://maps.app.goo.gl/jKDQ958pPWpF2tVX7",
       "guideUrl": "https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15",
       "guideLabel": "Guide p. 15",
+      "offlineGuideImageUrl": "./assets/guide-drivers-flat-parking.png",
+      "offlineGuideImageLabel": "Offline image",
       "crewNote": "Park on Foresthill Rd or roadside; main lot requires a fee. Walk in about 1/2 mile on Drivers Flat Rd; no parking or waiting there.",
       "summary": "Parking and walk-in directions."
     }
@@ -157,7 +163,7 @@
         { "label": "Aid", "type": "aid" },
         { "label": "Cut 12:45 PM", "type": "warn" }
       ],
-      "crewCallout": "CREW HERE: arrive by 10:40 AM. Use the Michigan Bluff bag and follow the official crew parking directions.",
+      "crewCallout": "CREW HERE: arrive by 10:58 AM. Use the Michigan Bluff bag and follow the official crew parking directions.",
       "resupplyTo": "Foresthill",
       "nextLeg": {
         "to": "Foresthill",
@@ -175,7 +181,7 @@
         { "label": "Drop bag", "type": "crew" },
         { "label": "Cut 2:30 PM", "type": "warn" }
       ],
-      "crewCallout": "CREW HERE: arrive by 12:15 PM. Use the Foresthill bag/drop bag and follow the official crew parking directions.",
+      "crewCallout": "CREW HERE: arrive by 12:33 PM. Use the Foresthill bag/drop bag and follow the official crew parking directions.",
       "resupplyTo": "Drivers Flat",
       "nextLeg": {
         "to": "Cal 2",
@@ -207,7 +213,7 @@
         { "label": "Aid", "type": "aid" },
         { "label": "Cut 7:45 PM", "type": "warn" }
       ],
-      "crewCallout": "CREW HERE: arrive by 4:45 PM. Use the Drivers Flat bag and follow the official crew parking directions.",
+      "crewCallout": "CREW HERE: arrive by 4:54 PM. Use the Drivers Flat bag and follow the official crew parking directions.",
       "resupplyTo": "Downtown Auburn Finish",
       "resupplyLabel": "Finish",
       "nextLeg": {
@@ -278,21 +284,27 @@
       "detail": "Crew allowed. Park on Chicken Hawk Rd only; no parking beyond the Michigan Bluff Rd / Chicken Hawk Rd intersection.",
       "driveUrl": "https://maps.app.goo.gl/unka31nx7UN6oFwf8",
       "guideUrl": "https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15",
-      "guideLabel": "Runner Guide p. 15"
+      "guideLabel": "Runner Guide p. 15",
+      "offlineGuideImageUrl": "./assets/guide-michigan-bluff-parking.png",
+      "offlineGuideImageAlt": "Official runner guide parking map for Michigan Bluff crew access."
     },
     {
       "name": "Foresthill",
       "detail": "Crew and drop bag. No parking on Church St, in front of businesses/residences, or in front of Foresthill School.",
       "driveUrl": "https://maps.app.goo.gl/nbjFvFMT7uwBT8tAA",
       "guideUrl": "https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=14",
-      "guideLabel": "Runner Guide p. 14"
+      "guideLabel": "Runner Guide p. 14",
+      "offlineGuideImageUrl": "./assets/guide-foresthill-parking.png",
+      "offlineGuideImageAlt": "Official runner guide parking map for Foresthill crew access."
     },
     {
       "name": "Drivers Flat",
       "detail": "Last crew stop. Park on Foresthill Rd or roadside; no parking or waiting on Drivers Flat Rd or the staging area.",
       "driveUrl": "https://maps.app.goo.gl/jKDQ958pPWpF2tVX7",
       "guideUrl": "https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15",
-      "guideLabel": "Runner Guide p. 15"
+      "guideLabel": "Runner Guide p. 15",
+      "offlineGuideImageUrl": "./assets/guide-drivers-flat-parking.png",
+      "offlineGuideImageAlt": "Official runner guide parking map for Drivers Flat crew access."
     }
   ],
   "sources": [

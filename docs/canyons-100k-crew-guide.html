@@ -4,6 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Canyons 100K Crew Guide</title>
+  <meta name="theme-color" content="#ff5a45">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Canyons Crew">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./assets/icon-192.png">
   <style>
 :root {
   color-scheme: light;
@@ -306,6 +311,38 @@ h1 {
 
 .card-links {
   margin-top: 10px;
+}
+
+.offline-status-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 0 12px;
+}
+
+.offline-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  margin: 8px 0 0;
+  padding: 4px 9px;
+  border: 1px solid rgba(var(--trail-rgb), 0.22);
+  border-radius: var(--radius);
+  background: #eef8f4;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.offline-status[data-state="ready"] {
+  border-color: rgba(var(--trail-rgb), 0.34);
+  color: #0b554f;
+}
+
+.offline-status[data-state="warn"] {
+  border-color: rgba(var(--crew-rgb), 0.34);
+  background: rgba(var(--crew-rgb), 0.08);
+  color: var(--crew-dark);
 }
 
 section {
@@ -687,6 +724,33 @@ h2 {
   border-left: 5px solid var(--trail);
 }
 
+.guide-image-link {
+  display: grid;
+  gap: 6px;
+  margin-top: 11px;
+  overflow: hidden;
+  border: 1px solid rgba(24, 32, 29, 0.12);
+  border-radius: var(--radius);
+  background: #f7faf9;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.guide-image-link img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+  object-fit: cover;
+}
+
+.guide-image-link span {
+  padding: 0 9px 9px;
+}
+
 .small-note {
   margin: 8px 0 0;
   color: var(--muted);
@@ -772,6 +836,10 @@ h2 {
 .route-head-meta a {
   min-height: 44px;
   color: var(--trail);
+}
+
+.route-head-meta .offline-status {
+  margin: 0;
 }
 
 .route-visuals {
@@ -3230,12 +3298,15 @@ h2 {
       <a href="./canyons-100k-route-tracker.html">Tracker</a>
     </nav>
   </div>
+  <div class="offline-status-wrap">
+    <span class="offline-status" data-offline-status hidden role="status" aria-live="polite"></span>
+  </div>
 
   <main class="wrap">
     <header id="overview">
       <p class="eyebrow">Canyons 100K by UTMB</p>
       <h1>Race Day Crew Guide</h1>
-      <p class="subtitle">16h36 expected plan. Crew arrivals include a 60-minute buffer. Bags are labeled by aid station; bring the matching bag to each crew stop.</p>
+      <p class="subtitle">16h36 expected plan. Crew arrivals include a 45-minute buffer. Bags are labeled by aid station; bring the matching bag to each crew stop.</p>
 
       <div class="race-facts" aria-label="Race facts">
         <span><strong>Start</strong> 5:00 AM</span>
@@ -3247,19 +3318,19 @@ h2 {
       <div class="crew-timeline" aria-label="Crew timeline">
         <div class="crew-timeline-title"><span class="label">Crew Timeline</span><strong>Arrive-by times are the working target</strong></div>
         <div class="crew-timeline-row">
-          <div class="crew-arrive"><span class="label">Arrive by</span><strong>10:43</strong></div>
+          <div class="crew-arrive"><span class="label">Arrive by</span><strong>10:58</strong></div>
           <div class="crew-stop-name"><strong>Michigan Bluff</strong><em>Runner 11:43 AM</em></div>
-          <div class="crew-task crew-logistics" aria-label="Michigan Bluff crew navigation and logistics"><div class="crew-links"><a href="https://maps.app.goo.gl/unka31nx7UN6oFwf8" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Michigan Bluff">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Michigan Bluff">Guide p. 15</a></div><p class="crew-note">Park on Chicken Hawk Rd only; no Michigan Bluff Rd parking and no parking past the Chicken Hawk intersection. Walk in about 1/2 mile.</p></div>
+          <div class="crew-task crew-logistics" aria-label="Michigan Bluff crew navigation and logistics"><div class="crew-links"><a href="https://maps.app.goo.gl/unka31nx7UN6oFwf8" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Michigan Bluff">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Michigan Bluff">Guide p. 15</a><a href="./assets/guide-michigan-bluff-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open saved offline guide image for Michigan Bluff">Offline image</a></div><p class="crew-note">Park on Chicken Hawk Rd only; no Michigan Bluff Rd parking and no parking past the Chicken Hawk intersection. Walk in about 1/2 mile.</p></div>
         </div>
         <div class="crew-timeline-row">
-          <div class="crew-arrive"><span class="label">Arrive by</span><strong>12:18</strong></div>
+          <div class="crew-arrive"><span class="label">Arrive by</span><strong>12:33</strong></div>
           <div class="crew-stop-name"><strong>Foresthill</strong><em>Runner 1:18 PM</em></div>
-          <div class="crew-task crew-logistics" aria-label="Foresthill crew navigation and logistics"><div class="crew-links"><a href="https://maps.app.goo.gl/nbjFvFMT7uwBT8tAA" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Foresthill">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=14" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Foresthill">Guide p. 14</a></div><p class="crew-note">No parking on Church St, in front of businesses/residences, or in front of the school. Arrive early and carpool.</p></div>
+          <div class="crew-task crew-logistics" aria-label="Foresthill crew navigation and logistics"><div class="crew-links"><a href="https://maps.app.goo.gl/nbjFvFMT7uwBT8tAA" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Foresthill">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=14" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Foresthill">Guide p. 14</a><a href="./assets/guide-foresthill-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open saved offline guide image for Foresthill">Offline image</a></div><p class="crew-note">No parking on Church St, in front of businesses/residences, or in front of the school.</p></div>
         </div>
         <div class="crew-timeline-row">
-          <div class="crew-arrive"><span class="label">Arrive by</span><strong>4:39</strong></div>
+          <div class="crew-arrive"><span class="label">Arrive by</span><strong>4:54</strong></div>
           <div class="crew-stop-name"><strong>Drivers Flat</strong><em>Runner 5:39 PM</em></div>
-          <div class="crew-task crew-logistics" aria-label="Drivers Flat crew navigation and logistics"><div class="crew-links"><a href="https://maps.app.goo.gl/jKDQ958pPWpF2tVX7" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Drivers Flat">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Drivers Flat">Guide p. 15</a></div><p class="crew-note">Park on Foresthill Rd or roadside; main lot requires a fee. Walk in about 1/2 mile on Drivers Flat Rd; no parking or waiting there.</p></div>
+          <div class="crew-task crew-logistics" aria-label="Drivers Flat crew navigation and logistics"><div class="crew-links"><a href="https://maps.app.goo.gl/jKDQ958pPWpF2tVX7" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Drivers Flat">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Drivers Flat">Guide p. 15</a><a href="./assets/guide-drivers-flat-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open saved offline guide image for Drivers Flat">Offline image</a></div><p class="crew-note">Park on Foresthill Rd or roadside; main lot requires a fee. Walk in about 1/2 mile on Drivers Flat Rd; no parking or waiting there.</p></div>
         </div>
       </div>
     </header>
@@ -3575,7 +3646,7 @@ h2 {
                 <span class="stop-mile">Mile 24.0</span>
               </div>
               <div class="badges"><span class="badge crew">Crew stop</span><span class="badge aid">Aid</span><span class="badge warn">Cut 12:45 PM</span></div>
-              <p class="stop-note">CREW HERE: arrive by 10:43 AM. Use the Michigan Bluff bag and follow the official crew parking directions.</p>
+              <p class="stop-note">CREW HERE: arrive by 10:58 AM. Use the Michigan Bluff bag and follow the official crew parking directions.</p>
 
               <div class="resupply" aria-label="Resupply from Michigan Bluff to Foresthill">
                 <div class="resupply-head">
@@ -3593,7 +3664,7 @@ h2 {
               <div class="stop-metrics">
                 <span class="stop-metric"><span class="label">Mile</span><strong>24.0</strong></span>
                 <span class="stop-metric"><span class="label">ETA</span><strong>11:43 AM</strong></span>
-                <span class="stop-metric"><span class="label">Crew by</span><strong>10:43 AM</strong></span>
+                <span class="stop-metric"><span class="label">Crew by</span><strong>10:58 AM</strong></span>
               </div>
             </div>
           </div>
@@ -3634,7 +3705,7 @@ h2 {
                 <span class="stop-mile">Mile 30.0</span>
               </div>
               <div class="badges"><span class="badge crew">Crew stop</span><span class="badge crew">Drop bag</span><span class="badge warn">Cut 2:30 PM</span></div>
-              <p class="stop-note">CREW HERE: arrive by 12:18 PM. Use the Foresthill bag/drop bag and follow the official crew parking directions.</p>
+              <p class="stop-note">CREW HERE: arrive by 12:33 PM. Use the Foresthill bag/drop bag and follow the official crew parking directions.</p>
 
               <div class="resupply" aria-label="Resupply from Foresthill to Drivers Flat">
                 <div class="resupply-head">
@@ -3652,7 +3723,7 @@ h2 {
               <div class="stop-metrics">
                 <span class="stop-metric"><span class="label">Mile</span><strong>30.0</strong></span>
                 <span class="stop-metric"><span class="label">ETA</span><strong>1:18 PM</strong></span>
-                <span class="stop-metric"><span class="label">Crew by</span><strong>12:18 PM</strong></span>
+                <span class="stop-metric"><span class="label">Crew by</span><strong>12:33 PM</strong></span>
               </div>
             </div>
           </div>
@@ -3740,7 +3811,7 @@ h2 {
                 <span class="stop-mile">Mile 47.5</span>
               </div>
               <div class="badges"><span class="badge crew">Crew stop</span><span class="badge aid">Aid</span><span class="badge warn">Cut 7:45 PM</span></div>
-              <p class="stop-note">CREW HERE: arrive by 4:39 PM. Use the Drivers Flat bag and follow the official crew parking directions.</p>
+              <p class="stop-note">CREW HERE: arrive by 4:54 PM. Use the Drivers Flat bag and follow the official crew parking directions.</p>
 
               <div class="resupply" aria-label="Resupply from Drivers Flat to Finish">
                 <div class="resupply-head">
@@ -3758,7 +3829,7 @@ h2 {
               <div class="stop-metrics">
                 <span class="stop-metric"><span class="label">Mile</span><strong>47.5</strong></span>
                 <span class="stop-metric"><span class="label">ETA</span><strong>5:39 PM</strong></span>
-                <span class="stop-metric"><span class="label">Crew by</span><strong>4:39 PM</strong></span>
+                <span class="stop-metric"><span class="label">Crew by</span><strong>4:54 PM</strong></span>
               </div>
             </div>
           </div>
@@ -3943,19 +4014,34 @@ h2 {
           <h3>Michigan Bluff</h3>
           <p>Crew allowed. Park on Chicken Hawk Rd only; no parking beyond the Michigan Bluff Rd / Chicken Hawk Rd intersection.</p>
 
-          <div class="card-links"><a href="https://maps.app.goo.gl/unka31nx7UN6oFwf8" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Michigan Bluff">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Michigan Bluff">Runner Guide p. 15</a></div>
+          <div class="card-links"><a href="https://maps.app.goo.gl/unka31nx7UN6oFwf8" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Michigan Bluff">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Michigan Bluff">Runner Guide p. 15</a><a href="./assets/guide-michigan-bluff-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open saved offline guide image for Michigan Bluff">Offline image</a></div>
+
+          <a class="guide-image-link" href="./assets/guide-michigan-bluff-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open offline guide image for Michigan Bluff">
+            <img src="./assets/guide-michigan-bluff-parking.png" alt="Official runner guide parking map for Michigan Bluff crew access." loading="lazy">
+            <span>Saved for offline use</span>
+          </a>
         </article>
         <article class="map-card crew">
           <h3>Foresthill</h3>
           <p>Crew and drop bag. No parking on Church St, in front of businesses/residences, or in front of Foresthill School.</p>
 
-          <div class="card-links"><a href="https://maps.app.goo.gl/nbjFvFMT7uwBT8tAA" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Foresthill">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=14" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Foresthill">Runner Guide p. 14</a></div>
+          <div class="card-links"><a href="https://maps.app.goo.gl/nbjFvFMT7uwBT8tAA" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Foresthill">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=14" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Foresthill">Runner Guide p. 14</a><a href="./assets/guide-foresthill-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open saved offline guide image for Foresthill">Offline image</a></div>
+
+          <a class="guide-image-link" href="./assets/guide-foresthill-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open offline guide image for Foresthill">
+            <img src="./assets/guide-foresthill-parking.png" alt="Official runner guide parking map for Foresthill crew access." loading="lazy">
+            <span>Saved for offline use</span>
+          </a>
         </article>
         <article class="map-card crew">
           <h3>Drivers Flat</h3>
           <p>Last crew stop. Park on Foresthill Rd or roadside; no parking or waiting on Drivers Flat Rd or the staging area.</p>
 
-          <div class="card-links"><a href="https://maps.app.goo.gl/jKDQ958pPWpF2tVX7" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Drivers Flat">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Drivers Flat">Runner Guide p. 15</a></div>
+          <div class="card-links"><a href="https://maps.app.goo.gl/jKDQ958pPWpF2tVX7" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Drivers Flat">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Drivers Flat">Runner Guide p. 15</a><a href="./assets/guide-drivers-flat-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open saved offline guide image for Drivers Flat">Offline image</a></div>
+
+          <a class="guide-image-link" href="./assets/guide-drivers-flat-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open offline guide image for Drivers Flat">
+            <img src="./assets/guide-drivers-flat-parking.png" alt="Official runner guide parking map for Drivers Flat crew access." loading="lazy">
+            <span>Saved for offline use</span>
+          </a>
         </article>
       </div>
     </section>
@@ -3983,5 +4069,41 @@ h2 {
       <p class="small-note">Version: Pantoll-calibrated expected pace, 16h36 schedule. Next pass: exact maps, parking screenshots, and product-specific fuel math.</p>
     </section>
   </main>
+  <script>
+    (() => {
+      const status = document.querySelector("[data-offline-status]");
+      const setStatus = (message, state = "pending") => {
+        if (!status) return;
+        status.hidden = false;
+        status.dataset.state = state;
+        status.textContent = message;
+      };
+
+      if (location.protocol === "file:") return;
+
+      window.addEventListener("offline", () => setStatus("Offline mode: saved guide is loaded.", "ready"));
+      window.addEventListener("online", () => setStatus("Offline cache: checking for updates.", "pending"));
+
+      if (!("serviceWorker" in navigator)) return;
+
+      setStatus("Offline cache: saving this guide.", "pending");
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js")
+          .then((registration) => {
+            const worker = registration.installing || registration.waiting || registration.active;
+            if (worker) {
+              worker.addEventListener("statechange", () => {
+                if (worker.state === "activated") {
+                  setStatus("Offline cache ready. Add to Home Screen before race day.", "ready");
+                }
+              });
+            }
+            return navigator.serviceWorker.ready;
+          })
+          .then(() => setStatus("Offline cache ready. Add to Home Screen before race day.", "ready"))
+          .catch(() => setStatus("Offline cache unavailable. Use the hosted page online once.", "warn"));
+      });
+    })();
+  </script>
 </body>
 </html>

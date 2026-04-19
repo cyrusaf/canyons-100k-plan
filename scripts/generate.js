@@ -2,6 +2,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 
 const ROOT = path.resolve(__dirname, "..");
 const DATA_PATH = path.join(ROOT, "data", "race-plan.json");
@@ -10,6 +11,8 @@ const STYLE_PATH = path.join(ROOT, "src", "styles.css");
 const INDEX_OUTPUT_PATH = path.join(ROOT, "docs", "index.html");
 const GUIDE_OUTPUT_PATH = path.join(ROOT, "docs", "canyons-100k-crew-guide.html");
 const TRACKER_OUTPUT_PATH = path.join(ROOT, "docs", "canyons-100k-route-tracker.html");
+const MANIFEST_OUTPUT_PATH = path.join(ROOT, "docs", "manifest.webmanifest");
+const SERVICE_WORKER_OUTPUT_PATH = path.join(ROOT, "docs", "sw.js");
 const NOJEKYLL_OUTPUT_PATH = path.join(ROOT, "docs", ".nojekyll");
 const FEET_PER_METER = 3.28084;
 const EARTH_RADIUS_MI = 3958.7613;
@@ -24,6 +27,24 @@ const MAJOR_CLIMB_MIN_AVG_GRADE = 3;
 
 const plan = JSON.parse(fs.readFileSync(DATA_PATH, "utf8"));
 const styles = fs.readFileSync(STYLE_PATH, "utf8");
+const PWA_ASSETS = [
+  "./",
+  "./index.html",
+  "./canyons-100k-crew-guide.html",
+  "./canyons-100k-route-tracker.html",
+  "./route-map-config.js",
+  "./manifest.webmanifest",
+  "./sw.js",
+  "./assets/icon-192.png",
+  "./assets/icon-512.png",
+  "./assets/guide-michigan-bluff-parking.png",
+  "./assets/guide-foresthill-parking.png",
+  "./assets/guide-drivers-flat-parking.png"
+];
+const PWA_EXTERNAL_ASSETS = [
+  "https://cdn.maptiler.com/maptiler-sdk-js/v3.0.1/maptiler-sdk.css",
+  "https://cdn.maptiler.com/maptiler-sdk-js/v3.0.1/maptiler-sdk.umd.min.js"
+];
 let cachedCourse = null;
 let cachedClimbs = null;
 
@@ -57,6 +78,27 @@ function jsonForScript(value) {
     .replaceAll("&", "\\u0026")
     .replaceAll("\u2028", "\\u2028")
     .replaceAll("\u2029", "\\u2029");
+}
+
+function shortHash(value) {
+  return crypto.createHash("sha1").update(value).digest("hex").slice(0, 12);
+}
+
+function hashFileContents(filePath) {
+  return crypto.createHash("sha1").update(fs.readFileSync(filePath)).digest("hex");
+}
+
+function hashPwaAssetContents() {
+  return PWA_ASSETS
+    .map((asset) => {
+      if (["./", "./index.html", "./canyons-100k-crew-guide.html", "./canyons-100k-route-tracker.html", "./manifest.webmanifest", "./sw.js"].includes(asset)) {
+        return `${asset}:generated`;
+      }
+
+      const assetPath = path.join(ROOT, "docs", asset.replace(/^\.\//, ""));
+      return `${asset}:${fs.existsSync(assetPath) ? hashFileContents(assetPath) : "missing"}`;
+    })
+    .join("\n");
 }
 
 function formatNumber(value) {
@@ -240,10 +282,62 @@ function renderExternalLink(url, label, ariaLabel) {
   return `<a href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer"${aria}>${escapeHtml(label)}</a>`;
 }
 
+function renderPwaHead(title) {
+  return `  <meta name="theme-color" content="#ff5a45">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Canyons Crew">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./assets/icon-192.png">`;
+}
+
+function renderOfflineStatus() {
+  return `<span class="offline-status" data-offline-status hidden role="status" aria-live="polite"></span>`;
+}
+
+function renderPwaRegistrationScript() {
+  return `  <script>
+    (() => {
+      const status = document.querySelector("[data-offline-status]");
+      const setStatus = (message, state = "pending") => {
+        if (!status) return;
+        status.hidden = false;
+        status.dataset.state = state;
+        status.textContent = message;
+      };
+
+      if (location.protocol === "file:") return;
+
+      window.addEventListener("offline", () => setStatus("Offline mode: saved guide is loaded.", "ready"));
+      window.addEventListener("online", () => setStatus("Offline cache: checking for updates.", "pending"));
+
+      if (!("serviceWorker" in navigator)) return;
+
+      setStatus("Offline cache: saving this guide.", "pending");
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js")
+          .then((registration) => {
+            const worker = registration.installing || registration.waiting || registration.active;
+            if (worker) {
+              worker.addEventListener("statechange", () => {
+                if (worker.state === "activated") {
+                  setStatus("Offline cache ready. Add to Home Screen before race day.", "ready");
+                }
+              });
+            }
+            return navigator.serviceWorker.ready;
+          })
+          .then(() => setStatus("Offline cache ready. Add to Home Screen before race day.", "ready"))
+          .catch(() => setStatus("Offline cache unavailable. Use the hosted page online once.", "warn"));
+      });
+    })();
+  </script>`;
+}
+
 function renderCrewTask(stop) {
   const links = [
     renderExternalLink(stop.driveUrl, "Google Maps", `Open Google Maps directions for ${stop.name}`),
-    renderExternalLink(stop.guideUrl, stop.guideLabel || "Runner Guide", `Open runner guide directions for ${stop.name}`)
+    renderExternalLink(stop.guideUrl, stop.guideLabel || "Runner Guide", `Open runner guide directions for ${stop.name}`),
+    renderExternalLink(stop.offlineGuideImageUrl, stop.offlineGuideImageLabel || "Offline image", `Open saved offline guide image for ${stop.name}`)
   ].filter(Boolean);
   const note = stop.crewNote ? `<p class="crew-note">${escapeHtml(stop.crewNote)}</p>` : "";
 
@@ -257,12 +351,23 @@ function renderCrewTask(stop) {
 function renderResourceLinks(item) {
   const links = [
     renderExternalLink(item.driveUrl, "Google Maps", `Open Google Maps directions for ${item.name}`),
-    renderExternalLink(item.guideUrl, item.guideLabel || "Runner Guide", `Open runner guide directions for ${item.name}`)
+    renderExternalLink(item.guideUrl, item.guideLabel || "Runner Guide", `Open runner guide directions for ${item.name}`),
+    renderExternalLink(item.offlineGuideImageUrl, "Offline image", `Open saved offline guide image for ${item.name}`)
   ].filter(Boolean);
 
   if (!links.length) return "";
   return `
           <div class="card-links">${links.join("")}</div>`;
+}
+
+function renderGuideImage(item) {
+  if (!item.offlineGuideImageUrl) return "";
+
+  return `
+          <a class="guide-image-link" href="${escapeAttr(item.offlineGuideImageUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Open offline guide image for ${escapeAttr(item.name)}">
+            <img src="${escapeAttr(item.offlineGuideImageUrl)}" alt="${escapeAttr(item.offlineGuideImageAlt || `${item.name} parking guide image`)}" loading="lazy">
+            <span>Saved for offline use</span>
+          </a>`;
 }
 
 function stripMeridiem(value) {
@@ -464,6 +569,7 @@ function renderMaps() {
           <h3>${escapeHtml(item.name)}</h3>
           <p>${escapeHtml(item.detail)}</p>
 ${renderResourceLinks(item)}
+${renderGuideImage(item)}
         </article>`
     )
     .join("\n");
@@ -1099,6 +1205,7 @@ function renderGuideHtml() {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escapeHtml(plan.title)}</title>
+${renderPwaHead(plan.title)}
   <style>
 ${styles}
   </style>
@@ -1112,6 +1219,9 @@ ${styles}
       <a href="#maps">Maps</a>
       <a href="./canyons-100k-route-tracker.html">Tracker</a>
     </nav>
+  </div>
+  <div class="offline-status-wrap">
+    ${renderOfflineStatus()}
   </div>
 
   <main class="wrap">
@@ -1168,6 +1278,7 @@ ${renderSources()}
       <p class="small-note">${escapeHtml(plan.versionNote)}</p>
     </section>
   </main>
+${renderPwaRegistrationScript()}
 </body>
 </html>
 `;
@@ -1189,6 +1300,7 @@ function renderRouteTrackerHtml() {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Canyons 100K Route Tracker</title>
+${renderPwaHead("Canyons 100K Route Tracker")}
   <link rel="stylesheet" href="https://cdn.maptiler.com/maptiler-sdk-js/v3.0.1/maptiler-sdk.css">
   <style>
 ${styles}
@@ -1205,6 +1317,7 @@ ${styles}
         <div class="route-head-meta">
           <span id="route-distance-label">0.0 / ${formatMiles(plan.race.courseDistanceMi)} mi</span>
           <a href="./canyons-100k-crew-guide.html">Crew Guide</a>
+          ${renderOfflineStatus()}
         </div>
       </div>
 
@@ -2515,10 +2628,141 @@ ${styles}
       observer.observe(elements.profileSvg);
     }
   </script>
+${renderPwaRegistrationScript()}
 </body>
 </html>
 `;
 }
+
+function renderManifest() {
+  return `${JSON.stringify(
+    {
+      name: "Canyons 100K Crew Guide",
+      short_name: "Canyons Crew",
+      description: "Offline-ready race day crew guide, parking maps, and route tracker for Canyons 100K.",
+      start_url: "./index.html",
+      scope: "./",
+      display: "standalone",
+      background_color: "#f7faf9",
+      theme_color: "#ff5a45",
+      icons: [
+        {
+          src: "./assets/icon-192.png",
+          sizes: "192x192",
+          type: "image/png"
+        },
+        {
+          src: "./assets/icon-512.png",
+          sizes: "512x512",
+          type: "image/png",
+          purpose: "any maskable"
+        }
+      ]
+    },
+    null,
+    2
+  )}\n`;
+}
+
+function renderServiceWorker(cacheVersion) {
+  return `"use strict";
+
+const CACHE_NAME = "canyons-100k-${cacheVersion}";
+const RUNTIME_CACHE_NAME = "canyons-100k-runtime-${cacheVersion}";
+const CORE_ASSETS = ${JSON.stringify(PWA_ASSETS, null, 2)};
+const EXTERNAL_ASSETS = ${JSON.stringify(PWA_EXTERNAL_ASSETS, null, 2)};
+
+async function cacheCoreAssets() {
+  const cache = await caches.open(CACHE_NAME);
+  await cache.addAll(CORE_ASSETS);
+
+  const runtime = await caches.open(RUNTIME_CACHE_NAME);
+  await Promise.allSettled(
+    EXTERNAL_ASSETS.map(async (url) => {
+      const response = await fetch(url, { mode: "no-cors" });
+      await runtime.put(url, response);
+    })
+  );
+}
+
+async function deleteOldCaches() {
+  const keys = await caches.keys();
+  await Promise.all(
+    keys
+      .filter((key) => key.startsWith("canyons-100k-") && key !== CACHE_NAME && key !== RUNTIME_CACHE_NAME)
+      .map((key) => caches.delete(key))
+  );
+}
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+
+  const response = await fetch(request);
+  if (response && response.ok) {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.put(request, response.clone());
+  }
+  return response;
+}
+
+async function networkFirst(request, fallbackUrl) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      await cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    return (await caches.match(request)) || (await caches.match(fallbackUrl));
+  }
+}
+
+async function staleWhileRevalidate(request) {
+  const runtime = await caches.open(RUNTIME_CACHE_NAME);
+  const cached = await runtime.match(request);
+  const fetched = fetch(request)
+    .then((response) => {
+      if (response && (response.ok || response.type === "opaque")) {
+        runtime.put(request, response.clone());
+      }
+      return response;
+    })
+    .catch(() => cached);
+
+  return cached || fetched;
+}
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(cacheCoreAssets().then(() => self.skipWaiting()));
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(deleteOldCaches().then(() => self.clients.claim()));
+});
+
+self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") return;
+
+  const url = new URL(event.request.url);
+  if (url.origin === self.location.origin) {
+    if (event.request.mode === "navigate") {
+      event.respondWith(networkFirst(event.request, "./index.html"));
+      return;
+    }
+
+    event.respondWith(cacheFirst(event.request));
+    return;
+  }
+
+  if (EXTERNAL_ASSETS.includes(url.href)) {
+    event.respondWith(staleWhileRevalidate(event.request));
+  }
+});
+`;
+}
+
 function validatePlan(data) {
   const names = new Set(data.stops.map((stop) => stop.name));
   for (const stop of data.stops) {
@@ -2534,11 +2778,18 @@ function validatePlan(data) {
 applyDerivedPacing();
 fs.mkdirSync(path.dirname(GUIDE_OUTPUT_PATH), { recursive: true });
 const guideHtml = renderGuideHtml();
+const trackerHtml = renderRouteTrackerHtml();
+const manifest = renderManifest();
+const cacheVersion = shortHash(`${guideHtml}\n${trackerHtml}\n${manifest}\n${JSON.stringify(PWA_ASSETS)}\n${hashPwaAssetContents()}`);
 fs.writeFileSync(INDEX_OUTPUT_PATH, guideHtml);
 fs.writeFileSync(GUIDE_OUTPUT_PATH, guideHtml);
-fs.writeFileSync(TRACKER_OUTPUT_PATH, renderRouteTrackerHtml());
+fs.writeFileSync(TRACKER_OUTPUT_PATH, trackerHtml);
+fs.writeFileSync(MANIFEST_OUTPUT_PATH, manifest);
+fs.writeFileSync(SERVICE_WORKER_OUTPUT_PATH, renderServiceWorker(cacheVersion));
 fs.writeFileSync(NOJEKYLL_OUTPUT_PATH, "");
 console.log(`Generated ${path.relative(ROOT, INDEX_OUTPUT_PATH)}`);
 console.log(`Generated ${path.relative(ROOT, GUIDE_OUTPUT_PATH)}`);
 console.log(`Generated ${path.relative(ROOT, TRACKER_OUTPUT_PATH)}`);
+console.log(`Generated ${path.relative(ROOT, MANIFEST_OUTPUT_PATH)}`);
+console.log(`Generated ${path.relative(ROOT, SERVICE_WORKER_OUTPUT_PATH)}`);
 console.log(`Generated ${path.relative(ROOT, NOJEKYLL_OUTPUT_PATH)}`);
