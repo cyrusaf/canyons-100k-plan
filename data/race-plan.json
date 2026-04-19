@@ -1,7 +1,7 @@
 {
   "title": "Canyons 100K Crew Guide",
   "eyebrow": "Canyons 100K by UTMB",
-  "subtitle": "16h36 expected plan. Crew arrivals include a 60-minute buffer. Official updates win.",
+  "subtitle": "16h36 expected plan. Crew arrivals include a 60-minute buffer. Bags are labeled by aid station; bring the matching bag to each crew stop.",
   "versionNote": "Version: Pantoll-calibrated expected pace, 16h36 schedule. Next pass: exact maps, parking screenshots, and product-specific fuel math.",
   "race": {
     "start": "5:00 AM",
@@ -32,23 +32,29 @@
     {
       "name": "Michigan Bluff",
       "arriveByBufferMinutes": 60,
-      "action": "Refill + cooling",
-      "detail": "Bottles, sunscreen, stomach check.",
-      "summary": "Quick refill and cooling."
+      "driveUrl": "https://maps.app.goo.gl/unka31nx7UN6oFwf8",
+      "guideUrl": "https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15",
+      "guideLabel": "Guide p. 15",
+      "crewNote": "Park on Chicken Hawk Rd only; no Michigan Bluff Rd parking and no parking past the Chicken Hawk intersection. Walk in about 1/2 mile.",
+      "summary": "Parking and walk-in directions."
     },
     {
       "name": "Foresthill",
       "arriveByBufferMinutes": 60,
-      "action": "Drop bag + reset",
-      "detail": "Socks/lube, Cal Street fuel.",
-      "summary": "Drop bag and main reset."
+      "driveUrl": "https://maps.app.goo.gl/nbjFvFMT7uwBT8tAA",
+      "guideUrl": "https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=14",
+      "guideLabel": "Guide p. 14",
+      "crewNote": "No parking on Church St, in front of businesses/residences, or in front of the school. Arrive early and carpool.",
+      "summary": "Parking and walk-in directions."
     },
     {
       "name": "Drivers Flat",
       "arriveByBufferMinutes": 60,
-      "action": "Last handoff",
-      "detail": "Lights, warmth, finish fuel.",
-      "summary": "Last handoff to finish."
+      "driveUrl": "https://maps.app.goo.gl/jKDQ958pPWpF2tVX7",
+      "guideUrl": "https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15",
+      "guideLabel": "Guide p. 15",
+      "crewNote": "Park on Foresthill Rd or roadside; main lot requires a fee. Walk in about 1/2 mile on Drivers Flat Rd; no parking or waiting there.",
+      "summary": "Parking and walk-in directions."
     }
   ],
   "stops": [
@@ -57,12 +63,10 @@
       "mile": 0.0,
       "eta": "5:00 AM",
       "tags": [
-        { "label": "No crew", "type": "warn" },
         { "label": "Start", "type": "default" }
       ],
       "note": "Runner-only shuttle. Leave with the first long-leg fuel loaded.",
       "resupplyTo": "Michigan Bluff",
-      "resupplyNote": "Use Deadwood full aid. Carry enough preferred fuel for the no-food Devils Thumb loop.",
       "nextLeg": {
         "to": "Deadwood 1",
         "distanceMi": 10.1,
@@ -74,8 +78,7 @@
       "mile": 10.1,
       "eta": "7:25 AM",
       "tags": [
-        { "label": "Full aid", "type": "aid" },
-        { "label": "No crew", "type": "warn" }
+        { "label": "Full aid", "type": "aid" }
       ],
       "note": "Refill and keep enough food for the Devils Thumb loop through Deadwood 2.",
       "nextLeg": {
@@ -89,8 +92,7 @@
       "mile": 12.0,
       "eta": "7:55 AM",
       "tags": [
-        { "label": "Hydration", "type": "default" },
-        { "label": "No crew", "type": "warn" }
+        { "label": "Hydration", "type": "default" }
       ],
       "note": "Water/electrolyte only. No food. Keep moving unless bottles are low.",
       "nextLeg": {
@@ -121,8 +123,7 @@
       "mile": 15.1,
       "eta": "9:10 AM",
       "tags": [
-        { "label": "Hydration", "type": "default" },
-        { "label": "No crew", "type": "warn" }
+        { "label": "Hydration", "type": "default" }
       ],
       "note": "Top off if needed. Food still comes from what you carried out of Deadwood 1.",
       "nextLeg": {
@@ -137,7 +138,6 @@
       "eta": "9:55 AM",
       "tags": [
         { "label": "Full aid", "type": "aid" },
-        { "label": "No crew", "type": "warn" },
         { "label": "Cut 11:30 AM", "type": "warn" }
       ],
       "note": "Refill for the push to first crew. Start heat management early.",
@@ -157,9 +157,8 @@
         { "label": "Aid", "type": "aid" },
         { "label": "Cut 12:45 PM", "type": "warn" }
       ],
-      "crewCallout": "CREW HERE: arrive by 10:40 AM. Fast bottle swap, cooling, sunscreen, quick stomach/feet check.",
+      "crewCallout": "CREW HERE: arrive by 10:40 AM. Use the Michigan Bluff bag and follow the official crew parking directions.",
       "resupplyTo": "Foresthill",
-      "resupplyNote": "Short crew-to-crew block. Keep the handoff fast and leave with simple calories.",
       "nextLeg": {
         "to": "Foresthill",
         "distanceMi": 5.9,
@@ -176,9 +175,8 @@
         { "label": "Drop bag", "type": "crew" },
         { "label": "Cut 2:30 PM", "type": "warn" }
       ],
-      "crewCallout": "CREW HERE: arrive by 12:15 PM. Main reset: bottles, drop bag, socks/lube if needed, preferred fuel for Cal Street.",
+      "crewCallout": "CREW HERE: arrive by 12:15 PM. Use the Foresthill bag/drop bag and follow the official crew parking directions.",
       "resupplyTo": "Drivers Flat",
-      "resupplyNote": "Longest crew-to-crew block. Use Cal 2 full aid, but leave Foresthill with the block covered.",
       "nextLeg": {
         "to": "Cal 2",
         "distanceMi": 8.3,
@@ -190,8 +188,7 @@
       "mile": 38.2,
       "eta": "3:15 PM",
       "tags": [
-        { "label": "Full aid", "type": "aid" },
-        { "label": "No crew", "type": "warn" }
+        { "label": "Full aid", "type": "aid" }
       ],
       "note": "Long no-crew leg follows. Refill hard here.",
       "nextLeg": {
@@ -210,10 +207,9 @@
         { "label": "Aid", "type": "aid" },
         { "label": "Cut 7:45 PM", "type": "warn" }
       ],
-      "crewCallout": "CREW HERE: arrive by 4:45 PM. Last handoff: lights, warmth, calories through the finish, decisive exit.",
+      "crewCallout": "CREW HERE: arrive by 4:45 PM. Use the Drivers Flat bag and follow the official crew parking directions.",
       "resupplyTo": "Downtown Auburn Finish",
       "resupplyLabel": "Finish",
-      "resupplyNote": "Final personal-fuel load. Add light, warm layer, and enough finish fuel to avoid bargaining.",
       "nextLeg": {
         "to": "Mammoth Bar",
         "distanceMi": 7.9,
@@ -226,7 +222,6 @@
       "eta": "7:50 PM",
       "tags": [
         { "label": "Full aid", "type": "aid" },
-        { "label": "No crew", "type": "warn" },
         { "label": "Cut 10:15 PM", "type": "warn" }
       ],
       "note": "Eat if possible. The finish is close enough to simplify, not close enough to stop fueling.",
@@ -241,8 +236,7 @@
       "mile": 59.1,
       "eta": "8:50 PM",
       "tags": [
-        { "label": "Full aid", "type": "aid" },
-        { "label": "No crew", "type": "warn" }
+        { "label": "Full aid", "type": "aid" }
       ],
       "note": "Final aid. Calories, fluid, then climb to Auburn.",
       "nextLeg": {
@@ -267,29 +261,38 @@
   "crewCheatSheet": [
     {
       "name": "Michigan Bluff",
-      "detail": "Fast stop. Bottles, cooling, sunscreen, trash, quick stomach/feet check."
+      "detail": "Use the labeled Michigan Bluff bag. Park on Chicken Hawk Rd only, then walk in about 1/2 mile."
     },
     {
       "name": "Foresthill",
-      "detail": "Main reset. Drop bag, socks/lube if needed, preferred fuel, weather choice."
+      "detail": "Use the labeled Foresthill bag/drop bag. No Church St, business, residence, or school-front parking."
     },
     {
       "name": "Drivers Flat",
-      "detail": "Final handoff. Light, warmth, finish fuel, confidence, and send."
+      "detail": "Use the labeled Drivers Flat bag. Park on Foresthill Rd or roadside, then walk in about 1/2 mile."
     }
   ],
   "maps": [
     {
       "name": "Michigan Bluff",
-      "detail": "Crew allowed. Plan for up to a 1.5 mile walk-in from designated parking."
+      "detail": "Crew allowed. Park on Chicken Hawk Rd only; no parking beyond the Michigan Bluff Rd / Chicken Hawk Rd intersection.",
+      "driveUrl": "https://maps.app.goo.gl/unka31nx7UN6oFwf8",
+      "guideUrl": "https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15",
+      "guideLabel": "Runner Guide p. 15"
     },
     {
       "name": "Foresthill",
-      "detail": "Crew and drop bag. Plan for up to a 1 mile walk-in from designated parking."
+      "detail": "Crew and drop bag. No parking on Church St, in front of businesses/residences, or in front of Foresthill School.",
+      "driveUrl": "https://maps.app.goo.gl/nbjFvFMT7uwBT8tAA",
+      "guideUrl": "https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=14",
+      "guideLabel": "Runner Guide p. 14"
     },
     {
       "name": "Drivers Flat",
-      "detail": "Last crew stop. Plan for up to a 1 mile walk-in from designated parking."
+      "detail": "Last crew stop. Park on Foresthill Rd or roadside; no parking or waiting on Drivers Flat Rd or the staging area.",
+      "driveUrl": "https://maps.app.goo.gl/jKDQ958pPWpF2tVX7",
+      "guideUrl": "https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15",
+      "guideLabel": "Runner Guide p. 15"
     }
   ],
   "sources": [
@@ -297,6 +300,11 @@
       "title": "Official 100K Page",
       "url": "https://canyons.utmb.world/races/100k",
       "label": "Course description, date, start time, distance, and GPX link"
+    },
+    {
+      "title": "Official Runner Guide",
+      "url": "https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf",
+      "label": "Crew parking maps, runner guide, and race weekend logistics"
     },
     {
       "title": "Official Aid Chart",

@@ -258,6 +258,56 @@ h1 {
   font-weight: 900;
 }
 
+.crew-logistics {
+  display: grid;
+  gap: 6px;
+}
+
+.crew-links,
+.card-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.crew-links a,
+.card-links a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 9px;
+  border: 1px solid rgba(var(--crew-rgb), 0.34);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.crew-links a:first-child,
+.card-links a:first-child {
+  border-color: var(--crew);
+  background: var(--crew);
+  color: #ffffff;
+}
+
+.crew-note {
+  max-width: 70ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1.25;
+}
+
+.card-links {
+  margin-top: 10px;
+}
+
 section {
   margin-top: 20px;
 }
@@ -438,7 +488,6 @@ h2 {
 }
 
 .resupply-range,
-.resupply-note,
 .resupply-context {
   color: var(--muted);
   font-size: 13px;
@@ -463,10 +512,6 @@ h2 {
   color: #0b554f;
   font-size: 15px;
   line-height: 1.08;
-}
-
-.resupply-note {
-  margin: 0;
 }
 
 .resupply-context {
@@ -3190,7 +3235,7 @@ h2 {
     <header id="overview">
       <p class="eyebrow">Canyons 100K by UTMB</p>
       <h1>Race Day Crew Guide</h1>
-      <p class="subtitle">16h36 expected plan. Crew arrivals include a 60-minute buffer. Official updates win.</p>
+      <p class="subtitle">16h36 expected plan. Crew arrivals include a 60-minute buffer. Bags are labeled by aid station; bring the matching bag to each crew stop.</p>
 
       <div class="race-facts" aria-label="Race facts">
         <span><strong>Start</strong> 5:00 AM</span>
@@ -3204,17 +3249,17 @@ h2 {
         <div class="crew-timeline-row">
           <div class="crew-arrive"><span class="label">Arrive by</span><strong>10:43</strong></div>
           <div class="crew-stop-name"><strong>Michigan Bluff</strong><em>Runner 11:43 AM</em></div>
-          <div class="crew-task"><strong>Refill + cooling</strong><span>Bottles, sunscreen, stomach check.</span></div>
+          <div class="crew-task crew-logistics" aria-label="Michigan Bluff crew navigation and logistics"><div class="crew-links"><a href="https://maps.app.goo.gl/unka31nx7UN6oFwf8" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Michigan Bluff">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Michigan Bluff">Guide p. 15</a></div><p class="crew-note">Park on Chicken Hawk Rd only; no Michigan Bluff Rd parking and no parking past the Chicken Hawk intersection. Walk in about 1/2 mile.</p></div>
         </div>
         <div class="crew-timeline-row">
           <div class="crew-arrive"><span class="label">Arrive by</span><strong>12:18</strong></div>
           <div class="crew-stop-name"><strong>Foresthill</strong><em>Runner 1:18 PM</em></div>
-          <div class="crew-task"><strong>Drop bag + reset</strong><span>Socks/lube, Cal Street fuel.</span></div>
+          <div class="crew-task crew-logistics" aria-label="Foresthill crew navigation and logistics"><div class="crew-links"><a href="https://maps.app.goo.gl/nbjFvFMT7uwBT8tAA" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Foresthill">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=14" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Foresthill">Guide p. 14</a></div><p class="crew-note">No parking on Church St, in front of businesses/residences, or in front of the school. Arrive early and carpool.</p></div>
         </div>
         <div class="crew-timeline-row">
           <div class="crew-arrive"><span class="label">Arrive by</span><strong>4:39</strong></div>
           <div class="crew-stop-name"><strong>Drivers Flat</strong><em>Runner 5:39 PM</em></div>
-          <div class="crew-task"><strong>Last handoff</strong><span>Lights, warmth, finish fuel.</span></div>
+          <div class="crew-task crew-logistics" aria-label="Drivers Flat crew navigation and logistics"><div class="crew-links"><a href="https://maps.app.goo.gl/jKDQ958pPWpF2tVX7" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Drivers Flat">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Drivers Flat">Guide p. 15</a></div><p class="crew-note">Park on Foresthill Rd or roadside; main lot requires a fee. Walk in about 1/2 mile on Drivers Flat Rd; no parking or waiting there.</p></div>
         </div>
       </div>
     </header>
@@ -3233,7 +3278,7 @@ h2 {
                 <h3>China Wall Start</h3>
                 <span class="stop-mile">Mile 0.0</span>
               </div>
-              <div class="badges"><span class="badge warn">No crew</span><span class="badge">Start</span></div>
+              <div class="badges"><span class="badge">Start</span></div>
               <p class="stop-note">Runner-only shuttle. Leave with the first long-leg fuel loaded.</p>
 
               <div class="resupply" aria-label="Resupply from China Wall Start to Michigan Bluff">
@@ -3245,7 +3290,6 @@ h2 {
                   <span><span class="label">Sodium</span><strong>3,350-4,950 mg</strong></span>
                   <span><span class="label">Fluid</span><strong>3.2-4.9 L</strong></span>
                 </div>
-                <p class="resupply-note">Use Deadwood full aid. Carry enough preferred fuel for the no-food Devils Thumb loop.</p>
                 <p class="resupply-context"><span class="resupply-context-label">Next resupply</span> <span class="resupply-context-detail"><strong>Michigan Bluff</strong> | 24.0 mi | 6h35 to next crew</span></p>
               </div>
             </div>
@@ -3293,7 +3337,7 @@ h2 {
                 <h3>Deadwood 1</h3>
                 <span class="stop-mile">Mile 10.1</span>
               </div>
-              <div class="badges"><span class="badge aid">Full aid</span><span class="badge warn">No crew</span></div>
+              <div class="badges"><span class="badge aid">Full aid</span></div>
               <p class="stop-note">Refill and keep enough food for the Devils Thumb loop through Deadwood 2.</p>
 
             </div>
@@ -3340,7 +3384,7 @@ h2 {
                 <h3>Devils Thumb 1</h3>
                 <span class="stop-mile">Mile 12.0</span>
               </div>
-              <div class="badges"><span class="badge">Hydration</span><span class="badge warn">No crew</span></div>
+              <div class="badges"><span class="badge">Hydration</span></div>
               <p class="stop-note">Water/electrolyte only. No food. Keep moving unless bottles are low.</p>
 
             </div>
@@ -3435,7 +3479,7 @@ h2 {
                 <h3>Devils Thumb 2</h3>
                 <span class="stop-mile">Mile 15.1</span>
               </div>
-              <div class="badges"><span class="badge">Hydration</span><span class="badge warn">No crew</span></div>
+              <div class="badges"><span class="badge">Hydration</span></div>
               <p class="stop-note">Top off if needed. Food still comes from what you carried out of Deadwood 1.</p>
 
             </div>
@@ -3482,7 +3526,7 @@ h2 {
                 <h3>Deadwood 2</h3>
                 <span class="stop-mile">Mile 18.3</span>
               </div>
-              <div class="badges"><span class="badge aid">Full aid</span><span class="badge warn">No crew</span><span class="badge warn">Cut 11:30 AM</span></div>
+              <div class="badges"><span class="badge aid">Full aid</span><span class="badge warn">Cut 11:30 AM</span></div>
               <p class="stop-note">Refill for the push to first crew. Start heat management early.</p>
 
             </div>
@@ -3531,7 +3575,7 @@ h2 {
                 <span class="stop-mile">Mile 24.0</span>
               </div>
               <div class="badges"><span class="badge crew">Crew stop</span><span class="badge aid">Aid</span><span class="badge warn">Cut 12:45 PM</span></div>
-              <p class="stop-note">CREW HERE: arrive by 10:43 AM. Fast bottle swap, cooling, sunscreen, quick stomach/feet check.</p>
+              <p class="stop-note">CREW HERE: arrive by 10:43 AM. Use the Michigan Bluff bag and follow the official crew parking directions.</p>
 
               <div class="resupply" aria-label="Resupply from Michigan Bluff to Foresthill">
                 <div class="resupply-head">
@@ -3542,7 +3586,6 @@ h2 {
                   <span><span class="label">Sodium</span><strong>750-1,150 mg</strong></span>
                   <span><span class="label">Fluid</span><strong>0.8-1.1 L</strong></span>
                 </div>
-                <p class="resupply-note">Short crew-to-crew block. Keep the handoff fast and leave with simple calories.</p>
                 <p class="resupply-context"><span class="resupply-context-label">Next resupply</span> <span class="resupply-context-detail"><strong>Foresthill</strong> | 5.9 mi | 1h31 to next crew</span></p>
               </div>
             </div>
@@ -3591,7 +3634,7 @@ h2 {
                 <span class="stop-mile">Mile 30.0</span>
               </div>
               <div class="badges"><span class="badge crew">Crew stop</span><span class="badge crew">Drop bag</span><span class="badge warn">Cut 2:30 PM</span></div>
-              <p class="stop-note">CREW HERE: arrive by 12:18 PM. Main reset: bottles, drop bag, socks/lube if needed, preferred fuel for Cal Street.</p>
+              <p class="stop-note">CREW HERE: arrive by 12:18 PM. Use the Foresthill bag/drop bag and follow the official crew parking directions.</p>
 
               <div class="resupply" aria-label="Resupply from Foresthill to Drivers Flat">
                 <div class="resupply-head">
@@ -3602,7 +3645,6 @@ h2 {
                   <span><span class="label">Sodium</span><strong>2,050-3,050 mg</strong></span>
                   <span><span class="label">Fluid</span><strong>2.0-3.1 L</strong></span>
                 </div>
-                <p class="resupply-note">Longest crew-to-crew block. Use Cal 2 full aid, but leave Foresthill with the block covered.</p>
                 <p class="resupply-context"><span class="resupply-context-label">Next resupply</span> <span class="resupply-context-detail"><strong>Drivers Flat</strong> | 17.6 mi | 4h07 to next crew</span></p>
               </div>
             </div>
@@ -3649,7 +3691,7 @@ h2 {
                 <h3>Cal 2</h3>
                 <span class="stop-mile">Mile 38.2</span>
               </div>
-              <div class="badges"><span class="badge aid">Full aid</span><span class="badge warn">No crew</span></div>
+              <div class="badges"><span class="badge aid">Full aid</span></div>
               <p class="stop-note">Long no-crew leg follows. Refill hard here.</p>
 
             </div>
@@ -3698,7 +3740,7 @@ h2 {
                 <span class="stop-mile">Mile 47.5</span>
               </div>
               <div class="badges"><span class="badge crew">Crew stop</span><span class="badge aid">Aid</span><span class="badge warn">Cut 7:45 PM</span></div>
-              <p class="stop-note">CREW HERE: arrive by 4:39 PM. Last handoff: lights, warmth, calories through the finish, decisive exit.</p>
+              <p class="stop-note">CREW HERE: arrive by 4:39 PM. Use the Drivers Flat bag and follow the official crew parking directions.</p>
 
               <div class="resupply" aria-label="Resupply from Drivers Flat to Finish">
                 <div class="resupply-head">
@@ -3709,7 +3751,6 @@ h2 {
                   <span><span class="label">Sodium</span><strong>1,900-2,850 mg</strong></span>
                   <span><span class="label">Fluid</span><strong>1.9-2.9 L</strong></span>
                 </div>
-                <p class="resupply-note">Final personal-fuel load. Add light, warm layer, and enough finish fuel to avoid bargaining.</p>
                 <p class="resupply-context"><span class="resupply-context-label">Next resupply</span> <span class="resupply-context-detail"><strong>Finish</strong> | 15.6 mi | 3h47 to finish</span></p>
               </div>
             </div>
@@ -3756,7 +3797,7 @@ h2 {
                 <h3>Mammoth Bar</h3>
                 <span class="stop-mile">Mile 55.5</span>
               </div>
-              <div class="badges"><span class="badge aid">Full aid</span><span class="badge warn">No crew</span><span class="badge warn">Cut 10:15 PM</span></div>
+              <div class="badges"><span class="badge aid">Full aid</span><span class="badge warn">Cut 10:15 PM</span></div>
               <p class="stop-note">Eat if possible. The finish is close enough to simplify, not close enough to stop fueling.</p>
 
             </div>
@@ -3804,7 +3845,7 @@ h2 {
                 <h3>Confluence</h3>
                 <span class="stop-mile">Mile 59.1</span>
               </div>
-              <div class="badges"><span class="badge aid">Full aid</span><span class="badge warn">No crew</span></div>
+              <div class="badges"><span class="badge aid">Full aid</span></div>
               <p class="stop-note">Final aid. Calories, fluid, then climb to Auburn.</p>
 
             </div>
@@ -3878,15 +3919,15 @@ h2 {
       <div class="crew-quick">
         <article class="crew-card">
           <h3>Michigan Bluff</h3>
-          <p>Fast stop. Bottles, cooling, sunscreen, trash, quick stomach/feet check.</p>
+          <p>Use the labeled Michigan Bluff bag. Park on Chicken Hawk Rd only, then walk in about 1/2 mile.</p>
         </article>
         <article class="crew-card">
           <h3>Foresthill</h3>
-          <p>Main reset. Drop bag, socks/lube if needed, preferred fuel, weather choice.</p>
+          <p>Use the labeled Foresthill bag/drop bag. No Church St, business, residence, or school-front parking.</p>
         </article>
         <article class="crew-card">
           <h3>Drivers Flat</h3>
-          <p>Final handoff. Light, warmth, finish fuel, confidence, and send.</p>
+          <p>Use the labeled Drivers Flat bag. Park on Foresthill Rd or roadside, then walk in about 1/2 mile.</p>
         </article>
       </div>
     </section>
@@ -3900,15 +3941,21 @@ h2 {
       <div class="map-grid">
         <article class="map-card crew">
           <h3>Michigan Bluff</h3>
-          <p>Crew allowed. Plan for up to a 1.5 mile walk-in from designated parking.</p>
+          <p>Crew allowed. Park on Chicken Hawk Rd only; no parking beyond the Michigan Bluff Rd / Chicken Hawk Rd intersection.</p>
+
+          <div class="card-links"><a href="https://maps.app.goo.gl/unka31nx7UN6oFwf8" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Michigan Bluff">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Michigan Bluff">Runner Guide p. 15</a></div>
         </article>
         <article class="map-card crew">
           <h3>Foresthill</h3>
-          <p>Crew and drop bag. Plan for up to a 1 mile walk-in from designated parking.</p>
+          <p>Crew and drop bag. No parking on Church St, in front of businesses/residences, or in front of Foresthill School.</p>
+
+          <div class="card-links"><a href="https://maps.app.goo.gl/nbjFvFMT7uwBT8tAA" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Foresthill">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=14" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Foresthill">Runner Guide p. 14</a></div>
         </article>
         <article class="map-card crew">
           <h3>Drivers Flat</h3>
-          <p>Last crew stop. Plan for up to a 1 mile walk-in from designated parking.</p>
+          <p>Last crew stop. Park on Foresthill Rd or roadside; no parking or waiting on Drivers Flat Rd or the staging area.</p>
+
+          <div class="card-links"><a href="https://maps.app.goo.gl/jKDQ958pPWpF2tVX7" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Drivers Flat">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Drivers Flat">Runner Guide p. 15</a></div>
         </article>
       </div>
     </section>
@@ -3923,6 +3970,10 @@ h2 {
         <article class="source-card">
           <h3>Official 100K Page</h3>
           <p><a href="https://canyons.utmb.world/races/100k">Course description, date, start time, distance, and GPX link</a></p>
+        </article>
+        <article class="source-card">
+          <h3>Official Runner Guide</h3>
+          <p><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf">Crew parking maps, runner guide, and race weekend logistics</a></p>
         </article>
         <article class="source-card">
           <h3>Official Aid Chart</h3>

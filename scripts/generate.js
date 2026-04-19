@@ -234,6 +234,37 @@ function renderTags(tags) {
     .join("");
 }
 
+function renderExternalLink(url, label, ariaLabel) {
+  if (!url) return "";
+  const aria = ariaLabel ? ` aria-label="${escapeAttr(ariaLabel)}"` : "";
+  return `<a href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer"${aria}>${escapeHtml(label)}</a>`;
+}
+
+function renderCrewTask(stop) {
+  const links = [
+    renderExternalLink(stop.driveUrl, "Google Maps", `Open Google Maps directions for ${stop.name}`),
+    renderExternalLink(stop.guideUrl, stop.guideLabel || "Runner Guide", `Open runner guide directions for ${stop.name}`)
+  ].filter(Boolean);
+  const note = stop.crewNote ? `<p class="crew-note">${escapeHtml(stop.crewNote)}</p>` : "";
+
+  if (links.length) {
+    return `<div class="crew-task crew-logistics" aria-label="${escapeAttr(stop.name)} crew navigation and logistics"><div class="crew-links">${links.join("")}</div>${note}</div>`;
+  }
+
+  return `<div class="crew-task"><strong>${escapeHtml(stop.action || stop.summary)}</strong>${stop.detail ? `<span>${escapeHtml(stop.detail)}</span>` : ""}</div>`;
+}
+
+function renderResourceLinks(item) {
+  const links = [
+    renderExternalLink(item.driveUrl, "Google Maps", `Open Google Maps directions for ${item.name}`),
+    renderExternalLink(item.guideUrl, item.guideLabel || "Runner Guide", `Open runner guide directions for ${item.name}`)
+  ].filter(Boolean);
+
+  if (!links.length) return "";
+  return `
+          <div class="card-links">${links.join("")}</div>`;
+}
+
 function stripMeridiem(value) {
   return String(value ?? "").replace(/\s+(AM|PM)$/i, "");
 }
@@ -261,7 +292,7 @@ ${plan.crewStops
     (stop) => `        <div class="crew-timeline-row">
           <div class="crew-arrive"><span class="label">Arrive by</span><strong>${escapeHtml(stripMeridiem(stop.arriveBy))}</strong></div>
           <div class="crew-stop-name"><strong>${escapeHtml(stop.name)}</strong><em>Runner ${escapeHtml(stop.eta)}</em></div>
-          <div class="crew-task"><strong>${escapeHtml(stop.action || stop.summary)}</strong>${stop.detail ? `<span>${escapeHtml(stop.detail)}</span>` : ""}</div>
+          ${renderCrewTask(stop)}
         </div>`
   )
   .join("\n")}
@@ -303,8 +334,7 @@ function resupplyFor(stop, index) {
     context: resupplyContextFor(targetStop),
     miles,
     minutes,
-    nutrition,
-    note: stop.resupplyNote
+    nutrition
   };
 }
 
@@ -322,7 +352,6 @@ function renderResupply(stop, index) {
                   <span><span class="label">Sodium</span><strong>${formatNumber(resupply.nutrition.sodiumLow)}-${formatNumber(resupply.nutrition.sodiumHigh)} mg</strong></span>
                   <span><span class="label">Fluid</span><strong>${formatFluid(resupply.nutrition.fluidLow)}-${formatFluid(resupply.nutrition.fluidHigh)} L</strong></span>
                 </div>
-                <p class="resupply-note">${escapeHtml(resupply.note)}</p>
                 <p class="resupply-context"><span class="resupply-context-label">Next resupply</span> <span class="resupply-context-detail"><strong>${escapeHtml(resupply.label)}</strong> | ${formatMiles(resupply.miles)} mi | ${formatDuration(resupply.minutes)} ${escapeHtml(resupply.context)}</span></p>
               </div>`;
 }
@@ -434,6 +463,7 @@ function renderMaps() {
       (item) => `        <article class="map-card crew">
           <h3>${escapeHtml(item.name)}</h3>
           <p>${escapeHtml(item.detail)}</p>
+${renderResourceLinks(item)}
         </article>`
     )
     .join("\n");
@@ -531,8 +561,7 @@ function routeStopForClient(stop, index) {
           context: resupply.context,
           miles: resupply.miles,
           minutes: resupply.minutes,
-          nutrition: resupply.nutrition,
-          note: resupply.note
+          nutrition: resupply.nutrition
         }
       : null,
     nextLeg: stop.nextLeg || null
@@ -1233,7 +1262,6 @@ ${styles}
               <span id="resupply-fluid">3.3-4.9L</span>
             </span>
             <span class="tracker-resupply-next" id="resupply-nutrition">Next Michigan Bluff · 24.0 mi / 6h32</span>
-            <p id="resupply-note"></p>
           </div>
         </div>
       </article>
@@ -1322,7 +1350,6 @@ ${styles}
       resupplySodium: document.getElementById("resupply-sodium"),
       resupplyFluid: document.getElementById("resupply-fluid"),
       resupplyNutrition: document.getElementById("resupply-nutrition"),
-      resupplyNote: document.getElementById("resupply-note"),
       profileViz: document.querySelector(".bottom-profile-viz"),
       profileTitle: document.querySelector(".bottom-profile-viz .viz-title"),
       profileSvg: document.getElementById("profile-svg"),
@@ -2276,7 +2303,6 @@ ${styles}
           "Next " + resupply.label + " · " +
           formatMiles(resupply.miles) + " mi / " +
           formatDuration(resupply.minutes);
-        elements.resupplyNote.textContent = resupply.note;
       } else {
         elements.stationPanel.classList.remove("has-resupply");
         elements.stationResupply.hidden = true;

@@ -251,6 +251,56 @@ h1 {
   font-weight: 900;
 }
 
+.crew-logistics {
+  display: grid;
+  gap: 6px;
+}
+
+.crew-links,
+.card-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.crew-links a,
+.card-links a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 9px;
+  border: 1px solid rgba(var(--crew-rgb), 0.34);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.crew-links a:first-child,
+.card-links a:first-child {
+  border-color: var(--crew);
+  background: var(--crew);
+  color: #ffffff;
+}
+
+.crew-note {
+  max-width: 70ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1.25;
+}
+
+.card-links {
+  margin-top: 10px;
+}
+
 section {
   margin-top: 20px;
 }
@@ -431,7 +481,6 @@ h2 {
 }
 
 .resupply-range,
-.resupply-note,
 .resupply-context {
   color: var(--muted);
   font-size: 13px;
@@ -456,10 +505,6 @@ h2 {
   color: #0b554f;
   font-size: 15px;
   line-height: 1.08;
-}
-
-.resupply-note {
-  margin: 0;
 }
 
 .resupply-context {
