@@ -195,7 +195,7 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 6px 10px;
-  align-items: baseline;
+  align-items: center;
   min-width: 0;
   padding: 7px 9px 5px 19px;
 }
@@ -204,6 +204,22 @@ h1 {
   min-width: 0;
   font-size: 13px;
   line-height: 1.12;
+}
+
+.crew-guide-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 5px 9px;
+  border: 1px solid rgba(var(--crew-rgb), 0.34);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  text-decoration: none;
 }
 
 .crew-timeline-row {

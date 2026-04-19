@@ -282,6 +282,17 @@ function renderExternalLink(url, label, ariaLabel) {
   return `<a href="${escapeAttr(url)}" target="_blank" rel="noopener noreferrer"${aria}>${escapeHtml(label)}</a>`;
 }
 
+function officialRunnerGuideSource() {
+  return (plan.sources || []).find((source) => source.title === "Official Runner Guide") || null;
+}
+
+function renderFullGuideLink() {
+  const source = officialRunnerGuideSource();
+  if (!source?.url) return "";
+
+  return `<a class="crew-guide-link" href="${escapeAttr(source.url)}" target="_blank" rel="noopener noreferrer" aria-label="Open the full official runner guide PDF">Full guide PDF</a>`;
+}
+
 function renderPwaHead(title) {
   return `  <meta name="theme-color" content="#ff5a45">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -336,8 +347,7 @@ function renderPwaRegistrationScript() {
 function renderCrewTask(stop) {
   const links = [
     renderExternalLink(stop.driveUrl, "Google Maps", `Open Google Maps directions for ${stop.name}`),
-    renderExternalLink(stop.guideUrl, stop.guideLabel || "Runner Guide", `Open runner guide directions for ${stop.name}`),
-    renderExternalLink(stop.offlineGuideImageUrl, stop.offlineGuideImageLabel || "Offline image", `Open saved offline guide image for ${stop.name}`)
+    renderExternalLink(stop.offlineGuideImageUrl, stop.offlineGuideImageLabel || "Parking map", `Open saved parking map for ${stop.name}`)
   ].filter(Boolean);
   const note = stop.crewNote ? `<p class="crew-note">${escapeHtml(stop.crewNote)}</p>` : "";
 
@@ -351,8 +361,7 @@ function renderCrewTask(stop) {
 function renderResourceLinks(item) {
   const links = [
     renderExternalLink(item.driveUrl, "Google Maps", `Open Google Maps directions for ${item.name}`),
-    renderExternalLink(item.guideUrl, item.guideLabel || "Runner Guide", `Open runner guide directions for ${item.name}`),
-    renderExternalLink(item.offlineGuideImageUrl, "Offline image", `Open saved offline guide image for ${item.name}`)
+    renderExternalLink(item.guideUrl, item.guideLabel || "Runner Guide", `Open runner guide directions for ${item.name}`)
   ].filter(Boolean);
 
   if (!links.length) return "";
@@ -391,7 +400,7 @@ function renderStats() {
 function renderCrewStrip() {
   return `
       <div class="crew-timeline" aria-label="Crew timeline">
-        <div class="crew-timeline-title"><span class="label">Crew Timeline</span><strong>Arrive-by times are the working target</strong></div>
+        <div class="crew-timeline-title"><span class="label">Crew Timeline</span><strong>Arrive-by times are the working target</strong>${renderFullGuideLink()}</div>
 ${plan.crewStops
   .map(
     (stop) => `        <div class="crew-timeline-row">

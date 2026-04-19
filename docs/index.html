@@ -194,7 +194,7 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 6px 10px;
-  align-items: baseline;
+  align-items: center;
   min-width: 0;
   padding: 7px 9px 5px 19px;
 }
@@ -203,6 +203,22 @@ h1 {
   min-width: 0;
   font-size: 13px;
   line-height: 1.12;
+}
+
+.crew-guide-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 5px 9px;
+  border: 1px solid rgba(var(--crew-rgb), 0.34);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  text-decoration: none;
 }
 
 .crew-timeline-row {
@@ -3316,21 +3332,21 @@ h2 {
       </div>
 
       <div class="crew-timeline" aria-label="Crew timeline">
-        <div class="crew-timeline-title"><span class="label">Crew Timeline</span><strong>Arrive-by times are the working target</strong></div>
+        <div class="crew-timeline-title"><span class="label">Crew Timeline</span><strong>Arrive-by times are the working target</strong><a class="crew-guide-link" href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf" target="_blank" rel="noopener noreferrer" aria-label="Open the full official runner guide PDF">Full guide PDF</a></div>
         <div class="crew-timeline-row">
           <div class="crew-arrive"><span class="label">Arrive by</span><strong>10:58</strong></div>
           <div class="crew-stop-name"><strong>Michigan Bluff</strong><em>Runner 11:43 AM</em></div>
-          <div class="crew-task crew-logistics" aria-label="Michigan Bluff crew navigation and logistics"><div class="crew-links"><a href="https://maps.app.goo.gl/unka31nx7UN6oFwf8" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Michigan Bluff">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Michigan Bluff">Guide p. 15</a><a href="./assets/guide-michigan-bluff-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open saved offline guide image for Michigan Bluff">Offline image</a></div><p class="crew-note">Park on Chicken Hawk Rd only; no Michigan Bluff Rd parking and no parking past the Chicken Hawk intersection. Walk in about 1/2 mile.</p></div>
+          <div class="crew-task crew-logistics" aria-label="Michigan Bluff crew navigation and logistics"><div class="crew-links"><a href="https://maps.app.goo.gl/unka31nx7UN6oFwf8" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Michigan Bluff">Google Maps</a><a href="./assets/guide-michigan-bluff-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open saved parking map for Michigan Bluff">Parking map</a></div><p class="crew-note">Park on Chicken Hawk Rd only; no Michigan Bluff Rd parking and no parking past the Chicken Hawk intersection. Walk in about 1/2 mile.</p></div>
         </div>
         <div class="crew-timeline-row">
           <div class="crew-arrive"><span class="label">Arrive by</span><strong>12:33</strong></div>
           <div class="crew-stop-name"><strong>Foresthill</strong><em>Runner 1:18 PM</em></div>
-          <div class="crew-task crew-logistics" aria-label="Foresthill crew navigation and logistics"><div class="crew-links"><a href="https://maps.app.goo.gl/nbjFvFMT7uwBT8tAA" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Foresthill">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=14" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Foresthill">Guide p. 14</a><a href="./assets/guide-foresthill-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open saved offline guide image for Foresthill">Offline image</a></div><p class="crew-note">No parking on Church St, in front of businesses/residences, or in front of the school.</p></div>
+          <div class="crew-task crew-logistics" aria-label="Foresthill crew navigation and logistics"><div class="crew-links"><a href="https://maps.app.goo.gl/nbjFvFMT7uwBT8tAA" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Foresthill">Google Maps</a><a href="./assets/guide-foresthill-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open saved parking map for Foresthill">Parking map</a></div><p class="crew-note">No parking on Church St, in front of businesses/residences, or in front of the school.</p></div>
         </div>
         <div class="crew-timeline-row">
           <div class="crew-arrive"><span class="label">Arrive by</span><strong>4:54</strong></div>
           <div class="crew-stop-name"><strong>Drivers Flat</strong><em>Runner 5:39 PM</em></div>
-          <div class="crew-task crew-logistics" aria-label="Drivers Flat crew navigation and logistics"><div class="crew-links"><a href="https://maps.app.goo.gl/jKDQ958pPWpF2tVX7" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Drivers Flat">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Drivers Flat">Guide p. 15</a><a href="./assets/guide-drivers-flat-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open saved offline guide image for Drivers Flat">Offline image</a></div><p class="crew-note">Park on Foresthill Rd or roadside; main lot requires a fee. Walk in about 1/2 mile on Drivers Flat Rd; no parking or waiting there.</p></div>
+          <div class="crew-task crew-logistics" aria-label="Drivers Flat crew navigation and logistics"><div class="crew-links"><a href="https://maps.app.goo.gl/jKDQ958pPWpF2tVX7" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Drivers Flat">Google Maps</a><a href="./assets/guide-drivers-flat-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open saved parking map for Drivers Flat">Parking map</a></div><p class="crew-note">Park on Foresthill Rd or roadside; main lot requires a fee. Walk in about 1/2 mile on Drivers Flat Rd; no parking or waiting there.</p></div>
         </div>
       </div>
     </header>
@@ -4014,7 +4030,7 @@ h2 {
           <h3>Michigan Bluff</h3>
           <p>Crew allowed. Park on Chicken Hawk Rd only; no parking beyond the Michigan Bluff Rd / Chicken Hawk Rd intersection.</p>
 
-          <div class="card-links"><a href="https://maps.app.goo.gl/unka31nx7UN6oFwf8" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Michigan Bluff">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Michigan Bluff">Runner Guide p. 15</a><a href="./assets/guide-michigan-bluff-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open saved offline guide image for Michigan Bluff">Offline image</a></div>
+          <div class="card-links"><a href="https://maps.app.goo.gl/unka31nx7UN6oFwf8" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Michigan Bluff">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Michigan Bluff">Runner Guide p. 15</a></div>
 
           <a class="guide-image-link" href="./assets/guide-michigan-bluff-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open offline guide image for Michigan Bluff">
             <img src="./assets/guide-michigan-bluff-parking.png" alt="Official runner guide parking map for Michigan Bluff crew access." loading="lazy">
@@ -4025,7 +4041,7 @@ h2 {
           <h3>Foresthill</h3>
           <p>Crew and drop bag. No parking on Church St, in front of businesses/residences, or in front of Foresthill School.</p>
 
-          <div class="card-links"><a href="https://maps.app.goo.gl/nbjFvFMT7uwBT8tAA" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Foresthill">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=14" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Foresthill">Runner Guide p. 14</a><a href="./assets/guide-foresthill-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open saved offline guide image for Foresthill">Offline image</a></div>
+          <div class="card-links"><a href="https://maps.app.goo.gl/nbjFvFMT7uwBT8tAA" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Foresthill">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=14" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Foresthill">Runner Guide p. 14</a></div>
 
           <a class="guide-image-link" href="./assets/guide-foresthill-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open offline guide image for Foresthill">
             <img src="./assets/guide-foresthill-parking.png" alt="Official runner guide parking map for Foresthill crew access." loading="lazy">
@@ -4036,7 +4052,7 @@ h2 {
           <h3>Drivers Flat</h3>
           <p>Last crew stop. Park on Foresthill Rd or roadside; no parking or waiting on Drivers Flat Rd or the staging area.</p>
 
-          <div class="card-links"><a href="https://maps.app.goo.gl/jKDQ958pPWpF2tVX7" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Drivers Flat">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Drivers Flat">Runner Guide p. 15</a><a href="./assets/guide-drivers-flat-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open saved offline guide image for Drivers Flat">Offline image</a></div>
+          <div class="card-links"><a href="https://maps.app.goo.gl/jKDQ958pPWpF2tVX7" target="_blank" rel="noopener noreferrer" aria-label="Open Google Maps directions for Drivers Flat">Google Maps</a><a href="https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15" target="_blank" rel="noopener noreferrer" aria-label="Open runner guide directions for Drivers Flat">Runner Guide p. 15</a></div>
 
           <a class="guide-image-link" href="./assets/guide-drivers-flat-parking.png" target="_blank" rel="noopener noreferrer" aria-label="Open offline guide image for Drivers Flat">
             <img src="./assets/guide-drivers-flat-parking.png" alt="Official runner guide parking map for Drivers Flat crew access." loading="lazy">

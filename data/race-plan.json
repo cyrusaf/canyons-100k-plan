@@ -36,7 +36,7 @@
       "guideUrl": "https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15",
       "guideLabel": "Guide p. 15",
       "offlineGuideImageUrl": "./assets/guide-michigan-bluff-parking.png",
-      "offlineGuideImageLabel": "Offline image",
+      "offlineGuideImageLabel": "Parking map",
       "crewNote": "Park on Chicken Hawk Rd only; no Michigan Bluff Rd parking and no parking past the Chicken Hawk intersection. Walk in about 1/2 mile.",
       "summary": "Parking and walk-in directions."
     },
@@ -47,7 +47,7 @@
       "guideUrl": "https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=14",
       "guideLabel": "Guide p. 14",
       "offlineGuideImageUrl": "./assets/guide-foresthill-parking.png",
-      "offlineGuideImageLabel": "Offline image",
+      "offlineGuideImageLabel": "Parking map",
       "crewNote": "No parking on Church St, in front of businesses/residences, or in front of the school.",
       "summary": "Parking and walk-in directions."
     },
@@ -58,7 +58,7 @@
       "guideUrl": "https://res.cloudinary.com/utmb-world/image/upload/v1776336097/canyons/PDFs/2026_Canyons_Runner_Guide_rs_5_6481b98142.pdf.pdf#page=15",
       "guideLabel": "Guide p. 15",
       "offlineGuideImageUrl": "./assets/guide-drivers-flat-parking.png",
-      "offlineGuideImageLabel": "Offline image",
+      "offlineGuideImageLabel": "Parking map",
       "crewNote": "Park on Foresthill Rd or roadside; main lot requires a fee. Walk in about 1/2 mile on Drivers Flat Rd; no parking or waiting there.",
       "summary": "Parking and walk-in directions."
     }
