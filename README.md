@@ -5,7 +5,7 @@ Generated race-day crew guide for the Canyons 100K.
 ## Files
 
 - `data/race-plan.json` is the editable race plan: stops, total moving-time target, station ETA padding, crew notes, fuel targets, map notes, and source links.
-- `data/canyons-100k-course.gpx` is the official 2026 100K GPX used for leg pacing, gain/loss, the route tracker map, and the elevation profile.
+- `data/canyons-100k-course.gpx` is the official 2026 100K alternate-course GPX used for leg pacing, gain/loss, the route tracker map, and the elevation profile.
 - `src/styles.css` is the report styling.
 - `scripts/generate.js` builds the HTML report and route tracker.
 - `scripts/review.js` builds the pages, captures Playwright screenshots, and checks mobile overflow, tap targets, tiny text, and route-tracker cursor movement.

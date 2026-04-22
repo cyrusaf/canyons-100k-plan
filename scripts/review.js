@@ -15,10 +15,13 @@ try {
 }
 
 const ROOT = path.resolve(__dirname, "..");
+const PLAN_PATH = path.join(ROOT, "data", "race-plan.json");
 const GUIDE_OUTPUT = path.join(ROOT, "docs", "canyons-100k-crew-guide.html");
 const TRACKER_OUTPUT = path.join(ROOT, "docs", "canyons-100k-route-tracker.html");
 const SCREENSHOT_DIR = path.join(ROOT, ".artifacts", "screenshots");
 const MAPTILER_API_KEY = process.env.MAPTILER_API_KEY || "";
+const plan = JSON.parse(fs.readFileSync(PLAN_PATH, "utf8"));
+const EXPECTED_COURSE_DISTANCE = Number(plan.race.courseDistanceMi);
 
 function fileUrl(filePath) {
   return pathToFileURL(filePath).href;
@@ -658,7 +661,8 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
   console.log(JSON.stringify(metrics, null, 2));
   const mileLabelMatch = trackerMetrics.mileLabel.match(/([\d.]+)\s*\/\s*([\d.]+)\s*mi/);
   const mileLabelAtEnd = mileLabelMatch
-    ? Math.abs(Number(mileLabelMatch[1]) - Number(mileLabelMatch[2])) <= 0.11 && Number(mileLabelMatch[2]) >= 63
+    ? Math.abs(Number(mileLabelMatch[1]) - Number(mileLabelMatch[2])) <= 0.11 &&
+      Math.abs(Number(mileLabelMatch[2]) - EXPECTED_COURSE_DISTANCE) <= 0.11
     : false;
   const liveMapReview = Boolean(MAPTILER_API_KEY);
   const trackerMapSkippedLocally =
@@ -693,15 +697,15 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     trackerMetrics.tinyText.length ||
     trackerMetrics.bodyOverflow !== "hidden" ||
     !mileLabelAtEnd ||
-    trackerMetrics.profileDragLabel.startsWith("63.1") ||
+    trackerMetrics.profileDragLabel.startsWith(EXPECTED_COURSE_DISTANCE.toFixed(1)) ||
     !trackerMetrics.profilePopupDuringDrag.visible ||
     !trackerMetrics.profilePopupDuringDrag.withinProfile ||
     !trackerMetrics.profilePopupDuringDrag.text.includes("mi") ||
     !trackerMetrics.profilePopupDuringDrag.text.includes("ft") ||
     !trackerMetrics.profilePopupDuringDrag.text.includes("%") ||
     !trackerMetrics.profilePopupDuringDrag.text.includes("->") ||
-    trackerMetrics.profileStopTypeCount < 6 ||
-    trackerMetrics.profileGuideTypeCount < 6 ||
+    trackerMetrics.profileStopTypeCount < 5 ||
+    trackerMetrics.profileGuideTypeCount < 5 ||
     trackerMetrics.profileGuideCount !== trackerMetrics.profileStopCount ||
     trackerMetrics.profileCurrentLegWidth < 4 ||
     trackerMetrics.profileCurrentLegHeight < 80 ||
@@ -724,26 +728,26 @@ fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
     !trackerStartResupplyMetrics.visible ||
     !trackerStartResupplyMetrics.text.includes("Resupply") ||
     !trackerStartResupplyMetrics.text.includes("Deadwood 1 arrival · full aid") ||
-    !trackerStartResupplyMetrics.text.includes("Next Michigan Bluff · 24.0 mi / 6h35") ||
+    !trackerStartResupplyMetrics.text.includes("Next Michigan Bluff · 22.6 mi / 6h24") ||
     trackerStartResupplyMetrics.text.includes("Resupply to") ||
     trackerStartResupplyMetrics.text.includes("Next resupply:") ||
     trackerStartResupplyMetrics.text.includes("Block total") ||
-    !trackerStartResupplyMetrics.text.includes("595g carbs") ||
-    !trackerStartResupplyMetrics.text.includes("Na 3.35-4.95g") ||
-    !trackerStartResupplyMetrics.stationText.includes("10.1 mi") ||
-    !trackerStartResupplyMetrics.stationText.includes("+1,620 / -2,552 ft") ||
-    !trackerStartResupplyMetrics.stationText.includes("Climb 2.9 mi @ 11.9%") ||
-    !trackerStartResupplyMetrics.stationText.includes("230 g") ||
-    !trackerStartResupplyMetrics.stationText.includes("1,300-1,900 mg") ||
-    !trackerStartResupplyMetrics.stationText.includes("1.3-1.9 L") ||
-    !trackerStartResupplyMetrics.stationText.includes("Arrive 7:33 AM") ||
+    !trackerStartResupplyMetrics.text.includes("580g carbs") ||
+    !trackerStartResupplyMetrics.text.includes("Na 3.15-4.85g") ||
+    !trackerStartResupplyMetrics.stationText.includes("11.2 mi") ||
+    !trackerStartResupplyMetrics.stationText.includes("+1,907 / -2,554 ft") ||
+    !trackerStartResupplyMetrics.stationText.includes("Climb 2.9 mi @ 11.8%") ||
+    !trackerStartResupplyMetrics.stationText.includes("265 g") ||
+    !trackerStartResupplyMetrics.stationText.includes("1,450-2,200 mg") ||
+    !trackerStartResupplyMetrics.stationText.includes("1.5-2.2 L") ||
+    !trackerStartResupplyMetrics.stationText.includes("Arrive 7:56 AM") ||
     !trackerStartResupplyMetrics.metricContentFits ||
     trackerStartResupplyMetrics.overflowCount ||
     trackerStartResupplyMetrics.height > trackerStartResupplyMetrics.stationHeight ||
     !trackerClimbModeMetrics.active ||
     trackerClimbModeMetrics.primary !== "2.9 mi" ||
-    !trackerClimbModeMetrics.secondary.includes("+1,835 ft") ||
-    !trackerClimbModeMetrics.grade.includes("11.9%") ||
+    !trackerClimbModeMetrics.secondary.includes("+1,830 ft") ||
+    !trackerClimbModeMetrics.grade.includes("11.8%") ||
     !trackerClimbModeMetrics.range.includes("mile 8.2-11.1") ||
     Math.abs(trackerShortMobileMetrics.stationBottomGap) > 1 ||
     !trackerShortMobileMetrics.profileAboveStation ||

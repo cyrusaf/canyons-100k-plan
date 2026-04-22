@@ -1,7 +1,7 @@
 "use strict";
 
-const CACHE_NAME = "canyons-100k-3b09b5b40a66";
-const RUNTIME_CACHE_NAME = "canyons-100k-runtime-3b09b5b40a66";
+const CACHE_NAME = "canyons-100k-a4d12587cd43";
+const RUNTIME_CACHE_NAME = "canyons-100k-runtime-a4d12587cd43";
 const CORE_ASSETS = [
   "./",
   "./index.html",

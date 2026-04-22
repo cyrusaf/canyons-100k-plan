@@ -211,6 +211,18 @@ function formatFluid(value) {
   return Number(value).toFixed(1);
 }
 
+function formatTightDecimal(value) {
+  return Number(value).toFixed(2).replace(/\.0+$/, "").replace(/(\.\d*[1-9])0+$/, "$1");
+}
+
+function formatSodiumGramsRange(nutrition) {
+  return `${formatTightDecimal(nutrition.sodiumLow / 1000)}-${formatTightDecimal(nutrition.sodiumHigh / 1000)}g`;
+}
+
+function formatCompactFluidRange(nutrition) {
+  return `${formatFluid(nutrition.fluidLow)}-${formatFluid(nutrition.fluidHigh)}L`;
+}
+
 function formatNutritionLine(nutrition) {
   return `${formatNumber(nutrition.carbs)} g carbs | ${formatNumber(nutrition.sodiumLow)}-${formatNumber(nutrition.sodiumHigh)} mg Na | ${formatFluid(nutrition.fluidLow)}-${formatFluid(nutrition.fluidHigh)} L`;
 }
@@ -1302,6 +1314,15 @@ function renderRouteTrackerHtml() {
   const firstLegDistance = firstLeg ? `${formatMiles(firstLeg.distanceMi)} mi` : "Finish";
   const firstLegClimb = firstLeg ? formatLegClimbLine(firstLeg.climbs) : "";
   const firstLegNutrition = firstLeg ? formatCompactNutritionLine(nutritionForMinutes(firstLeg.plannedMinutes)) : "Recover";
+  const firstResupply = firstDepart?.resupply || null;
+  const firstArrivalStatus = firstArrive
+    ? `${firstArrive.name} arrival · ${String(firstArrive.type || "aid").replaceAll("-", " ")}`
+    : "Finish";
+  const firstResupplyNutrition = firstResupply?.nutrition || emptyNutrition();
+  const firstResupplyNext = firstResupply
+    ? `Next ${firstResupply.label} · ${formatMiles(firstResupply.miles)} mi / ${formatDuration(firstResupply.minutes)}`
+    : "Next resupply";
+  const firstPopupLegStats = firstLeg ? `${firstLegDistance} / ${formatElevationLine(firstLeg)}` : "Finished";
 
   return `<!doctype html>
 <html lang="en">
@@ -1377,13 +1398,13 @@ ${styles}
           </div>
           <div class="tracker-data-cell tracker-resupply-cell" id="station-resupply" hidden>
             <span class="label" id="resupply-label">Resupply</span>
-            <strong id="resupply-arrival">Deadwood 1 arrival · full aid</strong>
+            <strong id="resupply-arrival">${escapeHtml(firstArrivalStatus)}</strong>
             <span class="tracker-resupply-refill" id="resupply-block">
-              <span id="resupply-carbs">590g carbs</span>
-              <span id="resupply-sodium">Na 3.25-4.9g</span>
-              <span id="resupply-fluid">3.3-4.9L</span>
+              <span id="resupply-carbs">${formatNumber(firstResupplyNutrition.carbs)}g carbs</span>
+              <span id="resupply-sodium">Na ${formatSodiumGramsRange(firstResupplyNutrition)}</span>
+              <span id="resupply-fluid">${formatCompactFluidRange(firstResupplyNutrition)}</span>
             </span>
-            <span class="tracker-resupply-next" id="resupply-nutrition">Next Michigan Bluff · 24.0 mi / 6h32</span>
+            <span class="tracker-resupply-next" id="resupply-nutrition">${escapeHtml(firstResupplyNext)}</span>
           </div>
         </div>
       </article>
@@ -1418,7 +1439,7 @@ ${styles}
           </div>
           <div class="profile-popup-leg">
             <span id="profile-popup-leg-route">China Wall Start -> Deadwood 1</span>
-            <span id="profile-popup-leg-stats">10.1 mi / +1,787 / -2,870 ft</span>
+            <span id="profile-popup-leg-stats">${escapeHtml(firstPopupLegStats)}</span>
           </div>
           <div class="profile-popup-climb" id="profile-popup-climb"></div>
         </div>
